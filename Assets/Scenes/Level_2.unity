@@ -3244,6 +3244,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   threatWeight: 5
   learnedWeight: 8
+  geneticWeight: 1
 --- !u!114 &708273128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3271,6 +3272,11 @@ MonoBehaviour:
     speedMultiplier: 1
     hpMultiplier: 1
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   - enemiesPerSpawner: 8
     spawnDelay: 2
     allowedEnemies:
@@ -3278,6 +3284,11 @@ MonoBehaviour:
     speedMultiplier: 1.4
     hpMultiplier: 1.3
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   - enemiesPerSpawner: 11
     spawnDelay: 2
     allowedEnemies:
@@ -3286,6 +3297,11 @@ MonoBehaviour:
     speedMultiplier: 1.4
     hpMultiplier: 1.3
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   - enemiesPerSpawner: 5
     spawnDelay: 2
     allowedEnemies:
@@ -3293,6 +3309,11 @@ MonoBehaviour:
     speedMultiplier: 1.4
     hpMultiplier: 1.7
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   - enemiesPerSpawner: 3
     spawnDelay: 2
     allowedEnemies:
@@ -3301,6 +3322,11 @@ MonoBehaviour:
     speedMultiplier: 1.1
     hpMultiplier: 1.6
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   - enemiesPerSpawner: 10
     spawnDelay: 3
     allowedEnemies:
@@ -3308,6 +3334,11 @@ MonoBehaviour:
     speedMultiplier: 1.5
     hpMultiplier: 2
     damageMultiplier: 1
+    isBossWave: 0
+    bossPrefab: {fileID: 0}
+    bossCount: 1
+    bossHpMultiplier: 3
+    bossDamageMultiplier: 2
   waveDelay: 5
   goldPerWave: 50
   endGameManager: {fileID: 1832835975}
@@ -5104,6 +5135,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1038760528}
   m_CullTransparentMesh: 1
+--- !u!1001 &1058036847
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -5.0710278
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -11.472778
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3944348601350247571, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5630101788778412920, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: grid
+      value: 
+      objectReference: {fileID: 624805089}
+    - target: {fileID: 7620170238098325842, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
+      propertyPath: m_Name
+      value: GeneticManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c553902382635fb4e97c2f2afa62f9d4, type: 3}
 --- !u!1 &1087308010
 GameObject:
   m_ObjectHideFlags: 0
@@ -8138,6 +8230,9 @@ MonoBehaviour:
   goldText: {fileID: 1640449954}
   hpText: {fileID: 1381224909}
   waveText: {fileID: 971566765}
+  nextWaveIcons: []
+  enemySprites: []
+  unknownSprite: {fileID: 0}
 --- !u!114 &1832835974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8170,6 +8265,7 @@ MonoBehaviour:
   winPanel: {fileID: 1916950817}
   loseText: {fileID: 1506779583}
   winText: {fileID: 871385991}
+  scoreText: {fileID: 0}
   loseRestartButton: {fileID: 444101600}
   loseMainMenuButton: {fileID: 430729474}
   winNextLevelButton: {fileID: 222807176}
@@ -11555,3 +11651,4 @@ SceneRoots:
   - {fileID: 638739644}
   - {fileID: 127550919}
   - {fileID: 708002324}
+  - {fileID: 1058036847}
