@@ -215,6 +215,8 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
             QLearningManager.Instance.ApplySuccessEpisode(episodeSteps);
         }
 
+        GeneticManager.Instance?.NotifyEnemyReachedBase();
+
         Destroy(gameObject);
     }
 
@@ -289,6 +291,8 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
             {
                 QLearningManager.Instance.ApplySuccessEpisode(episodeSteps);
             }
+
+            GeneticManager.Instance?.NotifyEnemyReachedBase();
         }
 
         CurrentMoveDirection = Vector2.zero;

@@ -25,6 +25,9 @@ public class Node : IHeapItem<Node>
     // Q-Learning'ten gelen "öğrenilmiş risk" puanı
     public float learnedCost;
 
+    // Genetik Algoritma'dan gelen hücre kaçınma maliyeti
+    public float geneticCost;
+
     // IHeapItem: MinHeap'teki pozisyon
     public int HeapIndex { get; set; }
 
@@ -45,6 +48,7 @@ public class Node : IHeapItem<Node>
         isOccupied = false;
         threatCost = 0f;
         learnedCost = 0f;
+        geneticCost = 0f;
 
         gCost = int.MaxValue;
         hCost = 0;

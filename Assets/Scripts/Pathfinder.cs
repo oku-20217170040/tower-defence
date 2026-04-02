@@ -13,6 +13,9 @@ public class Pathfinder : MonoBehaviour
     [Tooltip("Q-Learning’den gelen learnedCost A* maliyetine ne kadar etki etsin?")]
     public float learnedWeight = 1f;
 
+    [Tooltip("Genetik Algoritma’dan gelen geneticCost A* maliyetine ne kadar etki etsin?")]
+    public float geneticWeight = 1f;
+
     private void Awake()
     {
         grid = FindObjectOfType<GridManager>();
@@ -64,12 +67,14 @@ public class Pathfinder : MonoBehaviour
                 if (!neighbor.isWalkable || closed.Contains(neighbor))
                     continue;
 
-                int threatPenalty  = threatWeight  > 0f && neighbor.threatCost  > 0f
+                int threatPenalty   = threatWeight  > 0f && neighbor.threatCost  > 0f
                     ? Mathf.RoundToInt(neighbor.threatCost  * threatWeight)  : 0;
-                int learnedPenalty = learnedWeight > 0f && neighbor.learnedCost > 0f
+                int learnedPenalty  = learnedWeight > 0f && neighbor.learnedCost > 0f
                     ? Mathf.RoundToInt(neighbor.learnedCost * learnedWeight) : 0;
+                int geneticPenalty  = geneticWeight > 0f && neighbor.geneticCost > 0f
+                    ? Mathf.RoundToInt(neighbor.geneticCost * geneticWeight) : 0;
 
-                int newCost = current.gCost + 1 + threatPenalty + learnedPenalty;
+                int newCost = current.gCost + 1 + threatPenalty + learnedPenalty + geneticPenalty;
 
                 if (newCost < neighbor.gCost)
                 {

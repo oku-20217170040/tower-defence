@@ -85,6 +85,8 @@ public class WaveSpawner : MonoBehaviour
             currentWave = w + 1;
             OnWaveChanged?.Invoke(currentWave, waves.Length);
 
+            GeneticManager.Instance?.OnWaveStart(currentWave);
+
             if (baseHealth.isDestroyed) yield break;
 
             WaveConfig wave = waves[w];
@@ -111,6 +113,7 @@ public class WaveSpawner : MonoBehaviour
 
                     // ✅ spawn oldu -> canlı düşman say
                     aliveEnemyCount++;
+                    GeneticManager.Instance?.NotifyEnemySpawned();
 
                     // ✅ enemy ölünce / disable olunca bize haber versin
                     var tracker = enemy.GetComponent<EnemyLifeTracker>();
@@ -162,6 +165,7 @@ public class WaveSpawner : MonoBehaviour
             if (towerPlacer != null)
                 towerPlacer.AddGold(goldPerWave);
 
+            GeneticManager.Instance?.OnWaveEnd();
             ScoreManager.Instance?.RegisterWaveComplete();
 
             yield return new WaitForSeconds(waveDelay);
