@@ -12,9 +12,24 @@ public class SettingsPanelUI : MonoBehaviour
     {
         if (SettingsManager.Instance == null) return;
 
-        // Panel açýlýnca mevcut deðerleri göster
-        if (masterSlider != null) masterSlider.SetValueWithoutNotify(SettingsManager.Instance.GetMaster());
-        if (musicSlider != null) musicSlider.SetValueWithoutNotify(SettingsManager.Instance.GetMusic());
-        if (sfxSlider != null) sfxSlider.SetValueWithoutNotify(SettingsManager.Instance.GetSfx());
+        // Panel aÃ§Ä±lÄ±nca mevcut deÄŸerleri gÃ¶ster
+        if (masterSlider != null)
+        {
+            masterSlider.SetValueWithoutNotify(SettingsManager.Instance.GetMaster());
+            masterSlider.onValueChanged.RemoveAllListeners();
+            masterSlider.onValueChanged.AddListener(SettingsManager.Instance.SetMaster);
+        }
+        if (musicSlider != null)
+        {
+            musicSlider.SetValueWithoutNotify(SettingsManager.Instance.GetMusic());
+            musicSlider.onValueChanged.RemoveAllListeners();
+            musicSlider.onValueChanged.AddListener(SettingsManager.Instance.SetMusic);
+        }
+        if (sfxSlider != null)
+        {
+            sfxSlider.SetValueWithoutNotify(SettingsManager.Instance.GetSfx());
+            sfxSlider.onValueChanged.RemoveAllListeners();
+            sfxSlider.onValueChanged.AddListener(SettingsManager.Instance.SetSfx);
+        }
     }
 }

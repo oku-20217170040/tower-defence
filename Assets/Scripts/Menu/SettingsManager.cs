@@ -21,7 +21,7 @@ public class SettingsManager : MonoBehaviour
         // ✅ Tek kopya + sahneler arası kalıcı
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
             return;
         }
         Instance = this;
