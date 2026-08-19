@@ -12,7 +12,7 @@
 
 Böcek sürüleri yuvaya doğru ilerler ve geçtikleri yola feromon izi bırakır. İşe yarayan rotalar güçlenir, ölümle biten rotalar sönümlenir. Koloni zamanla haritayı ezberler. Oyuncu bu hafızayı okuyabilir ve kirletebilir.
 
-**Platform:** Android, yatay tutuş (gerekçe: bölüm 3.6)
+**Platform:** Android, dikey tutuş (gerekçe: bölüm 3.6)
 **Amaç:** Ticari mobil ürün
 **Tür:** Roguelike tower defense
 
@@ -67,9 +67,18 @@ Feromon izi ekranda görünür: parlayan, yoğunlukla kalınlaşan izler. Oyuncu
 
 Karınca kolonisi teması keyfi değildir. Gerçek karıncalar feromon izi bırakarak yol öğrenir; bu, `learnedCost` haritasının birebir doğal karşılığıdır. Oyuncu feromon gördüğünde öğrenmeyi anlamak için tutorial'a ihtiyaç duymaz. Kurgu, açıklama yükünü ortadan kaldırır.
 
-### 3.6 Ekran yönü
+### 3.6 Ekran yönü ve harita düzeni
 
-Yatay tutuş seçilmiştir. Mekanik, 3-4 koridorun aynı anda karşılaştırılabilmesini gerektirir; dikey ekranda koridorlar ya çok dar ya da kadraj dışında kalır ve kandırma kararı okunamaz hale gelir.
+**Dikey tutuş.** Mobilde dikey oynanış artık beklenen standarttır; oyuncular tek elle, telefonu çevirmeden oynamak ister. Yatay tutuş kurulum sürtünmesi yaratır ve oturum başlatma oranını düşürür.
+
+Dikey ekran bu mekaniğe engel değil, avantajdır:
+
+- **Akış yukarıdan aşağı.** Böcekler üst kenardan iner, yuva alt kenardadır. Uzun dikey mesafe, feromon izlerinin birikip görünür hale gelmesi için gereken yolu sağlar.
+- **Koridorlar dikey, yan yana.** 3 koridor ekranın dar ekseninde yan yana durur; oyuncu hangisinin parladığını tek bakışta karşılaştırır. Karşılaştırma dar eksende olduğu için göz gezdirme mesafesi kısadır.
+- **Kule alanları koridorlar arasında.** Kuleler yolu kapatmadığı için koridorların arasındaki ve kenarlarındaki şeritlere kurulur. Bir şeride konan kule iki koridorun ikisini birden etkileyebilir — bu, dikey düzenin kendiliğinden getirdiği bir karar zenginliğidir.
+- **Alt şerit arayüze ayrılır.** Ekranın alt bandı yuva ve draft/kule arayüzüdür; baş parmağın doğal erişim alanıdır.
+
+Örnek grid oranı: 11 sütun x 20 satır (3 koridor, aralarında ve kenarlarda kurulum şeritleri). Kesin sayılar denemeyle ayarlanacaktır.
 
 ---
 
@@ -87,7 +96,7 @@ Genetik katman böylece nemesis işlevi görür: koloni run'lar boyunca oyuncuya
 
 ---
 
-## 5. Dikey Dilim İçeriği
+## 5. İlk Kesit İçeriği (vertical slice)
 
 İlk hedef, az içerik fakat bitmiş kalitede tek bir tam çalışan kesittir.
 
@@ -128,7 +137,7 @@ Açılabilenler:
 - Hafif kalıcı pasifler (güç artışı sınırlı tutulur; beceri tavanı korunmalıdır)
 - **İstihbarat seviyesi:** yükseldikçe oyuncu kolonin hafızasını daha net görür
 
-Meta ilerleme dikey dilimde iskelet halinde bulunur; tam ağaç sonraki aşamada genişletilir.
+Meta ilerleme ilk kesitde iskelet halinde bulunur; tam ağaç sonraki aşamada genişletilir.
 
 ---
 
@@ -150,13 +159,55 @@ Oynanabilir 15 dalgalık tek run.
 
 **Kriter:** Oyuncu "yem + sessiz kule" kombinasyonunu kendi keşfettiğinde bir aha anı yaşıyor mu?
 
-Yaşamıyorsa mekanik yanlıştır ve içerik eklenmeden önce tasarıma dönülür. Bu kriter, dikey dilimin var oluş sebebidir.
+Yaşamıyorsa mekanik yanlıştır ve içerik eklenmeden önce tasarıma dönülür. Bu kriter, ilk kesitin var oluş sebebidir.
 
 ---
 
-## 9. Açık Riskler
+## 9. Riskler ve Alınan Kararlar
 
-- **Okunabilirlik riski:** Gürültücü/sessiz ayrımı oyuncuya net anlatılamazsa mekanik çöker. İlk oynanış testinin ana ölçüm hedefi budur.
-- **Yem dengesi:** Yem kulesi çok güçlü olursa oyun tek stratejiye iner; çok zayıf olursa mekanik hiç kullanılmaz.
-- **Nemesis cezalandırması:** Genetik katman yeni oyuncuyu bunaltmamalı; ilk run'larda evrim hızı düşük tutulmalıdır.
-- **Prosedürel kalite:** Üretilen haritalar koridor ayrımını her zaman net vermelidir; belirsiz topoloji kandırma kararını anlamsızlaştırır.
+Aşağıdaki dört risk, mekaniğin temelini ilgilendirdiği için uygulamaya geçmeden karara bağlanmıştır.
+
+### 9.1 Okunabilirlik: gürültücü/sessiz ayrımı anlaşılmazsa mekanik çöker
+
+**Karar: ayrım anlatılmaz, gösterilir.**
+
+- **Görsel dil.** Gürültücü kuleler sürekli genişleyen bir titreşim halkası yayar; halkanın yarıçapı tehdit alanının ta kendisidir. Sessiz kulelerin halkası yoktur, soluk ve gölgeli dururlar. Oyuncu iki sınıfı isimlerinden değil, ekrandan ayırt eder.
+- **Yerleştirme ön izlemesi.** Kule elde tutulurken, koridorlardaki feromon izinin o kule konursa nasıl değişeceği hayalet iz olarak gösterilir. Oyuncu sonucu koymadan önce görür.
+- **Sessiz keşif anı.** İlk run'ın 2. dalgasında oyuncuya garantili bir gürültücü kule verilir. Böcekler gözle görülür biçimde o koridordan kaçar. Tutorial metni yoktur; olay yaşatılır.
+- **Ölçüm.** Oyun testinde tek soru sorulur: "Bu kule düşmanı çeker mi, kaçırır mı?" Doğru cevap oranı düşükse görsel dil yeniden çalışılır.
+
+### 9.2 Yem dengesi: çok güçlüyse tek strateji, çok zayıfsa ölü mekanik
+
+**Karar: yem bir kurulum aracıdır, bir çözüm değil.**
+
+- Yem kulesi hiç hasar vermez. Tek başına hiçbir run kazandırmaz.
+- Yem sabit miktarda feromon ekler, oransal değil. Böylece zayıf izleri kolayca yönlendirir ama güçlü, oturmuş bir izi tek başına çeviremez. Doğal sonuç: yem erken oyunda güçlü, geç oyunda destek rolündedir.
+- Aynı koridora üst üste yem basmak azalan getiri verir.
+- Tuzak koridorunda böcekler öldükçe iz zayıflar, yani başarılı tuzak kendini yer ve tazelenmek ister.
+- Tüm denge tek bir sayıya bağlanır: `lureStrength`. Tek parametre üzerinden ayarlanabilir olması, dengelemeyi deneme meselesine indirger.
+
+### 9.3 Nemesis: evrim yeni oyuncuyu bunaltmamalı
+
+**Karar: evrim bir ceza değil, oyuncunun kendi alışkanlığının aynası olsun.**
+
+- Genetik katman ilk 3 run boyunca kapalıdır. Oyuncu önce oyunu öğrenir.
+- Evrim hızı oyuncunun kazanma oranına bağlanır. Üst üste kaybeden oyuncuda evrim durur, gerekirse geriler. Baskı yalnızca kazanan oyuncuda artar.
+- Koloni yalnızca oyuncunun **en çok kullandığı** stratejiye karşı evrilir. Oyuncu çeşitlenirse baskı kendiliğinden azalır. Böylece sistem cezalandırmaz, çeşitliliği ödüllendirir.
+- Evrim görünürdür. Run başında "Koloni şunu öğrendi: ..." kartı gösterilir. Oyuncu neyle karşılaşacağını bilir; sürpriz zorluk değil, okunabilir zorluk.
+
+### 9.4 Prosedürel harita kalitesi: belirsiz topoloji kandırmayı anlamsızlaştırır
+
+**Karar: üretim serbest değil, şablon tabanlı.**
+
+- Elle tasarlanmış 5-6 topoloji şablonu bulunur. Prosedürel olan yalnızca koridor uzunluğu, genişliği, engel yerleşimi ve kurulum şeridi varyasyonudur. Rastgelelik topolojiyi değil, dokuyu üretir.
+- Üretilen her harita otomatik doğrulamadan geçer:
+  - En az 3 ayrık koridor bulunmalıdır (yol bulma ile doğrulanır).
+  - En ucuz iki koridor arasındaki başlangıç maliyet farkı belirlenen eşiğin altında olmalıdır. Aksi halde bir koridor baştan galiptir ve seçim yanılsamaya döner.
+  - Her koridorun yanında en az bir kurulum şeridi bulunmalıdır.
+- Doğrulamadan geçemeyen harita atılır ve yeniden üretilir. Bu kurallar editör zamanı test olarak yazılır; teknik mimari belgesinde ele alınacaktır.
+
+---
+
+## 10. Çalışma Yöntemi
+
+Bu belgeden sonraki kararlar uygulama sırasında alınacaktır. Sanat yönü, ses ve içerik için ayrı ve daha hafif belgeler yazılacak; her şeyi önceden yazmak yerine çalışan bir ilk kesite doğru ilerlenecektir. Bölüm 9'daki dört karar istisnadır, çünkü mekaniğin temelini belirlerler.
