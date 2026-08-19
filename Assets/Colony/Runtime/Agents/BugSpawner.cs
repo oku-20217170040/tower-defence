@@ -59,6 +59,11 @@ namespace Colony.Runtime
             while (true)
             {
                 WaveNumber++;
+
+                // Yem kalici degildir: basarili tuzak kendini yer ve yemin
+                // surekli beslenmesi gerekir (spec 3.3).
+                world.ApplyLures();
+
                 yield return SpawnWave(bugsPerWave, spawnInterval);
 
                 while (AliveCount > 0)

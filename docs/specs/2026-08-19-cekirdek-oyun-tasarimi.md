@@ -12,7 +12,7 @@
 
 Böcek sürüleri yuvaya doğru ilerler ve geçtikleri yola feromon izi bırakır. İşe yarayan rotalar güçlenir, ölümle biten rotalar sönümlenir. Koloni zamanla haritayı ezberler. Oyuncu bu hafızayı okuyabilir ve kirletebilir.
 
-**Platform:** Android, dikey tutuş (gerekçe: bölüm 3.6)
+**Platform:** Android, dikey tutuş (gerekçe: bölüm 3.7)
 **Amaç:** Ticari mobil ürün
 **Tür:** Roguelike tower defense
 
@@ -59,15 +59,33 @@ Sahte Feromon Yayıcı bir koridora yapay feromon basarak sürüyü oraya çeker
 
 Bu, mekaniğe kendi kendini dengeleyen bir ritim verir: mükemmel bir tuzak koridoru kurmak, onu sürekli beslemeyi gerektirir. Oyuncu "kur ve unut" yapamaz.
 
-### 3.4 Feromon görselleştirmesi
+### 3.4 Tek araç yetmez — kombinasyon zorunludur
+
+*(19 Ağustos 2026'da ölçümle bulundu ve tasarıma alındı.)*
+
+Oturmuş bir feromon izine karşı üç senaryo ölçüldü. Kolonin izi terk etme oranı, dalga dalga:
+
+| Oyuncunun kullandığı | Dalga 1 → 8 |
+|---|---|
+| Yalnız gürültücü kule | 0,50 · 0,75 · 0,58 · 1,00 · 0,75 · 0,75 · 0,75 · 0,83 |
+| Yalnız yem | 1,00 boyunca değişmez |
+| Gürültücü kule + yem | 0,50 · 0,67 · 0,25 · 0,33 · 0,25 · 0,08 · 0,00 · 0,00 |
+
+**Hiçbir araç tek başına işe yaramaz.** Gürültücü kule tek başına sürüyü sarsar ama koloni toparlanıp geri döner — çünkü gidecek daha iyi bir yer yoktur. Yem tek başına hiç etki etmez — çünkü mevcut iz zaten daha caziptir. İkisi birlikte kullanıldığında sürü tamamen taşınır.
+
+Bu, bölüm 8'deki başarı kriterinin doğrudan karşılığıdır: oyuncunun keşfetmesi gereken şey tek bir kule değil, **itmek ile çekmenin birlikte kullanılması**. Kolonin ilk dalgada teslim olmaması da bilinçlidir; direnç olmadan öğrenmiş olmasının anlamı kalmaz.
+
+**Ölçülen değerler:** çekim ağırlığı 3, gürültücü kule tehdit gücü 4, yarıçap 4. Çekim 6 iken doymuş iz bir duvara dönüşür ve hiçbir müdahale sürüyü oynatamaz; çekim 2 iken sürü ilk dalgada pes eder.
+
+### 3.5 Feromon görselleştirmesi
 
 Feromon izi ekranda görünür: parlayan, yoğunlukla kalınlaşan izler. Oyuncu hangi koridorun öğrenilmiş olduğunu bakışta anlar. Bu, mekaniğin arayüzüdür — ayrı bir UI paneline ihtiyaç bırakmaz.
 
-### 3.5 Kurgu ile mekaniğin örtüşmesi
+### 3.6 Kurgu ile mekaniğin örtüşmesi
 
 Karınca kolonisi teması keyfi değildir. Gerçek karıncalar feromon izi bırakarak yol öğrenir; bu, `learnedCost` haritasının birebir doğal karşılığıdır. Oyuncu feromon gördüğünde öğrenmeyi anlamak için tutorial'a ihtiyaç duymaz. Kurgu, açıklama yükünü ortadan kaldırır.
 
-### 3.6 Ekran yönü ve harita düzeni
+### 3.7 Ekran yönü ve harita düzeni
 
 **Dikey tutuş.** Mobilde dikey oynanış artık beklenen standarttır; oyuncular tek elle, telefonu çevirmeden oynamak ister. Yatay tutuş kurulum sürtünmesi yaratır ve oturum başlatma oranını düşürür.
 

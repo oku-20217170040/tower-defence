@@ -52,7 +52,11 @@ namespace Colony.Runtime
 
         [Header("Rota Agirliklari")]
         public float threatWeight = 3f;
-        public float attractionWeight = 6f;
+
+        [Tooltip("Ogrenilmis izin cekim gucu. 6 iken doymus iz bir DUVAR olur ve " +
+                 "hicbir kule surusu yerinden oynatamaz; 2 iken suru cok cabuk pes " +
+                 "eder. 3 olcumle secildi: suru direnir ama 5-6 dalgada teslim olur.")]
+        public float attractionWeight = 3f;
 
         [Tooltip("Kesif orani. Her bocege yon tercihi katar. 0 = tum bocekler ayni " +
                  "koridoru secer ve koloni hicbir zaman alternatif denemez, yani " +
@@ -86,6 +90,88 @@ namespace Colony.Runtime
 
         /// <summary>Dunya yeniden uretildiginde tetiklenir; gorunum katmanlari buna baglanir.</summary>
         public event Action WorldRebuilt;
+
+        private readonly List<ColonyTower> towers = new List<ColonyTower>();
+
+        /// <summary>Sahnedeki tum kuleler. Yalnizca okuma icin.</summary>
+        public IReadOnlyList<ColonyTower> Towers => towers;
+
+        /// <summary>
+        /// Kule kayit olur. Gurultucu kuleler tehdit alanini degistirdigi icin
+        /// alan bastan hesaplanir; sessiz kuleler icin bu bedava bir islemdir.
+        /// </summary>
+        public void RegisterTower(ColonyTower tower)
+        {
+            if (tower == null || towers.Contains(tower)) return;
+            towers.Add(tower);
+            RebuildThreat();
+        }
+
+        public void UnregisterTower(ColonyTower tower)
+        {
+            if (tower == null) return;
+            if (towers.Remove(tower)) RebuildThreat();
+        }
+
+        /// <summary>
+        /// Tehdit alanini sifirdan kurar. YALNIZCA gurultucu kuleler yazar -
+        /// sessiz kuleler koloninin algisinda hic var olmaz (spec 3.1).
+        /// </summary>
+        public void RebuildThreat()
+        {
+            if (Threat == null) return;
+
+            Threat.Clear();
+            for (int i = 0; i < towers.Count; i++)
+            {
+                ColonyTower tower = towers[i];
+                if (tower == null || tower.kind != TowerKind.Noisy) continue;
+
+                Threat.AddSource(tower.Cell, tower.radius, tower.threatStrength);
+            }
+        }
+
+        /// <summary>
+        /// Yem kulelerini tazeler. Her dalga basinda cagrilir cunku yemin
+        /// etkisi kalici degildir: basarili tuzak kendini yer ve yem surekli
+        /// beslenmek ister (spec 3.3).
+        /// </summary>
+        public void ApplyLures()
+        {
+            if (Lure == null) return;
+
+            for (int i = 0; i < towers.Count; i++)
+            {
+                ColonyTower tower = towers[i];
+                if (tower == null || tower.kind != TowerKind.Lure) continue;
+
+                ApplyLureAround(tower.Cell, tower.radius);
+            }
+        }
+
+        private void ApplyLureAround(int centerCell, float radius)
+        {
+            int cx = Grid.X(centerCell);
+            int cy = Grid.Y(centerCell);
+            int reach = (int)radius;
+
+            for (int y = cy - reach; y <= cy + reach; y++)
+            {
+                for (int x = cx - reach; x <= cx + reach; x++)
+                {
+                    if (!Grid.InBounds(x, y)) continue;
+
+                    int cell = Grid.Index(x, y);
+                    if (!Grid.IsWalkable(cell)) continue;
+
+                    float dx = x - cx;
+                    float dy = y - cy;
+                    if (dx * dx + dy * dy > radius * radius) continue;
+
+                    Lure.Apply(cell);
+                }
+            }
+        }
 
         private void Awake()
         {

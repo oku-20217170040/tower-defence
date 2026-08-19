@@ -51,6 +51,12 @@ namespace Colony.EditorTools
             var spawner = spawnerGo.AddComponent<BugSpawner>();
             spawner.world = world;
 
+            // ── Kule yerlestirme ────────────────────────────────────
+            var placerGo = new GameObject("TowerPlacer");
+            var placer = placerGo.AddComponent<TowerPlacer>();
+            placer.world = world;
+            placer.targetCamera = camera;
+
             // ── Baglayici ───────────────────────────────────────────
             var binderGo = new GameObject("ColonyViewBinder");
             var binder = binderGo.AddComponent<ColonyViewBinder>();
