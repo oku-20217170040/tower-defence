@@ -132,6 +132,10 @@ namespace Colony.Runtime
             world.Pheromone.WeakenTrail(visited, weakenOnDeath);
             world.UnregisterBug(this);
 
+            // Olum ACIK renkte soner.
+            DeathPuff.Spawn(transform.position, new Color(1f, 0.95f, 0.8f, 0.9f),
+                            world.Space.CellSize * 0.7f, 25);
+
             Finished?.Invoke(this);
             Destroy(gameObject);
         }

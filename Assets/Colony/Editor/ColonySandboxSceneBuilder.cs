@@ -69,6 +69,14 @@ namespace Colony.EditorTools
             placer.world = world;
             placer.targetCamera = camera;
 
+            // ── Arayuz ──────────────────────────────────────────────
+            var hudGo = new GameObject("RunHud");
+            var hud = hudGo.AddComponent<RunHud>();
+            hud.run = run;
+            hud.nest = nest;
+            hud.spawner = spawner;
+            hud.placer = placer;
+
             // ── Baglayici ───────────────────────────────────────────
             var binderGo = new GameObject("ColonyViewBinder");
             var binder = binderGo.AddComponent<ColonyViewBinder>();
