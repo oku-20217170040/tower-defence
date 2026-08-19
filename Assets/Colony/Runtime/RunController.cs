@@ -39,8 +39,9 @@ namespace Colony.Runtime
         [Tooltip("Her dalga canin artis orani. 0.15 = dalga basina %15.")]
         public float hpGrowthPerWave = 0.15f;
 
-        [Tooltip("Ilk dalgadaki bocek sayisi.")]
-        public int baseBugsPerWave = 10;
+        [Tooltip("Ilk dalgadaki bocek sayisi. 8 olcumle secildi: 10 iken oyuncu " +
+                 "yeterli kuleyi kuramadan 4. dalgada kaybediyordu.")]
+        public int baseBugsPerWave = 8;
 
         [Tooltip("Her dalga eklenen bocek sayisi.")]
         public float bugsAddedPerWave = 1f;

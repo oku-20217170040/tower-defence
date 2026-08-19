@@ -14,6 +14,7 @@ namespace Colony.Runtime
     {
         public ColonyWorld world;
         public Camera targetCamera;
+        public EconomyRunner economy;
 
         [Header("Gorunum")]
         public Color noisyColor = new Color(0.95f, 0.35f, 0.25f);
@@ -41,6 +42,7 @@ namespace Colony.Runtime
         {
             if (world == null) world = FindFirstObjectByType<ColonyWorld>();
             if (targetCamera == null) targetCamera = Camera.main;
+            if (economy == null) economy = FindFirstObjectByType<EconomyRunner>();
         }
 
         private void Update()
@@ -76,6 +78,17 @@ namespace Colony.Runtime
                 Debug.Log("[TowerPlacer] Buraya kurulamaz: yalnizca kurulum seridine.");
                 return;
             }
+
+            // Parasi yetmiyorsa yerlestirme reddedilir ve sebebi soylenir.
+            if (economy != null && !economy.CanAfford(Selected))
+            {
+                Debug.Log("[TowerPlacer] Besin yetmiyor. Gereken=" +
+                          economy.CostFor(Selected) + " eldeki=" + economy.Economy.Balance);
+                return;
+            }
+
+            if (economy != null && !economy.TryBuy(Selected))
+                return;
 
             Place(Selected, cell);
         }

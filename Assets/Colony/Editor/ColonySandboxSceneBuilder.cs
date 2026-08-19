@@ -63,11 +63,16 @@ namespace Colony.EditorTools
             run.spawner = spawner;
             run.nest = nest;
 
+            // ── Ekonomi ─────────────────────────────────────────────
+            var ecoGo = new GameObject("EconomyRunner");
+            var economy = ecoGo.AddComponent<EconomyRunner>();
+
             // ── Kule yerlestirme ────────────────────────────────────
             var placerGo = new GameObject("TowerPlacer");
             var placer = placerGo.AddComponent<TowerPlacer>();
             placer.world = world;
             placer.targetCamera = camera;
+            placer.economy = economy;
 
             // ── Arayuz ──────────────────────────────────────────────
             var hudGo = new GameObject("RunHud");
@@ -76,6 +81,7 @@ namespace Colony.EditorTools
             hud.nest = nest;
             hud.spawner = spawner;
             hud.placer = placer;
+            hud.economy = economy;
 
             // ── Baglayici ───────────────────────────────────────────
             var binderGo = new GameObject("ColonyViewBinder");

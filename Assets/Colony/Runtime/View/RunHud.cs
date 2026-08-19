@@ -16,6 +16,7 @@ namespace Colony.Runtime
         public NestHealth nest;
         public BugSpawner spawner;
         public TowerPlacer placer;
+        public EconomyRunner economy;
 
         private GUIStyle labelStyle;
         private GUIStyle titleStyle;
@@ -26,6 +27,7 @@ namespace Colony.Runtime
             if (nest == null) nest = FindFirstObjectByType<NestHealth>();
             if (spawner == null) spawner = FindFirstObjectByType<BugSpawner>();
             if (placer == null) placer = FindFirstObjectByType<TowerPlacer>();
+            if (economy == null) economy = FindFirstObjectByType<EconomyRunner>();
         }
 
         private void EnsureStyles()
@@ -60,11 +62,19 @@ namespace Colony.Runtime
                 GUILayout.Label("Sahada: " + spawner.AliveCount, labelStyle);
             }
 
+            if (economy != null)
+            {
+                GUILayout.Space(8f);
+                GUILayout.Label("Besin: " + economy.Economy.Balance, labelStyle);
+            }
+
             if (placer != null)
             {
                 GUILayout.Space(8f);
                 GUILayout.Label("Secili: " + TurkishName(placer.Selected), labelStyle);
-                GUILayout.Label("1 Gurultucu   2 Sessiz   3 Yem", labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Noisy, "1 Gurultucu") + "   " +
+                                PriceLine(TowerKind.Silent, "2 Sessiz") + "   " +
+                                PriceLine(TowerKind.Lure, "3 Yem"), labelStyle);
             }
 
             GUILayout.EndArea();
@@ -86,6 +96,15 @@ namespace Colony.Runtime
                 : new Color(1f, 0.45f, 0.4f);
 
             GUI.Label(rect, text, centered);
+        }
+
+        /// <summary>Alinamayan kuleler parantezle isaretlenir.</summary>
+        private string PriceLine(TowerKind kind, string label)
+        {
+            if (economy == null) return label;
+
+            int cost = economy.CostFor(kind);
+            return economy.CanAfford(kind) ? (label + " " + cost) : ("(" + label + " " + cost + ")");
         }
 
         private static string TurkishName(TowerKind kind)
