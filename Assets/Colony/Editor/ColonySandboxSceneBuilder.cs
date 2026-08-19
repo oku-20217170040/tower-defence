@@ -46,6 +46,11 @@ namespace Colony.EditorTools
             overlayGo.AddComponent<SpriteRenderer>();
             var overlay = overlayGo.AddComponent<PheromoneOverlay>();
 
+            // ── Bocekler ────────────────────────────────────────────
+            var spawnerGo = new GameObject("BugSpawner");
+            var spawner = spawnerGo.AddComponent<BugSpawner>();
+            spawner.world = world;
+
             // ── Baglayici ───────────────────────────────────────────
             var binderGo = new GameObject("ColonyViewBinder");
             var binder = binderGo.AddComponent<ColonyViewBinder>();
