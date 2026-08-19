@@ -52,6 +52,35 @@ namespace Colony.Tests
         }
 
         [Test]
+        public void Generate_KeepsCorridorsOffTheGridEdges()
+        {
+            // Kenara yapisik koridorun tek tarafinda kurulum seridi olur ve
+            // digerlerinden zayif kalir; koridor secimi gercek bir karar
+            // olmaktan cikar. Iki dis sutun koridor OLMAMALI.
+            var grid = new MapGenerator().Generate(ThreeCorridorTemplate(), seed: 5);
+
+            int lastX = grid.Width - 1;
+            for (int y = 1; y < grid.Height - 1; y++)
+            {
+                Assert.AreNotEqual(CellKind.Corridor, grid.Get(grid.Index(0, y)),
+                    "Sol kenar sutunu koridor olmamali.");
+                Assert.AreNotEqual(CellKind.Corridor, grid.Get(grid.Index(lastX, y)),
+                    "Sag kenar sutunu koridor olmamali.");
+            }
+        }
+
+        [Test]
+        public void Generate_LeavesGapsBetweenCorridors()
+        {
+            // Koridorlar birbirine yapisirsa tek genis koridor gibi davranir
+            // ve dogrulama 3 ayrik koridor sayamaz.
+            var grid = new MapGenerator().Generate(ThreeCorridorTemplate(), seed: 5);
+            var result = new MapValidator().Validate(grid, maxCostGap: 10f);
+
+            Assert.AreEqual(3, result.CorridorCount, result.FailureReason);
+        }
+
+        [Test]
         public void Validate_AcceptsGeneratedMap()
         {
             var grid = new MapGenerator().Generate(ThreeCorridorTemplate(), seed: 3);

@@ -25,12 +25,21 @@ namespace Colony.Core
             var grid = new ColonyGrid(template.Width, template.Height);
             var random = new Random(seed);
 
-            // Koridorlari dar eksende esit araliklarla yerlestir.
-            int span = template.Width / template.CorridorCount;
+            // Koridorlari dar eksende, ARALARINDA VE KENARLARINDA bosluk kalacak
+            // sekilde yerlestir. Kenara yapisik koridorun tek tarafinda kurulum
+            // seridi olur; bu onu digerlerinden daha zayif yapar ve koridor secimi
+            // gercek bir karar olmaktan cikar (spec 9.4).
+            int totalCorridorWidth = template.CorridorCount * template.CorridorWidth;
+            int remaining = template.Width - totalCorridorWidth;
+            if (remaining < 0) remaining = 0;
+
+            int gapCount = template.CorridorCount + 1;
+            int gapSize = remaining / gapCount;
+            if (gapSize < 1) gapSize = 1;
 
             for (int c = 0; c < template.CorridorCount; c++)
             {
-                int corridorStart = c * span + (span - template.CorridorWidth) / 2;
+                int corridorStart = gapSize * (c + 1) + c * template.CorridorWidth;
                 if (corridorStart < 0) corridorStart = 0;
 
                 for (int w = 0; w < template.CorridorWidth; w++)
