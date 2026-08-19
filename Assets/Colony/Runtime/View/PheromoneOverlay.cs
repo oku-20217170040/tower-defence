@@ -21,6 +21,12 @@ namespace Colony.Runtime
         [Tooltip("Cizim sirasi. Izgara karolarinin ustunde, boceklerin altinda olmali.")]
         public int sortingOrder = 10;
 
+        [Tooltip("Hucre basina texel sayisi. 1 iken bilinear filtre izi bir hucre " +
+                 "boyunca yayip koridorun disina tasiriyor ve hangi hucrenin iz " +
+                 "tasidigi okunamiyor. 4 ile yayilma ceyrek hucreye iner.")]
+        [Range(1, 8)]
+        public int texelsPerCell = 4;
+
         private ColonyGrid grid;
         private PheromoneMap pheromone;
         private LureField lure;
@@ -53,19 +59,22 @@ namespace Colony.Runtime
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
 
-            texture = new Texture2D(grid.Width, grid.Height, TextureFormat.RGBA32, false)
+            int texWidth = grid.Width * texelsPerCell;
+            int texHeight = grid.Height * texelsPerCell;
+
+            texture = new Texture2D(texWidth, texHeight, TextureFormat.RGBA32, false)
             {
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
                 name = "PheromoneOverlay"
             };
 
-            pixels = new Color[grid.Width * grid.Height];
+            pixels = new Color[texWidth * texHeight];
 
-            // pixelsPerUnit = 1 / CellSize => sprite tam olarak izgara boyutunu kaplar.
-            var rect = new Rect(0f, 0f, grid.Width, grid.Height);
+            // pixelsPerUnit = texelsPerCell / CellSize => sprite tam olarak izgara boyutunu kaplar.
+            var rect = new Rect(0f, 0f, texWidth, texHeight);
             spriteRenderer.sprite = Sprite.Create(
-                texture, rect, new Vector2(0.5f, 0.5f), 1f / space.CellSize);
+                texture, rect, new Vector2(0.5f, 0.5f), texelsPerCell / space.CellSize);
             spriteRenderer.sortingOrder = sortingOrder;
 
             // Izgara dunya orijininde ortalandigi icin overlay de orada durur.
@@ -88,11 +97,23 @@ namespace Colony.Runtime
         {
             if (!bound) return;
 
-            for (int i = 0; i < pixels.Length; i++)
+            int texWidth = grid.Width * texelsPerCell;
+
+            for (int cell = 0; cell < grid.CellCount; cell++)
             {
-                float p = pheromone.Get(i) / saturation;
-                float l = lure.Get(i) / saturation;
-                pixels[i] = PheromoneColorRamp.Evaluate(p, l);
+                float p = pheromone.Get(cell) / saturation;
+                float l = lure.Get(cell) / saturation;
+                Color color = PheromoneColorRamp.Evaluate(p, l);
+
+                int baseX = grid.X(cell) * texelsPerCell;
+                int baseY = grid.Y(cell) * texelsPerCell;
+
+                for (int ty = 0; ty < texelsPerCell; ty++)
+                {
+                    int row = (baseY + ty) * texWidth + baseX;
+                    for (int tx = 0; tx < texelsPerCell; tx++)
+                        pixels[row + tx] = color;
+                }
             }
 
             texture.SetPixels(pixels);

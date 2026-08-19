@@ -18,7 +18,15 @@ namespace Colony.Runtime
     public static class PheromoneColorRamp
     {
         /// <summary>En yogun izin bile tam opak olmamasi icin tavan.</summary>
-        public const float MaxAlpha = 0.85f;
+        public const float MaxAlpha = 0.7f;
+
+        /// <summary>
+        /// Gorunurluk egrisi. 1'den buyuk deger zayif izleri bastirir ve
+        /// guclu izlerin arasindaki farki korur. Dogrusal egride iz birkac
+        /// dalgada tavana dayaniyor ve her yer ayni parlakliga gelip
+        /// "hangi hucre daha guclu" bilgisi kayboluyordu.
+        /// </summary>
+        private const float IntensityGamma = 1.8f;
 
         private static readonly Color WeakPheromone = new Color(1f, 0.95f, 0.55f);
         private static readonly Color StrongPheromone = new Color(1f, 0.45f, 0.12f);
@@ -47,7 +55,7 @@ namespace Colony.Runtime
             // Gorunurluk hangisi baskinsa ona gore belirlenir; boylece
             // yem tek basina da gorunur kalir.
             float intensity = pheromone > lure ? pheromone : lure;
-            rgb.a = intensity * MaxAlpha;
+            rgb.a = Mathf.Pow(intensity, IntensityGamma) * MaxAlpha;
 
             return rgb;
         }
