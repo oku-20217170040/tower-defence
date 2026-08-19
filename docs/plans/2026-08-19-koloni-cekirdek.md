@@ -1448,6 +1448,13 @@ git commit -m "feat: ColonyPathfinder ve birleşik rota maliyet modeli"
 - Üretir: `MapTemplate` struct — `Width`, `Height`, `CorridorCount`, `CorridorWidth`
 - Üretir: `MapGenerator` — `Generate(MapTemplate, int seed)` → `ColonyGrid`
 - Üretir: `MapValidationResult` struct — `IsValid`, `CorridorCount`, `CostGap`, `FailureReason`
+- Üretir: `CorridorSpan` struct — `StartX`, `EndX`
+
+> **Uygulama sirasinda duzeltildi:** Plan ilk halinde koridorlar tek sutunla temsil ediliyordu
+> (`FindCorridorColumns` -> `List<int>`). Bu hataliydi: 2 hucre genisligindeki bir koridorda
+> kurulum seridi cogu zaman yalnizca kenardaki sutunun komsusudur, ilk sutunun degil.
+> Bu haliyle her gecerli harita reddedilirdi. Koridorlar `CorridorSpan` ile sutun araligi
+> olarak temsil edilir ve dogrulama tum aralig tarar.
 - Üretir: `MapValidator` — `Validate(ColonyGrid, float maxCostGap)` → `MapValidationResult`
 
 Tasarım kaynağı: spec bölüm 9.4. **Rastgelelik topolojiyi değil dokuyu üretir.**
