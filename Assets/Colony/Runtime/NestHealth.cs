@@ -8,8 +8,10 @@ namespace Colony.Runtime
     /// </summary>
     public sealed class NestHealth : MonoBehaviour
     {
-        [Tooltip("Run basindaki can.")]
-        public int maxHp = 20;
+        [Tooltip("Run basindaki can. Olcumde zayif bir dugme oldugu gorildu: " +
+                 "30'dan 50'ye cikarmak kayip dalgasini yalnizca 10'dan 11'e tasidi. " +
+                 "Asil belirleyici kule sayisi.")]
+        public int maxHp = 30;
 
         public int CurrentHp { get; private set; }
         public bool IsAlive => CurrentHp > 0;

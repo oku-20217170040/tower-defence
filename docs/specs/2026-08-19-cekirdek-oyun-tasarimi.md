@@ -12,7 +12,7 @@
 
 Böcek sürüleri yuvaya doğru ilerler ve geçtikleri yola feromon izi bırakır. İşe yarayan rotalar güçlenir, ölümle biten rotalar sönümlenir. Koloni zamanla haritayı ezberler. Oyuncu bu hafızayı okuyabilir ve kirletebilir.
 
-**Platform:** Android, dikey tutuş (gerekçe: bölüm 3.7)
+**Platform:** Android, dikey tutuş (gerekçe: bölüm 3.8)
 **Amaç:** Ticari mobil ürün
 **Tür:** Roguelike tower defense
 
@@ -77,15 +77,33 @@ Bu, bölüm 8'deki başarı kriterinin doğrudan karşılığıdır: oyuncunun k
 
 **Ölçülen değerler:** çekim ağırlığı 3, gürültücü kule tehdit gücü 4, yarıçap 4. Çekim 6 iken doymuş iz bir duvara dönüşür ve hiçbir müdahale sürüyü oynatamaz; çekim 2 iken sürü ilk dalgada pes eder.
 
-### 3.5 Feromon görselleştirmesi
+### 3.5 Korunmayan koridor her zaman bulunur
+
+*(19 Ağustos 2026'da tam run simülasyonuyla ölçüldü.)*
+
+Bütün kuleleri tek koridora yığmak işe yaramaz. Koloni orada ölmeye başlayınca iz zayıflar, sürü koridoru terk eder ve korunmasız koridordan akar. Ölçümde bu net görüldü: aynı koridordaki kule sayısını 1'den 4'e çıkarmak öldürme sayısını yalnızca 34'ten 36'ya taşıdı.
+
+Kuleler üç koridora dağıtıldığında tablo tamamen değişti:
+
+| Kule dağılımı | Sonuç |
+|---|---|
+| Koridor başına 1 (toplam 3) | Dalga 10'da kayıp, 105 öldürme |
+| Koridor başına 2 (toplam 6) | Run tamamlandı, sıfır sızıntı, 255 öldürme |
+| Koridor başına 3 (toplam 9) | Aynı — fazlası boşa |
+
+**Tasarım sonucu:** Oyuncu üç koridoru da düşünmek zorunda. Tuzak kurmak tek başına yetmez; kaçış yolu açık bırakılırsa koloni onu bulur. Bu, üç koridorlu tasarımın gerçek maliyeti ve aynı zamanda derinliğidir.
+
+**Ekonomi için hedef:** Kule sayısı baskın değişken. Yuva canını 30'dan 50'ye çıkarmak kayıp dalgasını yalnızca 10'dan 11'e taşıdı; oysa koridor başına kuleyi 1'den 2'ye çıkarmak kaybı tam zafere çevirdi. Dolayısıyla ekonominin işi, oyuncunun 15 dalga boyunca kaç kuleye ulaşabileceğini belirlemek. Hedef bant: 4-5 etkili kule, 8-10. dalga civarında.
+
+### 3.6 Feromon görselleştirmesi
 
 Feromon izi ekranda görünür: parlayan, yoğunlukla kalınlaşan izler. Oyuncu hangi koridorun öğrenilmiş olduğunu bakışta anlar. Bu, mekaniğin arayüzüdür — ayrı bir UI paneline ihtiyaç bırakmaz.
 
-### 3.6 Kurgu ile mekaniğin örtüşmesi
+### 3.7 Kurgu ile mekaniğin örtüşmesi
 
 Karınca kolonisi teması keyfi değildir. Gerçek karıncalar feromon izi bırakarak yol öğrenir; bu, `learnedCost` haritasının birebir doğal karşılığıdır. Oyuncu feromon gördüğünde öğrenmeyi anlamak için tutorial'a ihtiyaç duymaz. Kurgu, açıklama yükünü ortadan kaldırır.
 
-### 3.7 Ekran yönü ve harita düzeni
+### 3.8 Ekran yönü ve harita düzeni
 
 **Dikey tutuş.** Mobilde dikey oynanış artık beklenen standarttır; oyuncular tek elle, telefonu çevirmeden oynamak ister. Yatay tutuş kurulum sürtünmesi yaratır ve oturum başlatma oranını düşürür.
 
