@@ -25,6 +25,21 @@ namespace Colony.Core
         public float ThreatWeight { get; set; } = 1f;
         public float AttractionWeight { get; set; } = 1f;
 
+        /// <summary>
+        /// Kesif orani [0, 1). Her bocegin maliyet algisina kendine ozgu bir
+        /// sapma katar.
+        ///
+        /// NEDEN GEREKLI: A* belirlenimcidir. Koridorlar esit maliyetteyken
+        /// (ki MapValidator bunu zorunlu kilar) her bocek ayni koridoru secer
+        /// ve koloni hicbir zaman alternatif denemez. Kesif olmadan ogrenme
+        /// diye bir sey olmaz: ilk secim son secimdir. Gercek karincalar
+        /// feromonu olasiliksal takip eder; bu alan onun karsiligidir.
+        /// </summary>
+        public float ExplorationNoise { get; set; } = 0f;
+
+        private float[] queryNoise;
+        private int gridWidth;
+
         public RouteCostModel(PheromoneMap pheromone, LureField lure, ThreatField threat)
         {
             this.pheromone = pheromone ?? throw new ArgumentNullException(nameof(pheromone));
@@ -33,7 +48,43 @@ namespace Colony.Core
             attractionSaturation = pheromone.Max;
         }
 
-        /// <summary>Bir hucreye adim atmanin maliyeti. Her zaman 1 veya uzeri.</summary>
+        /// <summary>
+        /// Tek bir yol aramasi icin sapma alanini uretir. Her bocek kendi
+        /// tohumuyla cagirir, boylece farkli bocekler farkli koridorlar dener.
+        ///
+        /// Sapma SUTUN BAZINDA uretilir, hucre bazinda degil. Bu kritik:
+        /// hucre basina bagimsiz sapma 18 hucrelik bir yol boyunca ortalamaya
+        /// gidip soner ve kesif yok olur. Sutun bazinda sapma ise bir bocege
+        /// "bu koridoru sevme" gibi tutarli bir YON TERCIHI verir - gercek
+        /// karincanin davranisi da budur.
+        ///
+        /// Sapma arama BOYUNCA SABIT kalir. Bu sart: A* ayni hucrenin
+        /// maliyetini her sorguldugunda ayni cevabi almalidir.
+        /// </summary>
+        public void BeginQuery(int seed, ColonyGrid grid)
+        {
+            if (ExplorationNoise <= 0f)
+            {
+                queryNoise = null;
+                return;
+            }
+
+            gridWidth = grid.Width;
+
+            if (queryNoise == null || queryNoise.Length != gridWidth)
+                queryNoise = new float[gridWidth];
+
+            var random = new Random(seed);
+            float span = ExplorationNoise * 2f;
+
+            for (int x = 0; x < gridWidth; x++)
+                queryNoise[x] = 1f - ExplorationNoise + (float)random.NextDouble() * span;
+        }
+
+        /// <summary>
+        /// Bir hucreye adim atmanin maliyeti. Sapma yokken her zaman 1 veya uzeri;
+        /// sapma varken en dusuk deger 1 * (1 - ExplorationNoise) olur.
+        /// </summary>
         public float StepCost(int index)
         {
             float attraction = pheromone.Get(index) + lure.Get(index);
@@ -43,7 +94,12 @@ namespace Colony.Core
             float attractionPenalty = AttractionWeight * (1f - normalized);
             float threatPenalty = ThreatWeight * threat.Get(index);
 
-            return 1f + threatPenalty + attractionPenalty;
+            float cost = 1f + threatPenalty + attractionPenalty;
+
+            if (queryNoise != null)
+                cost *= queryNoise[index % gridWidth];
+
+            return cost;
         }
     }
 }

@@ -54,6 +54,13 @@ namespace Colony.Runtime
         public float threatWeight = 3f;
         public float attractionWeight = 6f;
 
+        [Tooltip("Kesif orani. Her bocege yon tercihi katar. 0 = tum bocekler ayni " +
+                 "koridoru secer ve koloni hicbir zaman alternatif denemez, yani " +
+                 "ogrenme olmaz. 0.35 olcumle secildi: koloni dagilarak baslar ve " +
+                 "6-8 dalgada tek koridora yerlesir.")]
+        [Range(0f, 0.9f)]
+        public float explorationNoise = 0.35f;
+
         [Header("Gorunum")]
         [Tooltip("Bir hucrenin dunya birimi cinsinden kenar uzunlugu.")]
         public float cellSize = 1f;
@@ -148,7 +155,8 @@ namespace Colony.Runtime
             CostModel = new RouteCostModel(Pheromone, Lure, Threat)
             {
                 ThreatWeight = threatWeight,
-                AttractionWeight = attractionWeight
+                AttractionWeight = attractionWeight,
+                ExplorationNoise = explorationNoise
             };
 
             Pathfinder = new ColonyPathfinder(Grid, CostModel);

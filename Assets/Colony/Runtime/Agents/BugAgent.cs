@@ -19,13 +19,13 @@ namespace Colony.Runtime
         public float cellsPerSecond = 2.5f;
 
         [Tooltip("Gecerken her hucreye birakilan feromon.")]
-        public float depositPerCell = 5f;
+        public float depositPerCell = 0.5f;
 
         [Tooltip("Yuvaya ulasinca tum rotaya eklenen pekistirme. Basarili rota guclenir.")]
-        public float reinforceOnSuccess = 22f;
+        public float reinforceOnSuccess = 1.5f;
 
         [Tooltip("Olurse o ana kadarki rotadan silinen miktar. Olumle biten rota sonumlenir.")]
-        public float weakenOnDeath = 18f;
+        public float weakenOnDeath = 2.5f;
 
         private ColonyWorld world;
         private readonly List<int> path = new List<int>();
@@ -49,6 +49,10 @@ namespace Colony.Runtime
             visited.Clear();
             pathIndex = 0;
             ReachedNest = false;
+
+            // Her bocek kendi yon tercihiyle yola cikar. Bu olmadan tum bocekler
+            // ayni koridoru secer ve koloni hicbir zaman alternatif denemez.
+            world.CostModel.BeginQuery(UnityEngine.Random.Range(int.MinValue, int.MaxValue), world.Grid);
 
             if (!world.Pathfinder.FindPath(spawnCell, world.NestCell, path))
             {

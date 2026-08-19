@@ -94,6 +94,20 @@ Mevcut üç sistem korunur, ancak her birine ayrı ve oyuncu tarafından okunabi
 
 Genetik katman böylece nemesis işlevi görür: koloni run'lar boyunca oyuncuya karşı evrilir. Oyuncunun favori stratejisi zamanla aşınır.
 
+### 4.1 Keşif — öğrenmenin ön koşulu
+
+*(19 Ağustos 2026'da uygulama sırasında eklendi. Tasarımda atlanmış bir boşluktu ve mekanik onsuz hiç çalışmıyordu.)*
+
+Yalnızca feromon takibi tanımlamak yeterli değildir. Böcekler her zaman en ucuz rotayı seçerse ve koridorlar eşit maliyetteyse — ki bölüm 9.4 bunu bilerek zorunlu kılar — her böcek aynı koridoru seçer. Koloni hiçbir zaman alternatif denemez, dolayısıyla öğrenecek bir şey de olmaz: ilk seçim son seçimdir.
+
+Bu, kandırma mekaniğini de öldürür. Sürü ilk saniyede tek yola kilitlenmişse yem basmanın karşılığı kalmaz.
+
+**Karar:** Her böcek, koridorlara dair kendine özgü küçük bir yön tercihiyle yola çıkar. Bu tercih böcek başına sabittir (yol boyunca değişmez), böylece bazı böcekler sürünün geri kalanından farklı bir koridoru dener. Gerçek karıncaların feromonu olasılıksal takip etmesinin karşılığıdır.
+
+Keşif oranı, kolonin karakterini belirleyen bir ayar hâline gelir ve ileride oynanış kaldıracı olarak kullanılabilir: çok keşfeden koloni kandırılması zor ama tahmin edilebilirliği düşük, az keşfeden koloni kolay tuzağa düşer.
+
+**Ölçülen değerler:** Keşif oranı 0,35 ve böcek başına hücreye 2 birim feromon ile koloni dağılarak başlar, birkaç dalga tereddüt eder ve 6-8 dalgada tek koridora yerleşir. Sürünün dalga bazında baskın koridor payı: 0,42 → 0,75 → 0,58 → 0,58 → 0,75 → 0,92 → 0,92 → 1,00.
+
 ---
 
 ## 5. İlk Kesit İçeriği (vertical slice)

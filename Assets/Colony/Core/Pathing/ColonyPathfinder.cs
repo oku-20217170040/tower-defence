@@ -91,14 +91,23 @@ namespace Colony.Core
             return false;
         }
 
-        /// <summary>Manhattan mesafesi. Minimum adim maliyeti 1 oldugu icin kabul edilebilirdir.</summary>
+        /// <summary>
+        /// Manhattan mesafesi, en dusuk olasi adim maliyetiyle olceklenir.
+        /// Kesif sapmasi acikken bir adim 1 * (1 - ExplorationNoise) kadar ucuz
+        /// olabilir; sezgisel bunu hesaba katmazsa maliyeti FAZLA tahmin eder,
+        /// kabul edilebilirligini yitirir ve A* en kisa yolu kacirabilir.
+        /// </summary>
         private float Heuristic(int from, int to)
         {
             int dx = grid.X(from) - grid.X(to);
             int dy = grid.Y(from) - grid.Y(to);
             if (dx < 0) dx = -dx;
             if (dy < 0) dy = -dy;
-            return dx + dy;
+
+            float minStepCost = 1f - costModel.ExplorationNoise;
+            if (minStepCost < 0f) minStepCost = 0f;
+
+            return (dx + dy) * minStepCost;
         }
 
         private void Retrace(int start, int goal, List<int> result)
