@@ -28,6 +28,7 @@ namespace Colony.Runtime
         public float weakenOnDeath = 2.5f;
 
         private ColonyWorld world;
+        private NestHealth nest;
         private readonly List<int> path = new List<int>();
         private readonly List<int> visited = new List<int>();
         private int pathIndex;
@@ -38,13 +39,20 @@ namespace Colony.Runtime
 
         public bool ReachedNest { get; private set; }
 
+        /// <summary>Bu bocegin cani. Kuleler hedef secerken kullanir.</summary>
+        public BugHealth Health { get; private set; }
+
+        /// <summary>Yuvaya ulasirsa bu kadar can eksiltir.</summary>
+        public int damageToNest = 1;
+
         /// <summary>
         /// Bocegi baslatir. Rota bulunamazsa false doner ve bocek hemen biter -
         /// gecerli haritada bu olmamali, olursa dogrulamada bir sorun var demektir.
         /// </summary>
-        public bool Initialize(ColonyWorld world, int spawnCell)
+        public bool Initialize(ColonyWorld world, int spawnCell, NestHealth nest)
         {
             this.world = world;
+            this.nest = nest;
 
             visited.Clear();
             pathIndex = 0;
@@ -63,6 +71,10 @@ namespace Colony.Runtime
 
             transform.position = world.Space.CellToWorld(spawnCell);
             EnterCell(path[0]);
+
+            Health = GetComponent<BugHealth>();
+            world.RegisterBug(this);
+
             active = true;
             return true;
         }
@@ -118,6 +130,7 @@ namespace Colony.Runtime
             active = false;
 
             world.Pheromone.WeakenTrail(visited, weakenOnDeath);
+            world.UnregisterBug(this);
 
             Finished?.Invoke(this);
             Destroy(gameObject);

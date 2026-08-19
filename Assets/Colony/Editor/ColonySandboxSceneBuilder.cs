@@ -46,10 +46,22 @@ namespace Colony.EditorTools
             overlayGo.AddComponent<SpriteRenderer>();
             var overlay = overlayGo.AddComponent<PheromoneOverlay>();
 
+            // ── Yuva ────────────────────────────────────────────────
+            var nestGo = new GameObject("NestHealth");
+            var nest = nestGo.AddComponent<NestHealth>();
+
             // ── Bocekler ────────────────────────────────────────────
             var spawnerGo = new GameObject("BugSpawner");
             var spawner = spawnerGo.AddComponent<BugSpawner>();
             spawner.world = world;
+            spawner.nest = nest;
+
+            // ── Run akisi ───────────────────────────────────────────
+            var runGo = new GameObject("RunController");
+            var run = runGo.AddComponent<RunController>();
+            run.world = world;
+            run.spawner = spawner;
+            run.nest = nest;
 
             // ── Kule yerlestirme ────────────────────────────────────
             var placerGo = new GameObject("TowerPlacer");

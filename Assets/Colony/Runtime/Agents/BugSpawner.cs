@@ -4,28 +4,16 @@ using UnityEngine;
 namespace Colony.Runtime
 {
     /// <summary>
-    /// Dalgalar halinde bocek uretir ve dalga sonunda feromonu sonumler.
-    ///
-    /// Plan 2'de bocekler olmez, sadece yurur. Amac savas degil, rota
-    /// ogrenmesinin GORUNUR olmasi. Ilk dalgalarda surunun dagilmasi,
-    /// birkac dalga sonra tek koridorda toplanmasi beklenir.
+    /// Bocek uretir. Dalga akisini artik RunController surer; bu sinif
+    /// yalnizca "su kadar bocegi bu canla cikar" emrini yerine getirir.
     /// </summary>
     public sealed class BugSpawner : MonoBehaviour
     {
         public ColonyWorld world;
-
-        [Header("Dalga")]
-        [Tooltip("Her dalgada kac bocek cikar.")]
-        public int bugsPerWave = 12;
+        public NestHealth nest;
 
         [Tooltip("Bocekler arasi spawn araligi (saniye).")]
         public float spawnInterval = 0.35f;
-
-        [Tooltip("Dalga bittikten sonra sonraki dalgaya kadar beklenen sure.")]
-        public float delayBetweenWaves = 1.5f;
-
-        [Tooltip("Otomatik olarak dalga uretmeye basla.")]
-        public bool autoStart = true;
 
         [Header("Gorunum")]
         public Color bugColor = new Color(0.85f, 0.82f, 0.75f);
@@ -37,56 +25,31 @@ namespace Colony.Runtime
         [Tooltip("Cizim sirasi. Feromon katmaninin ustunde olmali.")]
         public int sortingOrder = 20;
 
-        public int WaveNumber { get; private set; }
         public int AliveCount { get; private set; }
+
+        /// <summary>Run boyunca oldurulen toplam bocek.</summary>
+        public int TotalKilled { get; private set; }
+
+        /// <summary>Run boyunca yuvaya ulasan toplam bocek.</summary>
+        public int TotalLeaked { get; private set; }
 
         private void Awake()
         {
             if (world == null) world = FindFirstObjectByType<ColonyWorld>();
+            if (nest == null) nest = FindFirstObjectByType<NestHealth>();
         }
 
-        private void Start()
-        {
-            if (autoStart) StartCoroutine(RunWaves());
-        }
-
-        private IEnumerator RunWaves()
-        {
-            // ColonyWorld.Awake'in bitmesini bekle.
-            while (world == null || world.Grid == null)
-                yield return null;
-
-            while (true)
-            {
-                WaveNumber++;
-
-                // Yem kalici degildir: basarili tuzak kendini yer ve yemin
-                // surekli beslenmesi gerekir (spec 3.3).
-                world.ApplyLures();
-
-                yield return SpawnWave(bugsPerWave, spawnInterval);
-
-                while (AliveCount > 0)
-                    yield return null;
-
-                // Dalga sonunda izler sonumlenir; kullanilmayan rotalar unutulur.
-                world.Pheromone.Decay();
-
-                Debug.Log("[BugSpawner] Dalga " + WaveNumber + " bitti.");
-                yield return new WaitForSeconds(delayBetweenWaves);
-            }
-        }
-
-        public IEnumerator SpawnWave(int count, float interval)
+        /// <summary>Tek bir dalga uretir ve spawn bitene kadar bekler.</summary>
+        public IEnumerator SpawnWave(int count, float hpPerBug)
         {
             for (int i = 0; i < count; i++)
             {
-                SpawnOne();
-                yield return new WaitForSeconds(interval);
+                SpawnOne(hpPerBug);
+                yield return new WaitForSeconds(spawnInterval);
             }
         }
 
-        private void SpawnOne()
+        private void SpawnOne(float hpPerBug)
         {
             var go = new GameObject("Bug");
             go.transform.SetParent(transform, false);
@@ -99,18 +62,31 @@ namespace Colony.Runtime
             renderer.color = bugColor;
             renderer.sortingOrder = sortingOrder;
 
+            var health = go.AddComponent<BugHealth>();
             var agent = go.AddComponent<BugAgent>();
+
+            health.Initialize(hpPerBug);
+            health.Died += OnBugDied;
             agent.Finished += OnBugFinished;
 
-            if (agent.Initialize(world, world.RandomSpawnCell()))
+            if (agent.Initialize(world, world.RandomSpawnCell(), nest))
                 AliveCount++;
             else
                 Destroy(go);
         }
 
+        private void OnBugDied(BugHealth health)
+        {
+            health.Died -= OnBugDied;
+            TotalKilled++;
+        }
+
         private void OnBugFinished(BugAgent agent)
         {
             agent.Finished -= OnBugFinished;
+
+            if (agent.ReachedNest) TotalLeaked++;
+
             AliveCount--;
             if (AliveCount < 0) AliveCount = 0;
         }

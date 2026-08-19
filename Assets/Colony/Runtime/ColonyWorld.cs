@@ -92,6 +92,23 @@ namespace Colony.Runtime
         public event Action WorldRebuilt;
 
         private readonly List<ColonyTower> towers = new List<ColonyTower>();
+        private readonly List<BugAgent> activeBugs = new List<BugAgent>();
+
+        /// <summary>
+        /// Sahnedeki canli bocekler. Kuleler hedef ararken bunu kullanir;
+        /// her karede tum sahneyi taramak kabul edilemez.
+        /// </summary>
+        public IReadOnlyList<BugAgent> ActiveBugs => activeBugs;
+
+        public void RegisterBug(BugAgent bug)
+        {
+            if (bug != null && !activeBugs.Contains(bug)) activeBugs.Add(bug);
+        }
+
+        public void UnregisterBug(BugAgent bug)
+        {
+            if (bug != null) activeBugs.Remove(bug);
+        }
 
         /// <summary>Sahnedeki tum kuleler. Yalnizca okuma icin.</summary>
         public IReadOnlyList<ColonyTower> Towers => towers;

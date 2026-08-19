@@ -87,29 +87,25 @@ Mermi yok; hasar sürekli ve anlıktır. Mermi görselleri Plan 5'in işi.
 
 ---
 
-### Görev 4: Ölüm geri beslemesinin dengelenmesi
+### Görev 4: Zorluk eğrisinin dengelenmesi
 
-**Bu planın asıl görevi.** Diğer üçü bunu ölçebilmek için yapılıyor.
+*(19 Ağustos 2026'da ölçüm sonrası yeniden yazıldı. Özgün hali "ölüm geri beslemesinin dengelenmesi" idi; ölçüm o düğmenin işe yaramadığını gösterdi.)*
 
-**Dosyalar:**
-- Oluştur: `Assets/Colony/Tests/EditMode/ColonyTrapFeedbackTests.cs`
-- Değiştir: ölçüm sonucuna göre `BugAgent.weakenOnDeath` ve kule hasar değerleri
+**Ölçüm ne gösterdi:** Sabit canlı böceklerde tuzak ya hep ya hiç çalışıyor. Bir böcek 4 yarıçaplı kulenin menzilinde ~3,2 saniye geçiriyor; dps 3'te toplam hasar 9,6 (10 canlı böcek sağ kurtulur), dps 4'te 12,8 (hepsi ölür). Arada gradyan yok.
 
-**Ölçülecek soru:** Oyuncu bir tuzak koridoru kurduğunda ne oluyor?
+Daha kötüsü, `weakenOnDeath` değerini 6'dan 15'e çıkarmak sonucu değiştirmedi (82 → 81 ölüm). Yani "ölüm geri beslemesini ayarlama" diye planladığım düğme, yüksek ölüm oranında hiçbir şey yapmıyor.
 
-Üç olası sonuç var ve hangisinin gerçekleştiğini tahmin etmiyoruz, ölçüyoruz:
+**Yeni yaklaşım:** Asıl zorluk düğmesi dalga başına can artışı. Sabit bir tuzak zamanla yetersiz kalır ve oyuncu genişletmek, taşımak ya da yükseltmek zorunda kalır. Bu, TD türünün kanıtlanmış baskısıdır ve ölçümün gösterdiği eşik davranışıyla uyumludur.
 
-1. **Tuzak kendini yer (isteneni):** Böcekler ölür, iz zayıflar, sürü başka koridora kayar. Oyuncu tuzağı taşımak ya da yemle beslemek zorunda kalır. Sürekli karar üretir.
-2. **Tuzak kalıcıdır:** Ölüm izi yeterince zayıflatmaz, sürü akmaya devam eder. Oyuncu bir kez kurar ve unutur — karar üretmez, sıkıcıdır.
-3. **Tuzak anında çöker:** İlk ölümlerde iz siliner, sürü dağılır, oyuncu hiçbir zaman kazanç sağlayamaz. Sinir bozucudur.
+**Uygulanan değerler:** böcek canı `10 * (1 + 0,15 * (dalga - 1))`, dalga başına böcek `10 + (dalga - 1)`, gürültücü kule 10 dps, sessiz kule 4 dps, yuva canı 20, run 15 dalga.
 
-- [ ] **Adım 1:** `execute_code` ile tarama: `weakenOnDeath` × sessiz kule DPS kombinasyonları. Ölçülecek çıktı: tuzak koridorundaki sürü payının dalga dalga seyri ve toplam öldürülen böcek sayısı.
-- [ ] **Adım 2:** Kazanan değerleri koda geçir.
-- [ ] **Adım 3:** `ColonyTrapFeedbackTests` yaz — seçilen davranışı kalıcı olarak koru.
+- [ ] **Adım 1:** `execute_code` ile tam run simülasyonu: 15 dalga, oyuncu tuzağı sabit. Ölçülecek: hangi dalgada tuzak yetersiz kalmaya başlıyor, yuva canı ne zaman bitiyor.
+- [ ] **Adım 2:** Hedef eğri: oyuncu hiçbir şey yapmazsa 8-11. dalga civarında kaybetmeli. Daha erken ise oyuncunun tepki verecek zamanı olmaz; daha geç ise ilk yarı anlamsızlaşır.
+- [ ] **Adım 3:** `ColonyDifficultyTests` yaz — seçilen eğriyi kalıcı olarak koru.
 - [ ] **Adım 4:** Bulguyu spec'e işle (yeni alt bölüm 3.8).
-- [ ] **Adım 5:** Commit — `denge: olum geri beslemesi`
+- [ ] **Adım 5:** Commit — `denge: zorluk egrisi`
 
----
+**Not — Plan 4'e devredilen tasarım sorunu:** Yem kulesi her dalga otomatik ve bedava tazeleniyor. Spec 3.3 "başarılı tuzak kendini yer, yem sürekli beslenmeli" diyordu; ama besleme otomatikse besleme diye bir karar kalmıyor. Bunun gerçek karşılığı ekonomi: yem tazelemenin bir maliyeti olmalı.
 
 ### Görev 5: Ekranda geri bildirim
 
