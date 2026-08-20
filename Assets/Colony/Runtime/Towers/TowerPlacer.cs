@@ -1,4 +1,5 @@
 using UnityEngine;
+using Colony.Core;
 
 namespace Colony.Runtime
 {
@@ -33,6 +34,13 @@ namespace Colony.Runtime
         [Tooltip("Sessiz kulenin saniyelik hasari. Dusuktur ama surekli is gorur - " +
                  "tuzak koridorunda gercek katliami bu yapar.")]
         public float silentDps = 4f;
+
+        [Header("Draft Pasifleri")]
+        [Tooltip("Draft'tan gelen kalici hasar carpani.")]
+        public float damageMultiplier = 1f;
+
+        [Tooltip("Draft'tan gelen kalici menzil carpani.")]
+        public float rangeMultiplier = 1f;
 
         public int sortingOrder = 15;
 
@@ -116,7 +124,8 @@ namespace Colony.Runtime
                       : (kind == TowerKind.Silent ? silentDps : 0f);
 
             if (dps > 0f)
-                go.AddComponent<TowerWeapon>().Bind(world, tower.radius, dps);
+                go.AddComponent<TowerWeapon>().Bind(
+                    world, tower.radius * rangeMultiplier, dps * damageMultiplier);
 
             // Titresim halkasi YALNIZCA gurultucu kulede. Halkasizlik,
             // "koloni beni goremiyor" demenin gorsel yoludur (spec 9.1).

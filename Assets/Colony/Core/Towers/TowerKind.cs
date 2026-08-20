@@ -1,4 +1,4 @@
-namespace Colony.Runtime
+namespace Colony.Core
 {
     /// <summary>
     /// Kule sinifi. Oyunun merkezi ayrimi budur (spec 3.1-3.2).

@@ -67,10 +67,10 @@ Aynı türden her yeni kule biraz daha pahalıya gelmeli; aksi halde oyuncu tek 
 
 Seçenek türleri: bedava kule, kule indirimi, besin, kalıcı pasif (menzil/hasar artışı).
 
-- [ ] **Adım 1:** `DraftOption` ve `DraftGenerator` — 3 seçenek üretir, koloni durumunu girdi alır.
-- [ ] **Adım 2:** `DraftGeneratorTests` — aynı seed aynı seçenekleri verir, seçenekler tekrarlanmaz, koloni durumu dağılımı etkiler.
-- [ ] **Adım 3:** `DraftView` — dalga sonunda 3 seçenek gösterir, seçim yapılana kadar bekler.
-- [ ] **Adım 4:** Commit — `ozellik: dalga sonu draft`
+- [x] **Adım 1:** `DraftOption` ve `DraftGenerator` — 3 seçenek üretir, koloni durumunu girdi alır.
+- [x] **Adım 2:** `DraftGeneratorTests` — aynı seed aynı seçenekleri verir, seçenekler tekrarlanmaz, koloni durumu dağılımı etkiler.
+- [x] **Adım 3:** `DraftView` — dalga sonunda 3 seçenek gösterir, seçim yapılana kadar bekler.
+- [x] **Adım 4:** Commit — `ozellik: dalga sonu draft`
 
 ---
 

@@ -41,6 +41,15 @@ namespace Colony.Runtime
 
         public RunEconomy Economy { get; private set; }
 
+        [Header("Draft Odulleri")]
+        [Tooltip("Indirim toplaminin ust siniri (yuzde). Sinirsiz indirim " +
+                 "ekonomiyi anlamsizlastirir.")]
+        public int maxDiscountPercent = 60;
+
+        // Kule turu basina birikmis indirim ve bedava kule hakki.
+        private readonly int[] discountPercent = new int[3];
+        private readonly int[] freeVouchers = new int[3];
+
         private BugSpawner spawner;
         private RunController run;
         private ColonyWorld world;
@@ -89,8 +98,32 @@ namespace Colony.Runtime
         /// <summary>Bu turden bir sonraki kulenin fiyati.</summary>
         public int CostFor(TowerKind kind)
         {
-            return BaseCostFor(kind) + costStepPerSameKind * CountOf(kind);
+            if (freeVouchers[(int)kind] > 0) return 0;
+
+            int raw = BaseCostFor(kind) + costStepPerSameKind * CountOf(kind);
+            int off = discountPercent[(int)kind];
+            if (off <= 0) return raw;
+
+            return raw * (100 - off) / 100;
         }
+
+        /// <summary>Draft odulu: bu turden bir kule bedava.</summary>
+        public void GrantFreeTower(TowerKind kind)
+        {
+            freeVouchers[(int)kind]++;
+        }
+
+        /// <summary>Draft odulu: bu turun fiyatinda kalici indirim.</summary>
+        public void AddDiscount(TowerKind kind, int percent)
+        {
+            int total = discountPercent[(int)kind] + percent;
+            if (total > maxDiscountPercent) total = maxDiscountPercent;
+            discountPercent[(int)kind] = total;
+        }
+
+        public int DiscountFor(TowerKind kind) { return discountPercent[(int)kind]; }
+
+        public int FreeTowersFor(TowerKind kind) { return freeVouchers[(int)kind]; }
 
         public bool CanAfford(TowerKind kind)
         {
@@ -100,6 +133,12 @@ namespace Colony.Runtime
         /// <summary>Satin almayi dener. Basarisizsa hicbir sey degismez.</summary>
         public bool TryBuy(TowerKind kind)
         {
+            if (freeVouchers[(int)kind] > 0)
+            {
+                freeVouchers[(int)kind]--;
+                return true;
+            }
+
             return Economy.TrySpend(CostFor(kind));
         }
 

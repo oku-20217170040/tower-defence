@@ -83,6 +83,14 @@ namespace Colony.EditorTools
             hud.placer = placer;
             hud.economy = economy;
 
+            // ── Dalga sonu draft ────────────────────────────────────
+            var draftGo = new GameObject("DraftView");
+            var draft = draftGo.AddComponent<DraftView>();
+            draft.world = world;
+            draft.economy = economy;
+            draft.placer = placer;
+            run.draft = draft;
+
             // ── Baglayici ───────────────────────────────────────────
             var binderGo = new GameObject("ColonyViewBinder");
             var binder = binderGo.AddComponent<ColonyViewBinder>();

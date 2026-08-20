@@ -24,6 +24,7 @@ namespace Colony.Runtime
         public ColonyWorld world;
         public BugSpawner spawner;
         public NestHealth nest;
+        public DraftView draft;
 
         [Header("Run")]
         [Tooltip("Run kac dalga surer.")]
@@ -60,6 +61,7 @@ namespace Colony.Runtime
             if (world == null) world = FindFirstObjectByType<ColonyWorld>();
             if (spawner == null) spawner = FindFirstObjectByType<BugSpawner>();
             if (nest == null) nest = FindFirstObjectByType<NestHealth>();
+            if (draft == null) draft = FindFirstObjectByType<DraftView>();
         }
 
         private void OnEnable()
@@ -110,6 +112,17 @@ namespace Colony.Runtime
 
                 while (spawner.AliveCount > 0 && State == RunState.Running)
                     yield return null;
+
+                if (State != RunState.Running) break;
+
+                // Draft, iz sonmeden ONCE acilir: sunulan secenekler koloninin
+                // o dalgada ogrendigi seye gore tartilir (spec 2.2).
+                if (draft != null && CurrentWave < totalWaves)
+                {
+                    draft.Open(CurrentWave + 1);
+                    while (draft.IsOpen && State == RunState.Running)
+                        yield return null;
+                }
 
                 if (State != RunState.Running) break;
 

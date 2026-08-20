@@ -1,4 +1,5 @@
 using UnityEngine;
+using Colony.Core;
 
 namespace Colony.Runtime
 {
