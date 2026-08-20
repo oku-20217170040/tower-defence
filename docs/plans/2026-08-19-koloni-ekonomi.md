@@ -106,3 +106,35 @@ Seçenek türleri: bedava kule, kule indirimi, besin, kalıcı pasif (menzil/has
 - **Genetik katmanın run'lar arası evrimi (nemesis)** — Plan 5.
 - **Blender asset'leri, ses, animasyon** — Plan 6.
 - **Yem tazelemenin maliyeti** — Plan 3'ten devredilen tasarım sorunu. Yem kulesi şu an her dalga bedava tazeleniyor ve bu, spec 3.3'ün istediği "beslemeye devam etme" kararını ortadan kaldırıyor. Görev 4'te ekonomiyle birlikte ölçülüp karara bağlanacak.
+
+
+---
+
+## Ek: Ekonomiyi sıkma denemesi — 20 Ağustos 2026 (dört tur ölçüm)
+
+**Talep:** 8-10. dalgada 6-8 kule (şu an 14,5). Kalibre `RunSimulator` ile ölçüldü.
+
+**Sonuç: bu bant mevcut yapıda ulaşılamıyor.** Ekonomi ikili davranıyor — ya kritik kule kütlesine ulaşıp kazanıyorsun (w8 ≈ 14), ya ulaşamayıp çöküyorsun (w8 ≈ 0-3). Arada bant yok. w8 = 10-11 olan kombinasyonlar bile %0 kazanıyor.
+
+### Tur 1 — gelir ve fiyat düğmeleri
+Öldürme geliri (1/2/3) × fiyat artışı (5/8/12) × draft. **Gelir ve fiyat neredeyse hiç fark yaratmadı.** Draft bedava kule vermeyi bırakınca her kombinasyon %0'a düştü. Ekonominin gerçek kaynağı para akışı değil, draft ödülü.
+
+### Tur 2 — draft sıklığı
+Bedava kule her dalga / 2 dalgada bir / 3 dalgada bir. Yine uçurum: 1/1 → %100 (w8=14); 1/2 + besin ödülü yoksa → %0. Ara değer yok.
+
+### Tur 3 — taban geliri yükselt, öldürme gelirini kıs
+Dalga geliri 20-30, öldürme 0-1, sessiz fiyat 24-40. 16 kombinasyondan yalnızca biri kazandı (yine w8=14). Sarmal kırılmadı.
+
+### Tur 4 — asıl sebep bulundu: böcek canı büyümesi
+
+| Can büyümesi | Kazanan kombinasyon sayısı | En düşük kazanan w8 |
+|---|---|---|
+| **%15 (mevcut)** | 4'te 1 | 14,0 |
+| %10 | 4'te 3 | 12,1 |
+| %6 | 4'te 3 | 12,5 |
+
+Sarmalın kaynağı **`hpGrowthPerWave = 0,15`**. Böcek canı her dalga %15 büyüdüğü için yetersiz kule sayısı hızla öldürme kaybına, o da gelir kaybına dönüşüyor. %10'a inince eşik yumuşuyor ve ekonomi ayarlanabilir hale geliyor — fiyat 40'a çıkarılsa bile run kazanılabiliyor.
+
+**Yine de 6-8 bandına ulaşılamadı; en düşük kazanan değer 12.** Bandı açmak için kule *sayısını* değil kule *gücünü* ölçeklendiren bir sistem (yükseltme) gerekiyor — bu Plan 5'in konusu.
+
+**Karar bekliyor:** can büyümesini %10'a düşürüp ekonomiyi yeniden mi ayarlayalım, yoksa mevcut bandı (14 kule) kabul edip hedefi mi güncelleyelim.

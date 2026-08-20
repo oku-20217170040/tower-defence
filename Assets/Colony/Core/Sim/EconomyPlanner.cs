@@ -66,6 +66,14 @@ namespace Colony.Core
             /// <summary>Draft her dalga bedava kule veriyor mu?</summary>
             public bool DraftGivesFreeTower;
 
+            /// <summary>
+            /// Kac dalgada bir bedava kule verilir. 1 = her dalga.
+            /// Olcum bunun ekonominin ASIL dugmesi oldugunu gosterdi: gelir
+            /// ve fiyat artisi degistirilince sonuc neredeyse hic degismiyor,
+            /// bedava kule kesilince ise her kombinasyon cokuyor.
+            /// </summary>
+            public int FreeTowerEveryNWaves;
+
             /// <summary>Draft bedava kule vermedigi dalgalarda kazanilan besin.</summary>
             public int DraftFoodReward;
 
@@ -90,6 +98,7 @@ namespace Colony.Core
                     NoisyThreatStrength = 4f,
                     NoisyTargeting = RunSimulator.Targeting.Splash,
                     DraftGivesFreeTower = true,
+                    FreeTowerEveryNWaves = 1,
                     DraftFoodReward = 0
                 };
             }
@@ -158,7 +167,9 @@ namespace Colony.Core
             economy.Earn(costs.FoodPerWave);
 
             // Draft odulu: ya bedava kule ya besin.
-            if (policy.DraftGivesFreeTower) freeTowers++;
+            int every = policy.FreeTowerEveryNWaves > 0 ? policy.FreeTowerEveryNWaves : 1;
+
+            if (policy.DraftGivesFreeTower && wave % every == 0) freeTowers++;
             else if (policy.DraftFoodReward > 0) economy.Earn(policy.DraftFoodReward);
         }
 
