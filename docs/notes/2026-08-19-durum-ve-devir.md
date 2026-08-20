@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 129 EditMode testi, 129 geçiyor (20 Ağu 2026)
+**Test durumu:** 133 EditMode testi, 133 geçiyor (20 Ağu 2026)
 **Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -48,9 +48,18 @@ Eski `Assets/Scripts/` hâlâ duruyor, silinmedi.
 
 **Kalibrasyon:** aynı 24 kule kurulumu `RunSimulator`'da 223,5 öldürme veriyor (gerçek 209, %7 fark) — simülatör doğrulanmış sayılır. Sızıntıda fark var (sim 1,5 / gerçek 16) çünkü sim kuleleri baştan kurulu kabul ediyor, oyuncu ise dalga dalga kuruyor. **Yani sızıntının neredeyse tamamı erken dalgalarda, kuleler azken oluşuyor.**
 
-**Buradan çıkan iki iş:**
-1. `RunSimulator`'a ekonomi + draft eklenip kulelerin zamanla kurulması modellenmeli. O zaman sim gerçek sızıntıyı (16) üretmeli; ürettiğinde denge sayıları güvenle yeniden ölçülebilir.
-2. **Geç oyun ekonomisi gevşek.** Hedef "8-10. dalgada 4-5 kule" idi; gerçekte run 24 kule ve 116 artan besinle bitiyor. Yuva canının yarısı yine de gidiyor — yani zorluk erken dalgalardan geliyor, geç oyun rahat.
+**Kalibrasyon tamamlandı (`EconomyPlanner` + `RunCalibrationTests`).** Simülatöre ekonomi, draft ve kulelerin zamanla kurulması eklendi. 10 seed ortalaması, gerçek run'ın yanında:
+
+| | Gerçek run | Simülatör | Fark |
+|---|---|---|---|
+| Öldürme | 209 | 206,7 | %1 |
+| Sızıntı | 16 | 18,3 | %14 |
+| Kule | 24 | 27,2 | %13 |
+| Artan besin | 116 | 107,7 | %7 |
+
+**Simülatör artık güvenilir bir ölçüm aracıdır.** Denge sayıları bununla yeniden ölçülebilir.
+
+**Açık kalan iş: geç oyun ekonomisi gevşek.** Hedef "8-10. dalgada 4-5 kule" idi; gerçekte run 24 kule ve 116 artan besinle bitiyor. Yuva canının yarısı yine de gidiyor — yani zorluk erken dalgalardan geliyor, geç oyun rahat.
 
 Aşağıdaki tablodaki savaş sayıları hâlâ sıralı modelle seçilmiştir; eski üç denge test dosyasının başına da uyarı konuldu. Testler geçiyor ama ölçtükleri şey gerçek oyun değil.
 

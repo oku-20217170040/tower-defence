@@ -93,6 +93,22 @@ namespace Colony.Core
             }
         }
 
+        /// <summary>
+        /// Dalga aralarina karisan oyuncu modeli. Ekonomiyi ve kule satin
+        /// almayi simulatorun disinda tutar: simulator yalnizca savasi bilir.
+        /// </summary>
+        public interface IRunPlanner
+        {
+            /// <summary>Dalga baslamadan once cagrilir; kule listesi degistirilebilir.</summary>
+            void OnWaveStart(int wave, List<TowerSpec> towers);
+
+            /// <summary>Bir bocek olduruldu.</summary>
+            void OnBugKilled();
+
+            /// <summary>Dalga bitti (yuva hala ayakta).</summary>
+            void OnWaveEnd(int wave);
+        }
+
         public struct RunResult
         {
             public bool Survived;
@@ -128,6 +144,19 @@ namespace Colony.Core
 
         public RunResult Run(IReadOnlyList<TowerSpec> towers, Settings settings, int seed)
         {
+            var copy = new List<TowerSpec>(towers);
+            return Run(copy, settings, seed, null);
+        }
+
+        /// <summary>
+        /// Planner verilirse kule listesi dalga aralarinda degisebilir; boylece
+        /// oyuncunun kuleleri ZAMANLA kurmasi modellenir. Gercek run ile
+        /// karsilastirinca sizintinin neredeyse tamaminin erken dalgalarda,
+        /// kuleler azken olustugu goruldu - sabit kule listesiyle bu hic
+        /// gorunmuyordu.
+        /// </summary>
+        public RunResult Run(List<TowerSpec> towers, Settings settings, int seed, IRunPlanner planner)
+        {
             var pheromone = new PheromoneMap(grid, 100f, 0.15f);
             var lure = new LureField(grid, 25f, 0.5f);
             var threat = new ThreatField(grid);
@@ -142,8 +171,6 @@ namespace Colony.Core
             var finder = new ColonyPathfinder(grid, model);
             var random = new Random(seed);
 
-            BuildFields(towers, threat, slow);
-
             var result = new RunResult { LostAtWave = -1 };
             int nestHp = settings.NestHp;
 
@@ -152,6 +179,13 @@ namespace Colony.Core
 
             for (int wave = 1; wave <= settings.TotalWaves && nestHp > 0; wave++)
             {
+                if (planner != null) planner.OnWaveStart(wave, towers);
+
+                // Kule listesi degismis olabilir; alanlar her dalga yeniden kurulur.
+                threat.Clear();
+                slow.Clear();
+                BuildFields(towers, threat, slow);
+
                 float bugHp = settings.BaseBugHp * (1f + settings.HpGrowthPerWave * (wave - 1));
                 int toSpawn = (int)Math.Round(
                     settings.BaseBugsPerWave + settings.BugsAddedPerWave * (wave - 1));
@@ -195,6 +229,7 @@ namespace Colony.Core
                             bug.Alive = false;
                             pheromone.WeakenTrail(bug.Visited, settings.WeakenOnDeath);
                             result.TotalKilled++;
+                            if (planner != null) planner.OnBugKilled();
                             Recycle(bug, active, pool, i);
                             continue;
                         }
@@ -212,6 +247,8 @@ namespace Colony.Core
 
                 pheromone.Decay();
 
+                if (nestHp > 0 && planner != null) planner.OnWaveEnd(wave);
+
                 if (nestHp <= 0 && result.LostAtWave < 0) result.LostAtWave = wave;
             }
 
@@ -220,7 +257,7 @@ namespace Colony.Core
             return result;
         }
 
-        private void BuildFields(IReadOnlyList<TowerSpec> towers, ThreatField threat, SlowField slow)
+        private void BuildFields(List<TowerSpec> towers, ThreatField threat, SlowField slow)
         {
             for (int i = 0; i < towers.Count; i++)
             {
@@ -283,7 +320,7 @@ namespace Colony.Core
             }
         }
 
-        private void Fire(IReadOnlyList<TowerSpec> towers, List<Bug> active, Settings settings, float dt)
+        private void Fire(List<TowerSpec> towers, List<Bug> active, Settings settings, float dt)
         {
             for (int t = 0; t < towers.Count; t++)
             {
