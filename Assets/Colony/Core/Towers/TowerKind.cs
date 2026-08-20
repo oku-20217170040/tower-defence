@@ -25,6 +25,13 @@ namespace Colony.Core
         /// Hasar vermez. Koridora yapay feromon basarak suruyu oraya ceker.
         /// Etkisi kalici degildir; her dalga tazelenmesi gerekir.
         /// </summary>
-        Lure = 2
+        Lure = 2,
+
+        /// <summary>
+        /// Hasar vermez, tehdit YAZMAZ. Menzilindeki bocekleri yavaslatir;
+        /// bocek sessiz kulelerin menzilinde daha uzun kalir. Tek basina
+        /// degersizdir - degeri sessiz kuleyle eslesmesinden gelir.
+        /// </summary>
+        Resin = 3
     }
 }

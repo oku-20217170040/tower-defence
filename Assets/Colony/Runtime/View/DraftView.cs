@@ -170,6 +170,7 @@ namespace Colony.Runtime
         {
             if (kind == TowerKind.Noisy) return "gurultucu";
             if (kind == TowerKind.Silent) return "sessiz";
+            if (kind == TowerKind.Resin) return "recine";
             return "yem";
         }
     }

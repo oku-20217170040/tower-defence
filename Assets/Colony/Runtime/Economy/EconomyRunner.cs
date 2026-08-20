@@ -42,6 +42,10 @@ namespace Colony.Runtime
         [Tooltip("Yem kulesi orta fiyatlidir.")]
         public int lureCost = 16;
 
+        [Tooltip("Recine kulesi. Hasar vermedigi icin sessizden ucuz; degeri " +
+                 "yalnizca bir sessiz kuleyle eslestiginde ortaya cikiyor.")]
+        public int resinCost = 16;
+
         [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
                  "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]
         public int costStepPerSameKind = 5;
@@ -54,8 +58,8 @@ namespace Colony.Runtime
         public int maxDiscountPercent = 60;
 
         // Kule turu basina birikmis indirim ve bedava kule hakki.
-        private readonly int[] discountPercent = new int[3];
-        private readonly int[] freeVouchers = new int[3];
+        private readonly int[] discountPercent = new int[4];
+        private readonly int[] freeVouchers = new int[4];
 
         private BugSpawner spawner;
         private RunController run;
@@ -153,6 +157,7 @@ namespace Colony.Runtime
         {
             if (kind == TowerKind.Noisy) return noisyCost;
             if (kind == TowerKind.Lure) return lureCost;
+            if (kind == TowerKind.Resin) return resinCost;
             return silentCost;
         }
 

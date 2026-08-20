@@ -109,6 +109,14 @@ Taramanın iki bulgusu spec'e giriyor:
 
 **Not:** Simülasyon oyuncunun yalnızca sessiz kule aldığını varsayar (ölçülen en güçlü strateji), dolayısıyla **ulaşılabilir üst sınırı** ölçer. Gürültücü ve yem kulesinin fiyatları bu taramada test edilmedi; oranları korundu (12 / 16 / 24).
 
+### 3.5c Reçine kulesi — ölçüldü (20 Ağustos 2026)
+
+Menzilindeki böcekleri **yarı hıza** düşürür (x2 geçiş süresi), hasar vermez, **tehdit yazmaz**. Değeri tek başına sıfırdır; yalnızca bir sessiz kulenin menziline konduğunda ortaya çıkar — böcek o menzilde iki kat uzun kalır.
+
+Eşik keskin ölçüldü (6 kule bütçesi, 3 sessiz + 3 reçine, 20 seed): x1,5'te reçine ölü mekanik (%20 kazanma), x3'te oyunu çözüyor (sızıntı sıfır), yalnızca x2 saf sessiz kuleyle başa baş kalıyor (%95 vs %100) — yani oyuncuya gerçek bir seçim sunuyor, üstün bir alternatif değil.
+
+**Reçine tehdit yazmaz ve bu bir ölçüm sonucudur:** yazan versiyonda kazanma %95'ten %5'e düşüyor, çünkü koloni reçineden kaçıyor ve yavaşlatma hiçbir böceğe değmiyor. Bu yüzden `SlowField` ile `ThreatField` ayrı sınıflardır — algılanmayan etki, algılanan etkiden yapısal olarak farklıdır. Aynı sebeple **Saat (zaman yavaşlatıcı) kulesi eklenmedi**: reçine zaten yavaşlatmayı taşıyor.
+
 ### 3.6 Feromon görselleştirmesi
 
 Feromon izi ekranda görünür: parlayan, yoğunlukla kalınlaşan izler. Oyuncu hangi koridorun öğrenilmiş olduğunu bakışta anlar. Bu, mekaniğin arayüzüdür — ayrı bir UI paneline ihtiyaç bırakmaz.

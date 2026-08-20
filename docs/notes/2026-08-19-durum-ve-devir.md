@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 110 EditMode testi, 110 geçiyor (20 Ağu 2026)
+**Test durumu:** 122 EditMode testi, 122 geçiyor (20 Ağu 2026)
 **Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -43,6 +43,7 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Çekim ağırlığı | 3 | 6 iken doymuş iz bir duvar; 2 iken sürü ilk dalgada pes ediyor |
 | Tehdit ağırlığı | 3 | — |
 | Böcek başına iz | 2 (0,5 yürürken + 1,5 varışta) | — |
+| Reçine yavaşlatma | x2 | x1,5 ölü mekanik (%20 kazanma), x3 oyunu çözüyor (sızıntı 0). Tehdit yazarsa %95 → %5 |
 | Sessiz kule DPS | 4 | 3'te hiç öldürmüyor, 4'te hepsini öldürüyor — eşik keskin |
 | Gürültücü kule DPS | 10 | Önünden geçen kalmadığı için gerçek DPS'i çok daha düşük |
 | Böcek canı | 10 × (1 + 0,15 × (dalga−1)) | Asıl zorluk düğmesi bu |

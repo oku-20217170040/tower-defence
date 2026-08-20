@@ -74,8 +74,9 @@ namespace Colony.Runtime
                 GUILayout.Space(8f);
                 GUILayout.Label("Secili: " + TurkishName(placer.Selected), labelStyle);
                 GUILayout.Label(PriceLine(TowerKind.Noisy, "1 Gurultucu") + "   " +
-                                PriceLine(TowerKind.Silent, "2 Sessiz") + "   " +
-                                PriceLine(TowerKind.Lure, "3 Yem"), labelStyle);
+                                PriceLine(TowerKind.Silent, "2 Sessiz"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Lure, "3 Yem") + "   " +
+                                PriceLine(TowerKind.Resin, "4 Recine"), labelStyle);
             }
 
             GUILayout.EndArea();
@@ -112,6 +113,7 @@ namespace Colony.Runtime
         {
             if (kind == TowerKind.Noisy) return "Gurultucu";
             if (kind == TowerKind.Silent) return "Sessiz";
+            if (kind == TowerKind.Resin) return "Recine";
             return "Yem";
         }
     }

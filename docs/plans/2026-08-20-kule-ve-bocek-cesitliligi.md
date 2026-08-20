@@ -16,7 +16,7 @@ Roster, mevcut eksene uyarlanarak alındı.
 | Sessiz | Var (4 dps) | Tek hedef, sürekli, tehdit yazmaz. Asıl katil. |
 | Gürültücü | Var (10 dps) | **Alan hasarı eklenecek.** Yüksek tehdit yazımı; yönlendirme aracı. |
 | Yem | Var | Pazarlıksız. Spec 3.4'ün "aha anı" ona bağlı. |
-| **Reçine** | Yeni | Yavaşlatır. Böcek koridorda uzun kalır → sessiz kulelerin gerçek DPS'i katlanır. **Ölçülecek soru:** tehdit yazsın mı? Yazarsa yönlendirici, yazmazsa muhtemelen fazla güçlü. |
+| **Reçine** | **Yapıldı** (20 Ağu) | Yavaşlatır (x2), tehdit yazmaz, fiyat 16. Böcek sessiz kulenin menzilinde uzun kalır. Tek başına değersiz. |
 | **Işın** | Yeni | Delip geçen hat hasarı. Kalabalık koridoru cezalandırır; koloninin tek koridora yığılmasıyla doğrudan çatışır. |
 
 **Saat (clock) kulesi — eklenmedi (20 Ağustos kararı).** Kısa süre düşünüldü, sonra çıkarıldı: Reçine zaten yavaşlatmayı sağlıyor. Reçine yerel ve kalıcı (menzilindeki böcek yavaş ilerler, bir *yerleştirme* kararıdır), Saat global ve anlık olacaktı (bir *zamanlama* kararı). Farklı eksende olsalar da oyuncunun kafasında ikisi aynı yere düşer ve roster'ı kalabalıklaştırır. Anlık müdahale aracı ilerde gerekirse Plan 5'te (meta ilerleme) yeniden değerlendirilir.
@@ -36,25 +36,30 @@ Bir böcek türü feromon/öğrenme ile etkileşmiyorsa yalnızca bir can rakam�
 | **Kuluçka** (bölünen) | Ölünce ikiye ayrılır ve ölüm yerine güçlü ölüm-izi bırakır. Oyuncunun kendi tuzağı koloniye "buradan gitme" diye işaretlenir. |
 | **Kraliçe** (boss) | Tehdit alanını temizler — koloninin korkusunu siler, öğrenmeyi resetler. |
 
-## Reçine ölçümü — 20 Ağustos, YARIM KALDI
+## Reçine ölçümü — 20 Ağustos, TAMAMLANDI
 
-İlk tarama yapıldı (`ResinScanTests`, `[Explicit]`, silinmedi — sonraki tur için duruyor). Sonuç **karar vermeye yetmiyor**; nedenini yazıyorum ki bir sonraki tur baştan başlamasın.
+**Seçilen değerler:** yavaşlatma çarpanı **x2** (yarım hız), tehdit **yazmaz**, fiyat 16.
 
-**Ne ölçüldü:** reçine karışım oranı (yok / 1-4 / 1-3 / 1-2) × yavaşlatma çarpanı (x1,5 / x2 / x3) × tehdit yazma × fiyat (16 / 24), 20 seed.
+Ölçüm sabit kule bütçesiyle yapıldı (ekonomi devre dışı, kuleler baştan kurulu), 20 seed. 6 kule bütçesi, 3 sessiz + 3 reçine:
 
-**Güvenilir olan tek bulgu:** reçineyi sessiz kulenin *menziline* koymak şart. İlk modelde reçine bağımsız yerleştiriliyordu ve yavaşlatma çarpanının sonuca **hiç** etkisi olmuyordu — modelin yanlış olduğunun işaretiydi. Eşleştirilmiş yerleşimle etki ortaya çıktı.
+| Yavaşlatma | Kazanma | Ort. sızıntı | Sonuç |
+|---|---|---|---|
+| x1,5 | %20 | 28,8 | Reçine ölü mekanik — aldığı sessiz kulenin yerini dolduramıyor |
+| **x2** | **%95** | **17,5** | **Seçilen.** Saf sessizle (%100 / 12,7) başa baş → gerçek seçim |
+| x3 | %100 | 0,0 | Baskın strateji; sızıntıyı sıfırlıyor, oyunu çözüyor |
+| x2 + tehdit yazar | %5 | 29,8 | Koloni kaçıyor, yavaşlatma hiçbir böceğe değmiyor |
 
-**Modelin hâlâ çözemediği iki şey:**
+**Bulgu 1 — eşik yine keskin.** x1,5 ölü, x3 oyunu çözüyor, arada tek çalışan değer var. Bu projede üçüncü kez oluyor (sessiz kule DPS 3/4, keşif oranı 0/0,35/0,5).
 
-1. **1/4 karışımda yavaşlatma çarpanı sonucu değiştirmiyor** (x1,5 / x2 / x3 → hepsi %95, sızıntı 20,7). Muhtemel açıklama: tuzağın zaten öldürdüğü böceği daha hızlı öldürmek sonucu değiştirmiyor; sızıntının kaynağı korunmasız koridor (spec 3.5) ve yavaşlatma oraya dokunmuyor. Doğruysa bu bir tasarım gerçeği: **yavaşlatma yalnızca hasarın yetersiz kaldığı yerde iş görür.** Ama doğrulanmadı.
+**Bulgu 2 — reçine tehdit yazmamalı, ve bu ölçüldü.** Yazınca kazanma %95'ten %5'e düşüyor: koloni reçineden kaçıyor, yavaşlatma hiç kimseye değmiyor. `SlowField`'ın `ThreatField`'dan ayrı bir sınıf olmasının gerekçesi budur — algılanmayan bir etki, algılanan bir etkiden yapısal olarak farklıdır.
 
-2. **1/3 karışım açıklanamaz biçimde çöküyor:** 1/4 → %95 ve 12,6 kule, 1/3 → **%0** ve 5,4 kule, 1/2 → %100 ve 15,0 kule. Ortadaki oranın iki ucundan da kötü olması modelin bozuk olduğuna işaret ediyor; muhtemelen fiyat artışı (costStep) tür başına ayrı sayıldığı için karışım oranı ekonomiyi beklenmedik yönde buruyor.
+**Bulgu 3 — önceki taramanın "1/3 çöküyor" gizemi çözüldü.** Sorun reçinenin savaş değeri değilmiş: sabit bütçede 6 sessiz + 3 reçine %100 kazanıyor, ekonomiyle birlikte %0'dı. Sebep fiyat artışının (`costStep`) tür başına ayrı sayılması — karışım yapan oyuncu her iki türde de düşük sayıda kaldığı için ekonomi ona beklenmedik biçimde davranıyor. **Açık iş:** reçine artık oyunda olduğuna göre ekonomi eğrisi (Plan 4 Görev 4) karışımlı oyuncu politikasıyla yeniden ölçülmeli.
 
-**Sonraki tur için:** önce (2)'yi çöz — karışım oranının kule bütçesine etkisini ekonomiden ayır (sabit kule bütçesiyle koştur), sonra yavaşlatmanın etkisini ölç. Model düzelmeden reçine sayıları koda geçirilmemeli.
+**Uygulandı:** `Core/Fields/SlowField.cs`, `TowerKind.Resin`, `ColonyWorld.RebuildSlow()`, `BugAgent` hız bölümü, 4 tuşu, fiyat 16, draft seçeneklerine dahil. `ColonyResinTests` (5 test) ve `SlowFieldTests` (7 test) kararları kilitliyor.
 
 ## Sıra
 
 1. Plan 4 Görev 4 — ekonomi eğrisi ölçülüp kilitlenir (**önce bu**)
-2. Plan 7 Görev 1 — Reçine (ölçüm modeli düzeltilecek) ve Işın
+2. Plan 7 Görev 1 — ~~Reçine~~ **bitti**. Sırada: Gürültücü kuleye alan hasarı, sonra Işın
 3. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
 3. Plan 8 — böcek türleri, her biri kendi öğrenme testiyle

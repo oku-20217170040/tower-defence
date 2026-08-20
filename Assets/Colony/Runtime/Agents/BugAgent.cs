@@ -91,7 +91,11 @@ namespace Colony.Runtime
             }
 
             Vector2 target = world.Space.CellToWorld(path[nextIndex]);
-            float step = cellsPerSecond * world.Space.CellSize * Time.deltaTime;
+
+            // Recine alanindaki hucrede gecis suresi uzar. Bocek bunu
+            // ALGILAMAZ - rota degismez, yalnizca yavaslar.
+            float slow = world.Slow != null ? world.Slow.Get(path[pathIndex]) : SlowField.None;
+            float step = cellsPerSecond / slow * world.Space.CellSize * Time.deltaTime;
 
             transform.position = Vector2.MoveTowards(transform.position, target, step);
 

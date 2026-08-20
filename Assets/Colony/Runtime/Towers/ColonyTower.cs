@@ -21,6 +21,12 @@ namespace Colony.Runtime
                  "anlamsiz kilar, daha dusugu hic etki etmez.")]
         public float threatStrength = 4f;
 
+        [Tooltip("Recine kulesinin gecis suresi carpani. 2 olcumle secildi ve " +
+                 "esik keskin: 1,5'te recine olu mekanik (6 kule butcesinde " +
+                 "kazanma %20), 3'te sizintiyi sifira indirip baskin strateji " +
+                 "oluyor. 2'de saf sessiz kuleyle basa bas - yani gercek bir secim.")]
+        public float slowFactor = 2f;
+
         private ColonyWorld world;
 
         /// <summary>Kulenin durdugu izgara hucresi.</summary>

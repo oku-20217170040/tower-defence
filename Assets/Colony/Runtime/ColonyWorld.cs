@@ -76,6 +76,7 @@ namespace Colony.Runtime
         public PheromoneMap Pheromone { get; private set; }
         public LureField Lure { get; private set; }
         public ThreatField Threat { get; private set; }
+        public SlowField Slow { get; private set; }
         public RouteCostModel CostModel { get; private set; }
         public ColonyPathfinder Pathfinder { get; private set; }
         public GridSpace Space { get; private set; }
@@ -145,6 +146,27 @@ namespace Colony.Runtime
                 if (tower == null || tower.kind != TowerKind.Noisy) continue;
 
                 Threat.AddSource(tower.Cell, tower.radius, tower.threatStrength);
+            }
+
+            RebuildSlow();
+        }
+
+        /// <summary>
+        /// Yavaslatma alanini sifirdan kurar. YALNIZCA recine kuleleri yazar
+        /// ve tehdit alanina HIC dokunmazlar - koloni yavaslatmayi algilamaz.
+        /// Algilasaydi kacar ve recine olu mekanige donusurdu (olculdu).
+        /// </summary>
+        public void RebuildSlow()
+        {
+            if (Slow == null) return;
+
+            Slow.Clear();
+            for (int i = 0; i < towers.Count; i++)
+            {
+                ColonyTower tower = towers[i];
+                if (tower == null || tower.kind != TowerKind.Resin) continue;
+
+                Slow.AddSource(tower.Cell, tower.radius, tower.slowFactor);
             }
         }
 
@@ -254,6 +276,7 @@ namespace Colony.Runtime
             Pheromone = new PheromoneMap(Grid, pheromoneMax, pheromoneDecay);
             Lure = new LureField(Grid, lureStrength, lureDiminish);
             Threat = new ThreatField(Grid);
+            Slow = new SlowField(Grid);
 
             CostModel = new RouteCostModel(Pheromone, Lure, Threat)
             {

@@ -7,7 +7,7 @@ namespace Colony.Runtime
     /// Kule yerlestirme girisi. Sandbox icin klavye + fare; dokunmatik
     /// arayuz Plan 3'un isi.
     ///
-    /// 1 = Gurultucu, 2 = Sessiz, 3 = Yem. Sol tik yerlestirir.
+    /// 1 = Gurultucu, 2 = Sessiz, 3 = Yem, 4 = Recine. Sol tik yerlestirir.
     /// Kuleler YALNIZCA kurulum seridine kurulur; koridora kule konsaydi
     /// yolu kapatirdi ve oyun labirent kurmaya donerdi (spec 3.6).
     /// </summary>
@@ -21,6 +21,7 @@ namespace Colony.Runtime
         public Color noisyColor = new Color(0.95f, 0.35f, 0.25f);
         public Color silentColor = new Color(0.45f, 0.5f, 0.55f);
         public Color lureColor = new Color(0.3f, 0.9f, 0.5f);
+        public Color resinColor = new Color(0.95f, 0.8f, 0.3f);
 
         [Tooltip("Kule capinin hucre boyutuna orani.")]
         [Range(0.2f, 1f)]
@@ -60,6 +61,7 @@ namespace Colony.Runtime
             if (Input.GetKeyDown(KeyCode.Alpha1)) Select(TowerKind.Noisy);
             if (Input.GetKeyDown(KeyCode.Alpha2)) Select(TowerKind.Silent);
             if (Input.GetKeyDown(KeyCode.Alpha3)) Select(TowerKind.Lure);
+            if (Input.GetKeyDown(KeyCode.Alpha4)) Select(TowerKind.Resin);
 
             if (Input.GetMouseButtonDown(0))
                 TryPlaceAt(Input.mousePosition);
@@ -151,6 +153,7 @@ namespace Colony.Runtime
         {
             if (kind == TowerKind.Noisy) return noisyColor;
             if (kind == TowerKind.Lure) return lureColor;
+            if (kind == TowerKind.Resin) return resinColor;
             return silentColor;
         }
     }
