@@ -15,6 +15,16 @@ namespace Colony.Tests
     /// Olcum sonucu: kule sayisi baskin degisken. Yuva canini 30'dan 50'ye
     /// cikarmak kayip dalgasini yalnizca 10'dan 11'e tasidi; oysa koridor
     /// basina kuleyi 1'den 2'ye cikarmak kaybi tam zafere cevirdi.
+    ///
+    /// !!! MODEL UYARISI (20 Agustos 2026) !!!
+    /// Buradaki simulasyon bocekleri SIRAYLA isler: bir bocek butun yolu
+    /// yurur, sonra digeri baslar. O modelde tek hedefli bir kule, ayni anda
+    /// gecen sekiz bocegin HEPSINE tam DPS verir - gercekte bir seferde tek
+    /// bocege ates eder. Olcum: 8 bocek / 3 kule kurulumunda sirali model
+    /// hepsini olduruyor, eszamanli model 2 olum + 6 sizinti veriyor.
+    /// Yani buradaki sayilar tek hedefli kuleleri OLDUGUNDAN GUCLU gosterir.
+    /// Colony.Core.RunSimulator eszamanli olcer; bu dosyadaki degerler onunla
+    /// yeniden olculmeden gercek kabul edilmemeli.
     /// </summary>
     public class ColonyDifficultyTests
     {

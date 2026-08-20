@@ -14,7 +14,7 @@ Roster, mevcut eksene uyarlanarak alındı.
 | Sınıf | Durum | Rol |
 |---|---|---|
 | Sessiz | Var (4 dps) | Tek hedef, sürekli, tehdit yazmaz. Asıl katil. |
-| Gürültücü | Var (10 dps) | **Alan hasarı eklenecek.** Yüksek tehdit yazımı; yönlendirme aracı. |
+| Gürültücü | Var (10 dps) | **Alan hasarı ölçüldü, eklenmeyi bekliyor.** Aynı 4 dps ile tek hedefli kule 8 böcekten 2'sini, alan hasarlı 8'ini öldürüyor. Yüksek tehdit yazımı; yönlendirme aracı. |
 | Yem | Var | Pazarlıksız. Spec 3.4'ün "aha anı" ona bağlı. |
 | **Reçine** | **Yapıldı** (20 Ağu) | Yavaşlatır (x2), tehdit yazmaz, fiyat 16. Böcek sessiz kulenin menzilinde uzun kalır. Tek başına değersiz. |
 | **Işın** | Yeni | Delip geçen hat hasarı. Kalabalık koridoru cezalandırır; koloninin tek koridora yığılmasıyla doğrudan çatışır. |
@@ -61,5 +61,6 @@ Bir böcek türü feromon/öğrenme ile etkileşmiyorsa yalnızca bir can rakam�
 
 1. Plan 4 Görev 4 — ekonomi eğrisi ölçülüp kilitlenir (**önce bu**)
 2. Plan 7 Görev 1 — ~~Reçine~~ **bitti**. Sırada: Gürültücü kuleye alan hasarı, sonra Işın
-3. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
+3. **Alan hasarı (topçu) ölçüldü:** `RunSimulator` ile aynı DPS'te tek hedefli 2, alan hasarlı 8 öldürme. Sürüye karşı fark devasa — ama önce temel denge sayıları eşzamanlı modelle yeniden ölçülmeli, yoksa topçu kırık bir zemine oturur.
+4. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
 3. Plan 8 — böcek türleri, her biri kendi öğrenme testiyle

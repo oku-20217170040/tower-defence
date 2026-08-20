@@ -23,6 +23,16 @@ namespace Colony.Tests
     ///
     /// Esik keskin; bu projede daha once sessiz kule DPS'inde de goruldu
     /// (3'te hic oldurmuyor, 4'te hepsini olduruyor).
+    ///
+    /// !!! MODEL UYARISI (20 Agustos 2026) !!!
+    /// Buradaki simulasyon bocekleri SIRAYLA isler: bir bocek butun yolu
+    /// yurur, sonra digeri baslar. O modelde tek hedefli bir kule, ayni anda
+    /// gecen sekiz bocegin HEPSINE tam DPS verir - gercekte bir seferde tek
+    /// bocege ates eder. Olcum: 8 bocek / 3 kule kurulumunda sirali model
+    /// hepsini olduruyor, eszamanli model 2 olum + 6 sizinti veriyor.
+    /// Yani buradaki sayilar tek hedefli kuleleri OLDUGUNDAN GUCLU gosterir.
+    /// Colony.Core.RunSimulator eszamanli olcer; bu dosyadaki degerler onunla
+    /// yeniden olculmeden gercek kabul edilmemeli.
     /// </summary>
     public class ColonyResinTests
     {

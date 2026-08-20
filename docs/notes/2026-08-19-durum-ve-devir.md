@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 122 EditMode testi, 122 geçiyor (20 Ağu 2026)
+**Test durumu:** 129 EditMode testi, 129 geçiyor (20 Ağu 2026)
 **Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -32,6 +32,29 @@ Sahne kod ile üretilir: Unity menüsünde **Colony → Sandbox Sahnesini Uret**
 Eski `Assets/Scripts/` hâlâ duruyor, silinmedi.
 
 ---
+
+## ⚠️ ÖLÇÜM MODELİ KIRIK ÇIKTI (20 Ağustos 2026) — önce bunu oku
+
+**Aşağıdaki "ölçülmüş sabitler" tablosundaki savaş sayıları güvenilir değil.**
+
+Bütün denge simülasyonları böcekleri **sırayla** işliyordu: bir böcek tüm yolu yürüyor, sonra diğeri başlıyordu. O modelde tek hedefli bir kule, aynı anda geçen sekiz böceğin **hepsine** tam DPS veriyor. Gerçekte bir kule bir seferde tek böceğe ateş eder (`TowerWeapon.FindNearestTarget`).
+
+Ölçülen fark (8 böcek, 3 sessiz kule, 4 dps):
+
+| Model | Ölen | Sızan |
+|---|---|---|
+| Sıralı (eski) | 8 | 0 |
+| **Eşzamanlı (gerçek)** | **2** | **6** |
+
+Tam run taraması, eşzamanlı modelde koridor başına **4 kulenin bile** (toplam 12) run'ı kaybettiğini söylüyor — eski modelde 2 kule (toplam 6) %100 kazanıyordu.
+
+Böcekler 0,35 s arayla doğup 0,4 s'de bir hücre ilerliyor; yani sürü hâlinde geliyorlar ve sıralı model bu gerçeği hiç görmüyordu.
+
+`Colony.Core.RunSimulator` eşzamanlı ölçüm yapar ve 7 testle doğrulanmıştır (`RunSimulatorTests`). Eski üç denge test dosyasının başına da uyarı konuldu; testler hâlâ geçiyor ama **ölçtükleri şey gerçek oyun değil.**
+
+**Yapılması gereken:** sessiz kule DPS'i, ekonomi eğrisi ve reçine çarpanı `RunSimulator` ile yeniden ölçülmeli. Bunlar yapılmadan yeni kule/böcek eklemek, yanlış zemine inşa etmek olur.
+
+**Doğrulanmayı bekleyen:** gerçek oyunun bu kadar zor olup olmadığı. Kullanıcının oynayıp kaçıncı dalgada kaç kuleyle ne yaşadığını söylemesi gerekiyor.
 
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME
 
