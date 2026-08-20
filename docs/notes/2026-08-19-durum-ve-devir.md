@@ -2,8 +2,8 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 89 EditMode testi, 89 geçiyor
-**Sıradaki iş:** Plan 4, Görev 3 — dalga sonu draft sistemi
+**Test durumu:** 104 EditMode testi, 104 geçiyor (20 Ağu 2026)
+**Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 
@@ -48,10 +48,10 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Böcek canı | 10 × (1 + 0,15 × (dalga−1)) | Asıl zorluk düğmesi bu |
 | İlk dalga böcek | 8 | 10 iken oyuncu toparlanamadan 4. dalgada kaybediyordu |
 | Yuva canı | 30 | Zayıf düğme: 50 yapmak kayıp dalgasını 10'dan 11'e taşıdı |
-| Başlangıç besini | 40 | 60 sıkıcı kolay, 30 bıçak sırtı |
-| Kule fiyatları | Gürültücü 12 · Yem 16 · Sessiz 20, aynı türde +10 | Gürültücü ucuz çünkü tek başına işe yaramıyor |
+| Başlangıç besini | 50 | 20 Ağu taraması; 40'ta oyuncu ilk dalgalarda iki kule bile kuramıyor |
+| Kule fiyatları | Gürültücü 12 · Yem 16 · Sessiz 24, aynı türde **+5** | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
 
-**Hedef eğri:** dalga 5/8/10/15'te 3/5/6/9 kule → run kazanılır ama yuva canının yarısı gider.
+**Ölçülen eğri (20 Ağu):** optimal oyuncu run'ların %85'ini kazanıyor, 8. dalgada ortalama 5,6 kule, yuva canının 30'da 22'si gidiyor. Eski 3/5/6/9 hedefi ölçümde hiç kazanmıyordu — geçersiz.
 
 ---
 
@@ -83,7 +83,9 @@ Bunlar tasarımda yoktu; ancak ölçünce ortaya çıktılar ve spec'e işlendil
 | Plan 1 — Koloni çekirdeği | **Bitti.** Feromon, yem, tehdit, rota modeli, harita üretimi |
 | Plan 2 — Görselleştirme | **Bitti.** Mekanik oyuncu tarafından doğrulandı |
 | Plan 3 — Savaş | **Bitti.** Can, hasar, yuva, run akışı, arayüz, zorluk eğrisi |
-| Plan 4 — Ekonomi ve draft | Görev 1-2 ve 5'in bir kısmı bitti. **Sırada Görev 3: draft** |
+| Plan 4 — Ekonomi ve draft | **Bitti.** Ekonomi, draft, eğri ölçümü. Açık: Görev 5 Adım 2 (kullanıcı testi) |
+| Plan 7 — Kule sınıfları (Reçine, Işın, Saat) | Taslak yazıldı, karar alındı |
+| Plan 8 — Böcek türleri (izci, asker, kör, kuluçka, kraliçe) | Karar alındı, plan yazılmadı |
 | Plan 5 — Meta ilerleme, nemesis | Yazılmadı |
 | Plan 6 — Blender asset'leri, ses | Yazılmadı |
 
