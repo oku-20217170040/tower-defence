@@ -33,28 +33,26 @@ Eski `Assets/Scripts/` hâlâ duruyor, silinmedi.
 
 ---
 
-## ⚠️ ÖLÇÜM MODELİ KIRIK ÇIKTI (20 Ağustos 2026) — önce bunu oku
+## Ölçüm modeli düzeltildi + gerçek run kalibrasyonu (20 Ağustos 2026)
 
-**Aşağıdaki "ölçülmüş sabitler" tablosundaki savaş sayıları güvenilir değil.**
+**Kırık olan:** bütün eski denge simülasyonları böcekleri **sırayla** işliyordu — bir böcek tüm yolu yürüyor, sonra diğeri. O modelde tek hedefli bir kule, aynı anda geçen sekiz böceğin **hepsine** tam DPS veriyor; gerçekte bir seferde tek böceğe ateş eder (`TowerWeapon.FindNearestTarget`).
 
-Bütün denge simülasyonları böcekleri **sırayla** işliyordu: bir böcek tüm yolu yürüyor, sonra diğeri başlıyordu. O modelde tek hedefli bir kule, aynı anda geçen sekiz böceğin **hepsine** tam DPS veriyor. Gerçekte bir kule bir seferde tek böceğe ateş eder (`TowerWeapon.FindNearestTarget`).
-
-Ölçülen fark (8 böcek, 3 sessiz kule, 4 dps):
-
-| Model | Ölen | Sızan |
+| 8 böcek, 3 sessiz kule, 4 dps | Ölen | Sızan |
 |---|---|---|
-| Sıralı (eski) | 8 | 0 |
-| **Eşzamanlı (gerçek)** | **2** | **6** |
+| Sıralı (eski model) | 8 | 0 |
+| Eşzamanlı (`RunSimulator`) | 2 | 6 |
 
-Tam run taraması, eşzamanlı modelde koridor başına **4 kulenin bile** (toplam 12) run'ı kaybettiğini söylüyor — eski modelde 2 kule (toplam 6) %100 kazanıyordu.
+**Kırık OLMAYAN: oyunun dengesi.** İlk çıkarımım "eşzamanlı modelde 12 kule bile kaybediyor, demek oyun kazanılamaz" idi — **yanlıştı.** Sebep: simülasyonda kule sayısını ekonomiden bağımsız düşük tutmuştum. Gerçek oyuncu draft ödülleri ve öldürme geliriyle çok daha fazla kule kuruyor.
 
-Böcekler 0,35 s arayla doğup 0,4 s'de bir hücre ilerliyor; yani sürü hâlinde geliyorlar ve sıralı model bu gerçeği hiç görmüyordu.
+**Gerçek run (kullanıcı, 20 Ağu, ekran görüntüsüyle):** 15/15 dalga, KAZANDI, yuva 14/30, 209 öldürme, 16 sızıntı, **24 kule** (13 sessiz + 7 gürültücü + 4 reçine), üstüne 116 besin artmış.
 
-`Colony.Core.RunSimulator` eşzamanlı ölçüm yapar ve 7 testle doğrulanmıştır (`RunSimulatorTests`). Eski üç denge test dosyasının başına da uyarı konuldu; testler hâlâ geçiyor ama **ölçtükleri şey gerçek oyun değil.**
+**Kalibrasyon:** aynı 24 kule kurulumu `RunSimulator`'da 223,5 öldürme veriyor (gerçek 209, %7 fark) — simülatör doğrulanmış sayılır. Sızıntıda fark var (sim 1,5 / gerçek 16) çünkü sim kuleleri baştan kurulu kabul ediyor, oyuncu ise dalga dalga kuruyor. **Yani sızıntının neredeyse tamamı erken dalgalarda, kuleler azken oluşuyor.**
 
-**Yapılması gereken:** sessiz kule DPS'i, ekonomi eğrisi ve reçine çarpanı `RunSimulator` ile yeniden ölçülmeli. Bunlar yapılmadan yeni kule/böcek eklemek, yanlış zemine inşa etmek olur.
+**Buradan çıkan iki iş:**
+1. `RunSimulator`'a ekonomi + draft eklenip kulelerin zamanla kurulması modellenmeli. O zaman sim gerçek sızıntıyı (16) üretmeli; ürettiğinde denge sayıları güvenle yeniden ölçülebilir.
+2. **Geç oyun ekonomisi gevşek.** Hedef "8-10. dalgada 4-5 kule" idi; gerçekte run 24 kule ve 116 artan besinle bitiyor. Yuva canının yarısı yine de gidiyor — yani zorluk erken dalgalardan geliyor, geç oyun rahat.
 
-**Doğrulanmayı bekleyen:** gerçek oyunun bu kadar zor olup olmadığı. Kullanıcının oynayıp kaçıncı dalgada kaç kuleyle ne yaşadığını söylemesi gerekiyor.
+Aşağıdaki tablodaki savaş sayıları hâlâ sıralı modelle seçilmiştir; eski üç denge test dosyasının başına da uyarı konuldu. Testler geçiyor ama ölçtükleri şey gerçek oyun değil.
 
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME
 
