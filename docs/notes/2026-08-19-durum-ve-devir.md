@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 135 EditMode testi, 135 geçiyor (20 Ağu 2026)
+**Test durumu:** 139 EditMode testi, 139 geçiyor (20 Ağu 2026)
 **Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -79,8 +79,9 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Gürültücü kule DPS | 10 | Önünden geçen kalmadığı için gerçek DPS'i çok daha düşük |
 | Böcek canı | 10 × (1 + **0,10** × (dalga−1)) | 0,15'te ekonominin hiçbir düğmesi çalışmıyordu: yetersiz kule → az öldürme → az gelir → çöküş sarmalı. 0,10'da eşik yumuşadı |
 | İlk dalga böcek | 8 | 10 iken oyuncu toparlanamadan 4. dalgada kaybediyordu |
+| Dalga temposu | ilk dalga öncesi 8 sn, ilk 4 dalga arası 6 sn, sonra 2 sn | Erken oyunda düşünme süresi zorluktan değerli; oyuncu ilk kulelerini kurmadan boğulmamalı |
 | Yuva canı | 30 | Zayıf düğme: 50 yapmak kayıp dalgasını 10'dan 11'e taşıdı |
-| Başlangıç besini | 50 | 20 Ağu taraması; 40'ta oyuncu ilk dalgalarda iki kule bile kuramıyor |
+| Başlangıç besini | **90** | 50'de ilk dalgada YALNIZCA 1 kule kurulabiliyordu (3 koridor varken) — oyuncu geri bildirimi doğrulandı. Dalga geliri 6, öldürme geliri 1 ile birlikte: erken oyun açılıyor, toplam zorluk aynı kalıyor |
 | Kule fiyatları | Gürültücü **20** · Yem/Reçine **26** · Sessiz **40**, aynı türde +5 | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
 
 **Ölçülen eğri (20 Ağu):** optimal oyuncu run'ların %85'ini kazanıyor, 8. dalgada ortalama 5,6 kule, yuva canının 30'da 22'si gidiyor. Eski 3/5/6/9 hedefi ölçümde hiç kazanmıyordu — geçersiz.

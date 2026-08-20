@@ -51,7 +51,14 @@ namespace Colony.Runtime
             GUILayout.BeginArea(new Rect(16f, 16f, 420f, 260f));
 
             if (run != null)
+            {
                 GUILayout.Label("Dalga " + run.CurrentWave + " / " + run.totalWaves, labelStyle);
+
+                // Hazirlik suresi gorunmezse oyuncu bekledigini bilmez, oyunun
+                // takildigini sanir.
+                if (run.CurrentWave == 0)
+                    GUILayout.Label("Hazirlan: kule kur (1-4 tuslari)", labelStyle);
+            }
 
             if (nest != null)
                 GUILayout.Label("Yuva cani: " + nest.CurrentHp + " / " + nest.maxHp, labelStyle);

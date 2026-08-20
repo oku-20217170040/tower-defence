@@ -6,6 +6,12 @@ namespace Colony.Runtime
     /// <summary>
     /// Ekonomiyi sahneye baglar: gelirleri toplar, kule fiyatlarini hesaplar.
     ///
+    /// GUNCELLEME 2 (20 Agu 2026, oyuncu geri bildirimi): baslangic besini
+    /// 50 -> 90, dalga geliri 10 -> 6, oldurme geliri 2 -> 1. Erken oyun
+    /// aciliyor (ilk dalgada 1 yerine 2 kule) ama toplam zorluk AYNI
+    /// kaliyor (sizinti 22,1 -> 21,8) cunku gec oyun geliri kisildi.
+    /// Yan fayda: artan besin 120 -> 92.
+    ///
     /// GUNCELLEME (20 Agu 2026): bocek cani buyumesi %15'ten %10'a
     /// dusuruldugu icin fiyatlar yukseltildi (sessiz 24 -> 40, gurultucu
     /// 12 -> 20, yem/recine 16 -> 26). Olcum: bu ikili birlikte kule
@@ -26,16 +32,17 @@ namespace Colony.Runtime
     public sealed class EconomyRunner : MonoBehaviour
     {
         [Header("Gelir")]
-        [Tooltip("Run basindaki besin. 50 taramayla secildi: 40'ta oyuncu ilk " +
-                 "dalgalarda iki kule bile kuramiyor.")]
-        public int startingBalance = 50;
+        [Tooltip("Run basindaki besin. 90 olcumle secildi. 50 iken ilk dalgada " +
+                 "YALNIZCA BIR kule kurulabiliyordu - uc koridorlu bir haritada " +
+                 "bu, oyuncunun sistemi hic kuramamasi demek (oyuncu geri bildirimi).")]
+        public int startingBalance = 90;
 
         [Tooltip("Oldurulen bocek basina besin.")]
-        public int foodPerKill = 2;
+        public int foodPerKill = 1;
 
         [Tooltip("Dalga tamamlaninca kazanilan besin. Bu bir TABAN GELIRDIR: " +
                  "oldurmekten bagimsiz oldugu icin kaybetme sarmalini kirar.")]
-        public int foodPerWave = 10;
+        public int foodPerWave = 6;
 
         [Header("Kule Fiyatlari")]
         [Tooltip("Gurultucu kule ucuzdur: tek basina ise yaramadigi icin (spec 3.4) " +

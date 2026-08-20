@@ -34,9 +34,9 @@ namespace Colony.Core
             {
                 return new Costs
                 {
-                    StartingBalance = 50,
-                    FoodPerKill = 2,
-                    FoodPerWave = 10,
+                    StartingBalance = 90,
+                    FoodPerKill = 1,
+                    FoodPerWave = 6,
                     NoisyCost = 20,
                     SilentCost = 40,
                     LureCost = 26,

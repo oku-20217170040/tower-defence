@@ -200,15 +200,25 @@ namespace Colony.Tests
             return settings;
         }
 
-        /// <summary>Referans run'in fiyatlari.</summary>
+        /// <summary>
+        /// Referans run'in ekonomisi. Bugunku degerlerden BAGIMSIZ olmali;
+        /// Costs.Default()'tan tek bir alan sizarsa kalibrasyon sessizce
+        /// yanlis seyi olcer (bir kez yasandi: gelirler guncellenince
+        /// sizinti 18'den 6'ya dustu).
+        /// </summary>
         private static EconomyPlanner.Costs ReferenceCosts()
         {
-            var costs = EconomyPlanner.Costs.Default();
-            costs.NoisyCost = 12;
-            costs.SilentCost = 24;
-            costs.LureCost = 16;
-            costs.ResinCost = 16;
-            return costs;
+            return new EconomyPlanner.Costs
+            {
+                StartingBalance = 50,
+                FoodPerKill = 2,
+                FoodPerWave = 10,
+                NoisyCost = 12,
+                SilentCost = 24,
+                LureCost = 16,
+                ResinCost = 16,
+                CostStep = 5
+            };
         }
 
         private Averages MeasureWithNoisy(RunSimulator.Targeting targeting, float dps, int seedCount)

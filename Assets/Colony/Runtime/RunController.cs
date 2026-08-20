@@ -33,6 +33,19 @@ namespace Colony.Runtime
         [Tooltip("Dalga arasi bekleme (saniye).")]
         public float delayBetweenWaves = 2f;
 
+        [Tooltip("Ilk dalga baslamadan once verilen hazirlik suresi. Oyuncu " +
+                 "haritayi okuyup ilk kulelerini kurabilmeli; run bir kosuya " +
+                 "degil bir kurulusa baslamali.")]
+        public float openingDelay = 8f;
+
+        [Tooltip("Ilk kac dalga genis araliklarla gelsin. Erken oyunda oyuncunun " +
+                 "kurdugu her kule sistemin donmesi icin kritik; bu donemde " +
+                 "dusunme suresi zorluktan daha degerli.")]
+        public int slowStartWaves = 4;
+
+        [Tooltip("Yavas baslangic doneminde dalga arasi bekleme.")]
+        public float earlyWaveDelay = 6f;
+
         [Header("Zorluk")]
         [Tooltip("Ilk dalgadaki bocek cani.")]
         public float baseBugHp = 10f;
@@ -102,6 +115,10 @@ namespace Colony.Runtime
             while (world == null || world.Grid == null)
                 yield return null;
 
+            // Ilk dalgadan once hazirlik suresi.
+            if (openingDelay > 0f)
+                yield return new WaitForSeconds(openingDelay);
+
             while (State == RunState.Running && CurrentWave < totalWaves)
             {
                 CurrentWave++;
@@ -133,11 +150,20 @@ namespace Colony.Runtime
                 // Dalga sonunda kullanilmayan izler unutulur.
                 world.Pheromone.Decay();
 
-                yield return new WaitForSeconds(delayBetweenWaves);
+                yield return new WaitForSeconds(DelayAfterWave(CurrentWave));
             }
 
             if (State == RunState.Running)
                 Finish(RunState.Won);
+        }
+
+        /// <summary>
+        /// Bu dalgadan sonraki bekleme. Erken dalgalar daha genis aralikli
+        /// gelir; oyuncu ekonomisini kuramadan bogulmamali.
+        /// </summary>
+        public float DelayAfterWave(int wave)
+        {
+            return wave <= slowStartWaves ? earlyWaveDelay : delayBetweenWaves;
         }
 
         private void OnNestEmptied()
