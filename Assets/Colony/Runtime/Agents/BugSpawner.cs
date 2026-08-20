@@ -85,7 +85,14 @@ namespace Colony.Runtime
         {
             agent.Finished -= OnBugFinished;
 
-            if (agent.ReachedNest) TotalLeaked++;
+            // Yuvaya varan bocek can eksiltir. Hasar burada verilir cunku
+            // sizinti sayaci da burada tutulur; iki sayi ayni yerde kalmazsa
+            // sessizce birbirinden kopar - bu hata bir kez yasandi.
+            if (agent.ReachedNest)
+            {
+                TotalLeaked++;
+                if (nest != null) nest.Damage(agent.damageToNest);
+            }
 
             AliveCount--;
             if (AliveCount < 0) AliveCount = 0;

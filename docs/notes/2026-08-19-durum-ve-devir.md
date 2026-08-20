@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 104 EditMode testi, 104 geçiyor (20 Ağu 2026)
+**Test durumu:** 110 EditMode testi, 110 geçiyor (20 Ağu 2026)
 **Sıradaki iş:** Plan 7 — kule sınıfları (Reçine, Işın, Saat) ve Plan 8 — böcek türleri. Bkz. `docs/plans/2026-08-20-kule-ve-bocek-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -52,6 +52,8 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Kule fiyatları | Gürültücü 12 · Yem 16 · Sessiz 24, aynı türde **+5** | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
 
 **Ölçülen eğri (20 Ağu):** optimal oyuncu run'ların %85'ini kazanıyor, 8. dalgada ortalama 5,6 kule, yuva canının 30'da 22'si gidiyor. Eski 3/5/6/9 hedefi ölçümde hiç kazanmıyordu — geçersiz.
+
+> **Testlerin kör noktası (20 Ağu 2026'da acı bir şekilde öğrenildi):** Denge testleri saf modeli simüle eder, **sahnedeki zinciri değil.** Yuvaya varan böceğin can eksiltmesi hiç kodlanmamıştı; 104 test yeşilken oyunda yuva canı düşmüyordu. Simülasyon "sızıntı 22/30" derken gerçek oyunda sıfırdı. Runtime zinciri (spawn → yürüme → varış → hasar → run sonu) yalnızca oynayarak doğrulanır. Yeni bir runtime davranışı eklerken buna dikkat.
 
 ---
 

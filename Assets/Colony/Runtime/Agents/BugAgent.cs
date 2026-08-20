@@ -116,6 +116,10 @@ namespace Colony.Runtime
             // Basarili rota guclenir - kolonin ogrenmesi budur.
             world.Pheromone.DepositTrail(visited, reinforceOnSuccess);
 
+            // Varan bocek de listeden cikmali. Cikmazsa kuleler yok edilmis
+            // hedeflere ates etmeye devam eder.
+            world.UnregisterBug(this);
+
             Finished?.Invoke(this);
             Destroy(gameObject);
         }
