@@ -29,10 +29,10 @@
 
 **Tasarım notu:** Kaynak birimi **besin**. Böcek öldürmek ve dalga tamamlamak besin kazandırır. Sızan böcek kazandırmaz — oyuncunun tuzağı çalışmazsa hem can hem gelir kaybeder. Bu, kaybetme sarmalı yaratabilir; Görev 4'te ölçülüp gerekirse taban gelir eklenecek.
 
-- [ ] **Adım 1:** `RunEconomyTests` yaz — kazanma, harcama, yetersiz bakiye reddi, negatife düşmeme, toplam sayaçlar.
-- [ ] **Adım 2:** Testi koştur, başarısızlığı gör.
-- [ ] **Adım 3:** `RunEconomy` yaz, testleri geçir.
-- [ ] **Adım 4:** Commit — `ozellik: run ekonomisi cekirdegi`
+- [x] **Adım 1:** `RunEconomyTests` yaz — kazanma, harcama, yetersiz bakiye reddi, negatife düşmeme, toplam sayaçlar.
+- [x] **Adım 2:** Testi koştur, başarısızlığı gör.
+- [x] **Adım 3:** `RunEconomy` yaz, testleri geçir.
+- [x] **Adım 4:** Commit — `ozellik: run ekonomisi cekirdegi`
 
 ---
 
@@ -48,10 +48,10 @@
 
 Aynı türden her yeni kule biraz daha pahalıya gelmeli; aksi halde oyuncu tek stratejiyi spam'ler.
 
-- [ ] **Adım 1:** `EconomyRunner` yaz — `RunEconomy`'yi sahneye bağlar, ölüm ve dalga sonu gelirlerini dinler.
-- [ ] **Adım 2:** `TowerPlacer` satın alma kontrolü yapar; parası yetmezse yerleştirmeyi reddeder ve sebebini söyler.
-- [ ] **Adım 3:** Aynı türden kule fiyatı artışı.
-- [ ] **Adım 4:** Commit — `ozellik: kule maliyetleri ve satin alma`
+- [x] **Adım 1:** `EconomyRunner` yaz — `RunEconomy`'yi sahneye bağlar, ölüm ve dalga sonu gelirlerini dinler.
+- [x] **Adım 2:** `TowerPlacer` satın alma kontrolü yapar; parası yetmezse yerleştirmeyi reddeder ve sebebini söyler.
+- [x] **Adım 3:** Aynı türden kule fiyatı artışı.
+- [x] **Adım 4:** Commit — `ozellik: kule maliyetleri ve satin alma`
 
 ---
 
@@ -80,12 +80,12 @@ Seçenek türleri: bedava kule, kule indirimi, besin, kalıcı pasif (menzil/has
 
 **Ölçülecek soru:** Oyuncu dalga dalga kaç kuleye ulaşıyor ve bu, Plan 3'te ölçülen kazanma/kaybetme bandına oturuyor mu?
 
-- [ ] **Adım 1:** `execute_code` ile tarama: öldürme başına besin × dalga başına besin × kule fiyatı kombinasyonları. Ölçülecek çıktı: dalga dalga alınabilen kule sayısı ve run sonucu.
-- [ ] **Adım 2:** Hedef bant — 8-10. dalgada 4-5 etkili kule. Erken ulaşırsa oyun kolaylaşır, geç ulaşırsa oyuncu çaresiz kalır.
-- [ ] **Adım 3:** Kaybetme sarmalı kontrolü: tuzağı çalışmayan oyuncu gelir kaybedip büsbütün çaresiz kalıyor mu? Kalıyorsa taban gelir eklenir.
-- [ ] **Adım 4:** `ColonyEconomyTests` yaz — seçilen eğriyi kalıcı olarak koru.
-- [ ] **Adım 5:** Bulguyu spec'e işle.
-- [ ] **Adım 6:** Commit — `denge: ekonomi egrisi`
+- [x] **Adım 1:** `execute_code` ile tarama: öldürme başına besin × dalga başına besin × kule fiyatı kombinasyonları. Ölçülecek çıktı: dalga dalga alınabilen kule sayısı ve run sonucu.
+- [x] **Adım 2:** Hedef bant — 8-10. dalgada 4-5 etkili kule. Erken ulaşırsa oyun kolaylaşır, geç ulaşırsa oyuncu çaresiz kalır.
+- [x] **Adım 3:** Kaybetme sarmalı kontrolü: tuzağı çalışmayan oyuncu gelir kaybedip büsbütün çaresiz kalıyor mu? Kalıyorsa taban gelir eklenir.
+- [x] **Adım 4:** `ColonyEconomyTests` yaz — seçilen eğriyi kalıcı olarak koru.
+- [x] **Adım 5:** Bulguyu spec'e işle.
+- [x] **Adım 6:** Commit — `denge: ekonomi egrisi`
 
 ---
 
@@ -94,9 +94,9 @@ Seçenek türleri: bedava kule, kule indirimi, besin, kalıcı pasif (menzil/has
 **Dosyalar:**
 - Değiştir: `Assets/Colony/Runtime/View/RunHud.cs`
 
-- [ ] **Adım 1:** Besin bakiyesi, kule fiyatları ve alınamayan kulelerin soluk gösterimi.
-- [ ] **Adım 2:** Kullanıcıya oynatıp geri bildirim al.
-- [ ] **Adım 3:** Commit — `ozellik: ekonomi arayuzu`
+- [x] **Adım 1:** Besin bakiyesi, kule fiyatları ve alınamayan kulelerin soluk gösterimi.
+- [ ] **Adım 2:** Kullanıcıya oynatıp geri bildirim al. — *bekliyor, görsel doğrulama kullanıcıya ait*
+- [x] **Adım 3:** Commit — `ozellik: ekonomi arayuzu`
 
 ---
 

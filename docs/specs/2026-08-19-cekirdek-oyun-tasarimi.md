@@ -95,6 +95,20 @@ Kuleler üç koridora dağıtıldığında tablo tamamen değişti:
 
 **Ekonomi için hedef:** Kule sayısı baskın değişken. Yuva canını 30'dan 50'ye çıkarmak kayıp dalgasını yalnızca 10'dan 11'e taşıdı; oysa koridor başına kuleyi 1'den 2'ye çıkarmak kaybı tam zafere çevirdi. Dolayısıyla ekonominin işi, oyuncunun 15 dalga boyunca kaç kuleye ulaşabileceğini belirlemek. Hedef bant: 4-5 etkili kule, 8-10. dalga civarında.
 
+### 3.5b Ekonomi eğrisi — ölçüldü (20 Ağustos 2026)
+
+162 kombinasyon × 20 seed taraması yapıldı. Seçilen eğri: başlangıç 50 besin, öldürme başına 2, dalga sonu 10, sessiz kule 24, aynı türde +5.
+
+Ölçülen sonuç: optimal oynayan oyuncu run'ların **%85'ini** kazanıyor, 8. dalgada ortalama **5,6 kuleye** ulaşıyor, yuva canının 30'da **22'sini** kaybediyor. Tarama tek seed'le yapılsaydı yanlış ayar seçilecekti; 999'da kıl payı kazanan iki kombinasyon 20 seed'de %25 ve %45'e düştü.
+
+Taramanın iki bulgusu spec'e giriyor:
+
+**1. Aynı türde +10 fiyat artışı run'ı öldürüyordu.** Kazanma oranı %10, 8. dalgada ortalama 3,5 kule. Artış +5'e indirilince %85'e çıktı. Spam'i pahalılaştırma fikri doğru ama eğim oyunu boğacak kadar dikti. `SteepCostStep_KillsTheRun` bunu koruyor.
+
+**2. Dalga sonu geliri bir taban gelirdir, süs değil.** Sızan böcek gelir kazandırmaz; yani tuzağı çalışmayan oyuncunun tek geliri dalga sonu ödemesidir. O taban sıfırlanınca kazanma oranı %60'ın altına düşüyor — yani kaybetme sarmalı gerçek ve taban gelir onu kıran şey. Plan 4 Görev 4'ün "gerekirse taban gelir eklenir" sorusu böylece ölçümle cevaplandı: gerekiyor, zaten var, korunmalı.
+
+**Not:** Simülasyon oyuncunun yalnızca sessiz kule aldığını varsayar (ölçülen en güçlü strateji), dolayısıyla **ulaşılabilir üst sınırı** ölçer. Gürültücü ve yem kulesinin fiyatları bu taramada test edilmedi; oranları korundu (12 / 16 / 24).
+
 ### 3.6 Feromon görselleştirmesi
 
 Feromon izi ekranda görünür: parlayan, yoğunlukla kalınlaşan izler. Oyuncu hangi koridorun öğrenilmiş olduğunu bakışta anlar. Bu, mekaniğin arayüzüdür — ayrı bir UI paneline ihtiyaç bırakmaz.

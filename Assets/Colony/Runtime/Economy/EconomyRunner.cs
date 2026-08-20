@@ -6,22 +6,29 @@ namespace Colony.Runtime
     /// <summary>
     /// Ekonomiyi sahneye baglar: gelirleri toplar, kule fiyatlarini hesaplar.
     ///
-    /// Tum sayilar tam run simulasyonuyla secildi (spec 3.5 hedefi: oyuncu
-    /// 8-10. dalgada 4-5 etkili kuleye ulasmali). Olculen egri:
-    /// dalga 5/8/10/15'te 3/5/6/9 kule, run kazanilir ama yuva caninin
-    /// yarisi gider. Daha yuksek baslangic sermayesi run'i sikici derecede
-    /// kolaylastiriyor, daha dususu 4. dalgada kaybettiriyor.
+    /// Tum sayilar 162 kombinasyon x 20 seed taramasiyla secildi
+    /// (ColonyEconomyTests egriyi koruyor). Secilen ayar: optimal oynayan
+    /// oyuncu run'larin %85'ini kazaniyor, 8. dalgada ortalama 5,6 kuleye
+    /// ulasiyor ve yuva caninin 30'da 22'sini kaybediyor.
+    ///
+    /// Taramada bulunan iki sey:
+    /// 1. Ayni turde +10 fiyat artisi run'i olduruyordu (kazanma %10).
+    ///    +5'te ekonomi nefes aliyor ama spam yine pahali.
+    /// 2. Dalga sonu geliri bir TABAN GELIRDIR: oldurmekten bagimsiz oldugu
+    ///    icin tuzagi calismayan oyuncunun kaybetme sarmalini kiriyor.
     /// </summary>
     public sealed class EconomyRunner : MonoBehaviour
     {
         [Header("Gelir")]
-        [Tooltip("Run basindaki besin. 40 olcumle secildi.")]
-        public int startingBalance = 40;
+        [Tooltip("Run basindaki besin. 50 taramayla secildi: 40'ta oyuncu ilk " +
+                 "dalgalarda iki kule bile kuramiyor.")]
+        public int startingBalance = 50;
 
         [Tooltip("Oldurulen bocek basina besin.")]
         public int foodPerKill = 2;
 
-        [Tooltip("Dalga tamamlaninca kazanilan besin.")]
+        [Tooltip("Dalga tamamlaninca kazanilan besin. Bu bir TABAN GELIRDIR: " +
+                 "oldurmekten bagimsiz oldugu icin kaybetme sarmalini kirar.")]
         public int foodPerWave = 10;
 
         [Header("Kule Fiyatlari")]
@@ -30,14 +37,14 @@ namespace Colony.Runtime
         public int noisyCost = 12;
 
         [Tooltip("Sessiz kule pahalidir: gercek katliami o yapar.")]
-        public int silentCost = 20;
+        public int silentCost = 24;
 
         [Tooltip("Yem kulesi orta fiyatlidir.")]
         public int lureCost = 16;
 
-        [Tooltip("Ayni turden her yeni kulenin ek maliyeti. Tek stratejiyi " +
-                 "spam'lemeyi pahalilastirir ve cesitlilige iter.")]
-        public int costStepPerSameKind = 10;
+        [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
+                 "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]
+        public int costStepPerSameKind = 5;
 
         public RunEconomy Economy { get; private set; }
 
