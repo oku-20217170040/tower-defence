@@ -14,7 +14,7 @@ Roster, mevcut eksene uyarlanarak alındı.
 | Sınıf | Durum | Rol |
 |---|---|---|
 | Sessiz | Var (4 dps) | Tek hedef, sürekli, tehdit yazmaz. Asıl katil. |
-| Gürültücü | Var (10 dps) | **Alan hasarı ölçüldü, eklenmeyi bekliyor.** Aynı 4 dps ile tek hedefli kule 8 böcekten 2'sini, alan hasarlı 8'ini öldürüyor. Yüksek tehdit yazımı; yönlendirme aracı. |
+| Gürültücü / topçu | **Yapıldı** (20 Ağu) | **Alan hasarı, 2,5 dps.** Menzildeki tüm böceklere aynı anda vurur. Yüksek tehdit yazımı; yönlendirme aracı. |
 | Yem | Var | Pazarlıksız. Spec 3.4'ün "aha anı" ona bağlı. |
 | **Reçine** | **Yapıldı** (20 Ağu) | Yavaşlatır (x2), tehdit yazmaz, fiyat 16. Böcek sessiz kulenin menzilinde uzun kalır. Tek başına değersiz. |
 | **Işın** | Yeni | Delip geçen hat hasarı. Kalabalık koridoru cezalandırır; koloninin tek koridora yığılmasıyla doğrudan çatışır. |
@@ -61,6 +61,7 @@ Bir böcek türü feromon/öğrenme ile etkileşmiyorsa yalnızca bir can rakam�
 
 1. Plan 4 Görev 4 — ekonomi eğrisi ölçülüp kilitlenir (**önce bu**)
 2. Plan 7 Görev 1 — ~~Reçine~~ **bitti**. Sırada: Gürültücü kuleye alan hasarı, sonra Işın
-3. **Alan hasarı (topçu) ölçüldü:** `RunSimulator` ile aynı DPS'te tek hedefli 2, alan hasarlı 8 öldürme. Sürüye karşı fark devasa — ama önce temel denge sayıları eşzamanlı modelle yeniden ölçülmeli, yoksa topçu kırık bir zemine oturur.
-4. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
+3. ~~Topçu~~ **bitti.** Ölçülen DPS eğrisi (10 seed, kalibre simülatör): Splash 1,5 → sızıntı 29,3 (%20 kazanma); **2,5 → 20,6 (seçilen)**; 4 → 12,2; 10 → 10,0 (doygunluk). Tek hedefli 10 dps 18,3 veriyordu — yani alan hasarı ~4 kat değer katıyor ve 2,5 dps eski zorluğu koruyor. Topçu bir güç artışı değil, karakter değişimi.
+4. **Sırada: ekonomiyi sık** (kullanıcı kararı, 20 Ağu). Hedef 8-10. dalgada 6-8 kule; şu an 14,5. Kalibre simülatörle taranacak.
+5. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
 3. Plan 8 — böcek türleri, her biri kendi öğrenme testiyle

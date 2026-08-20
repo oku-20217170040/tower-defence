@@ -19,12 +19,18 @@ namespace Colony.Runtime
         [Tooltip("Menzil (hucre). Kulenin tehdit yaricapiyla ayni olmak zorunda degil.")]
         public float range = 4f;
 
+        [Tooltip("Acikken menzildeki TUM boceklere ayni anda vurur (gurultucu kule). " +
+                 "Olcum: alan hasari yaklasik 4 kat deger katiyor - 8 bocek gecerken " +
+                 "tek hedefli kule 2, alan hasarli 8 olduruyor.")]
+        public bool splash;
+
         private ColonyWorld world;
         private float worldRange;
 
-        public void Bind(ColonyWorld world, float rangeInCells, float dps)
+        public void Bind(ColonyWorld world, float rangeInCells, float dps, bool splash)
         {
             this.world = world;
+            this.splash = splash;
             range = rangeInCells;
             damagePerSecond = dps;
             worldRange = rangeInCells * world.Space.CellSize;
@@ -34,10 +40,45 @@ namespace Colony.Runtime
         {
             if (world == null || damagePerSecond <= 0f) return;
 
+            float damage = damagePerSecond * Time.deltaTime;
+
+            if (splash)
+            {
+                DamageEveryoneInRange(damage);
+                return;
+            }
+
             BugHealth target = FindNearestTarget();
             if (target == null) return;
 
-            target.TakeDamage(damagePerSecond * Time.deltaTime);
+            target.TakeDamage(damage);
+        }
+
+        /// <summary>
+        /// Menzildeki her bocege ayni anda vurur. Gurultucu kulenin sürüye
+        /// karsi degeri buradan gelir - ama koloni ondan kacmayi ogrendigi
+        /// icin onunden gecen sayisi zamanla azalir (spec 3.2).
+        /// </summary>
+        private void DamageEveryoneInRange(float damage)
+        {
+            var bugs = world.ActiveBugs;
+            if (bugs == null || bugs.Count == 0) return;
+
+            Vector2 origin = transform.position;
+            float rangeSqr = worldRange * worldRange;
+
+            // Hasar bocegi yok edebilecegi icin geriye dogru gezilir.
+            for (int i = bugs.Count - 1; i >= 0; i--)
+            {
+                BugAgent bug = bugs[i];
+                if (bug == null) continue;
+
+                BugHealth health = bug.Health;
+                if (health == null || !health.IsAlive) continue;
+
+                if (((Vector2)bug.transform.position - origin).sqrMagnitude <= rangeSqr)
+                    health.TakeDamage(damage);
+            }
         }
 
         /// <summary>

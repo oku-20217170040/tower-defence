@@ -28,9 +28,10 @@ namespace Colony.Runtime
         public float towerScale = 0.8f;
 
         [Header("Silah")]
-        [Tooltip("Gurultucu kulenin saniyelik hasari. Yuksektir ama onunden " +
-                 "zamanla kimse gecmez; gercek hasari cok daha dusuk kalir.")]
-        public float noisyDps = 10f;
+        [Tooltip("Gurultucu kulenin saniyelik hasari. ALAN hasari verdigi icin " +
+                 "dusuktur: olcumde alan hasari yaklasik 4 kat deger katiyor, " +
+                 "2,5 alan hasari 10 tek hedefli hasara denk cikti.")]
+        public float noisyDps = 2.5f;
 
         [Tooltip("Sessiz kulenin saniyelik hasari. Dusuktur ama surekli is gorur - " +
                  "tuzak koridorunda gercek katliami bu yapar.")]
@@ -125,9 +126,11 @@ namespace Colony.Runtime
             float dps = kind == TowerKind.Noisy ? noisyDps
                       : (kind == TowerKind.Silent ? silentDps : 0f);
 
+            // Alan hasari YALNIZCA gurultucu kulede: sürüyü bicen odur.
             if (dps > 0f)
                 go.AddComponent<TowerWeapon>().Bind(
-                    world, tower.radius * rangeMultiplier, dps * damageMultiplier);
+                    world, tower.radius * rangeMultiplier, dps * damageMultiplier,
+                    kind == TowerKind.Noisy);
 
             // Titresim halkasi YALNIZCA gurultucu kulede. Halkasizlik,
             // "koloni beni goremiyor" demenin gorsel yoludur (spec 9.1).

@@ -17,6 +17,10 @@ namespace Colony.Tests
     /// 12 + 5x7, recine 27 = (16 + 5x4) x 0,75 (draft indirimi), sessiz
     /// 66 = (24 + 5x13) x 0,75.
     ///
+    /// NOT: referans run gurultucu kule TEK HEDEFLI 10 dps iken oynandi.
+    /// Sonra alan hasarina (2,5 dps) gecildi; olcum ikisinin ayni zorluk
+    /// bandini urettigini gosteriyor, bu yuzden referans gecerli kaldi.
+    ///
     /// Bu testler oyunun dengesini degil, OLCUM ARACININ gercekle
     /// ortusmesini korur. Sapma buyurse ya simulator ya da oyun degismistir;
     /// hangisi oldugu arastirilmadan denge sayilari degistirilmemeli.
@@ -83,40 +87,14 @@ namespace Colony.Tests
             public float TowersAtWave8;
         }
 
+        /// <summary>
+        /// Referans run'i yeniden uretir. Gurultucu kule O RUN'DA tek hedefli
+        /// 10 dps idi; kalibrasyon kendi kosullariyla olculmeli, bugunku
+        /// varsayilanlarla degil. Alan hasari karari ayri testlerde olculuyor.
+        /// </summary>
         private Averages Measure(int seedCount)
         {
-            var settings = RunSimulator.Settings.Default();
-            int wins = 0;
-            float killed = 0f, leaked = 0f, towers = 0f, food = 0f, w8 = 0f;
-
-            for (int s = 0; s < seedCount; s++)
-            {
-                var planner = new EconomyPlanner(
-                    EconomyPlanner.Costs.Default(),
-                    EconomyPlanner.Policy.Default(),
-                    Place,
-                    settings.TotalWaves);
-
-                var built = new List<RunSimulator.TowerSpec>();
-                var result = sim.Run(built, settings, seed: 1000 + s * 37, planner: planner);
-
-                if (result.Survived) wins++;
-                killed += result.TotalKilled;
-                leaked += result.TotalLeaked;
-                towers += planner.TowersBuilt;
-                food += planner.LeftoverFood;
-                w8 += planner.TowersAtWave[8];
-            }
-
-            return new Averages
-            {
-                WinPercent = 100 * wins / seedCount,
-                Killed = killed / seedCount,
-                Leaked = leaked / seedCount,
-                Towers = towers / seedCount,
-                LeftoverFood = food / seedCount,
-                TowersAtWave8 = w8 / seedCount
-            };
+            return MeasureWithNoisy(RunSimulator.Targeting.Single, 10f, seedCount);
         }
 
         [Test]
@@ -179,6 +157,74 @@ namespace Colony.Tests
             Assert.Greater(avg.TowersAtWave8, 8f,
                 "8. dalgadaki kule sayisi dusmus - ekonomi degistiyse bu test " +
                 "ve spec 3.5b birlikte guncellenmeli. Olculen: " + avg.TowersAtWave8);
+        }
+
+        [Test]
+        public void NoisySplash_MatchesSingleTargetAtAQuarterOfTheDps()
+        {
+            // Topcu karari: gurultucu kule alan hasari verir. Olcumde alan
+            // hasari yaklasik 4 kat deger katiyor - 2,5 alan hasari, 10 tek
+            // hedefli hasarla ayni zorluk bandini uretiyor:
+            //   Single 10  -> sizinti 18,3
+            //   Splash 2,5 -> sizinti 20,6
+            //   Splash 4   -> sizinti 12,2  (oyunu kolaylastirir)
+            //   Splash 1,5 -> sizinti 29,3  (kazanma %20)
+            var splash = MeasureWithNoisy(RunSimulator.Targeting.Splash, 2.5f, seedCount: 10);
+            var single = MeasureWithNoisy(RunSimulator.Targeting.Single, 10f, seedCount: 10);
+
+            Assert.That(splash.Leaked, Is.EqualTo(single.Leaked).Within(6f),
+                "Alan hasarli 2,5 dps artik tek hedefli 10 dps'e denk degil: " +
+                "alan=" + splash.Leaked + " tek=" + single.Leaked);
+        }
+
+        [Test]
+        public void NoisySplash_TooStrongWouldTrivializeTheRun()
+        {
+            // 4 dps alan hasari sizintiyi 12'ye indiriyordu; secilmemesinin
+            // sebebi bu. Test, dps'in sessizce yukseltilmesini yakalar.
+            var strong = MeasureWithNoisy(RunSimulator.Targeting.Splash, 4f, seedCount: 10);
+            var chosen = MeasureWithNoisy(RunSimulator.Targeting.Splash, 2.5f, seedCount: 10);
+
+            Assert.Less(strong.Leaked, chosen.Leaked,
+                "Alan hasarini yukseltmek artik oyunu kolaylastirmiyor; secim " +
+                "gerekcesi olcume dayanmiyor.");
+        }
+
+        private Averages MeasureWithNoisy(RunSimulator.Targeting targeting, float dps, int seedCount)
+        {
+            var settings = RunSimulator.Settings.Default();
+            int wins = 0;
+            float killed = 0f, leaked = 0f, towers = 0f, food = 0f, w8 = 0f;
+
+            for (int s = 0; s < seedCount; s++)
+            {
+                var policy = EconomyPlanner.Policy.Default();
+                policy.NoisyTargeting = targeting;
+                policy.NoisyDps = dps;
+
+                var planner = new EconomyPlanner(
+                    EconomyPlanner.Costs.Default(), policy, Place, settings.TotalWaves);
+
+                var built = new List<RunSimulator.TowerSpec>();
+                var result = sim.Run(built, settings, seed: 1000 + s * 37, planner: planner);
+
+                if (result.Survived) wins++;
+                killed += result.TotalKilled;
+                leaked += result.TotalLeaked;
+                towers += planner.TowersBuilt;
+                food += planner.LeftoverFood;
+                w8 += planner.TowersAtWave[8];
+            }
+
+            return new Averages
+            {
+                WinPercent = 100 * wins / seedCount,
+                Killed = killed / seedCount,
+                Leaked = leaked / seedCount,
+                Towers = towers / seedCount,
+                LeftoverFood = food / seedCount,
+                TowersAtWave8 = w8 / seedCount
+            };
         }
     }
 }

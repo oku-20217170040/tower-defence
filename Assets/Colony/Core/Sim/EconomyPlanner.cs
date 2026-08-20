@@ -57,6 +57,10 @@ namespace Colony.Core
             public float ResinSlowFactor;
             public float NoisyThreatStrength;
 
+            /// <summary>
+            /// Gurultucu kule alan hasari verir (topcu karari, 20 Agu 2026).
+            /// TowerPlacer varsayilanlari ile ayni: Splash, 2,5 dps.
+            /// </summary>
             public RunSimulator.Targeting NoisyTargeting;
 
             /// <summary>Draft her dalga bedava kule veriyor mu?</summary>
@@ -80,11 +84,11 @@ namespace Colony.Core
                         TowerKind.Noisy
                     },
                     SilentDps = 4f,
-                    NoisyDps = 10f,
+                    NoisyDps = 2.5f,
                     TowerRadius = 4f,
                     ResinSlowFactor = 2f,
                     NoisyThreatStrength = 4f,
-                    NoisyTargeting = RunSimulator.Targeting.Single,
+                    NoisyTargeting = RunSimulator.Targeting.Splash,
                     DraftGivesFreeTower = true,
                     DraftFoodReward = 0
                 };
