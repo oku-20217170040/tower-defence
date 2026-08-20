@@ -37,10 +37,10 @@ namespace Colony.Core
                     StartingBalance = 50,
                     FoodPerKill = 2,
                     FoodPerWave = 10,
-                    NoisyCost = 12,
-                    SilentCost = 24,
-                    LureCost = 16,
-                    ResinCost = 16,
+                    NoisyCost = 20,
+                    SilentCost = 40,
+                    LureCost = 26,
+                    ResinCost = 26,
                     CostStep = 5
                 };
             }

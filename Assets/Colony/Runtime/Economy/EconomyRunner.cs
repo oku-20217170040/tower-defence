@@ -6,6 +6,12 @@ namespace Colony.Runtime
     /// <summary>
     /// Ekonomiyi sahneye baglar: gelirleri toplar, kule fiyatlarini hesaplar.
     ///
+    /// GUNCELLEME (20 Agu 2026): bocek cani buyumesi %15'ten %10'a
+    /// dusuruldugu icin fiyatlar yukseltildi (sessiz 24 -> 40, gurultucu
+    /// 12 -> 20, yem/recine 16 -> 26). Olcum: bu ikili birlikte kule
+    /// sayisini 14'ten 12'ye indiriyor ve zorlugu koruyor (sizinti 20,4 ->
+    /// 22,8). Tek basina can dusurulseydi oyun KOLAYLASIRDI.
+    ///
     /// Tum sayilar 162 kombinasyon x 20 seed taramasiyla secildi
     /// (ColonyEconomyTests egriyi koruyor). Secilen ayar: optimal oynayan
     /// oyuncu run'larin %85'ini kazaniyor, 8. dalgada ortalama 5,6 kuleye
@@ -34,17 +40,17 @@ namespace Colony.Runtime
         [Header("Kule Fiyatlari")]
         [Tooltip("Gurultucu kule ucuzdur: tek basina ise yaramadigi icin (spec 3.4) " +
                  "oyuncunun onu denemesi ucuza gelmeli.")]
-        public int noisyCost = 12;
+        public int noisyCost = 20;
 
         [Tooltip("Sessiz kule pahalidir: gercek katliami o yapar.")]
-        public int silentCost = 24;
+        public int silentCost = 40;
 
         [Tooltip("Yem kulesi orta fiyatlidir.")]
-        public int lureCost = 16;
+        public int lureCost = 26;
 
         [Tooltip("Recine kulesi. Hasar vermedigi icin sessizden ucuz; degeri " +
                  "yalnizca bir sessiz kuleyle eslestiginde ortaya cikiyor.")]
-        public int resinCost = 16;
+        public int resinCost = 26;
 
         [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
                  "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]

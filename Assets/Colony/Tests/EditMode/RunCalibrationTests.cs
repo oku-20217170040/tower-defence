@@ -17,9 +17,11 @@ namespace Colony.Tests
     /// 12 + 5x7, recine 27 = (16 + 5x4) x 0,75 (draft indirimi), sessiz
     /// 66 = (24 + 5x13) x 0,75.
     ///
-    /// NOT: referans run gurultucu kule TEK HEDEFLI 10 dps iken oynandi.
-    /// Sonra alan hasarina (2,5 dps) gecildi; olcum ikisinin ayni zorluk
-    /// bandini urettigini gosteriyor, bu yuzden referans gecerli kaldi.
+    /// NOT: referans run BUGUNKU ayarlarla oynanmadi. O sirada gurultucu
+    /// kule tek hedefli 10 dps idi, bocek cani her dalga %15 buyuyordu ve
+    /// kuleler ucuzdu (sessiz 24). Kalibrasyon bu kosullari acikca kurar -
+    /// yoksa oyun her dengelendiginde referans kirilir ve olcum aracinin
+    /// dogrulugu hakkinda hicbir sey soylemez.
     ///
     /// Bu testler oyunun dengesini degil, OLCUM ARACININ gercekle
     /// ortusmesini korur. Sapma buyurse ya simulator ya da oyun degismistir;
@@ -124,10 +126,10 @@ namespace Colony.Tests
             // Sabit kule listesiyle ayni kurulum 1,5 sizinti veriyordu; ekonomiyle
             // 18. Aradaki fark tamamen erken dalgalardan geliyor - oyunun zorlugu
             // orada. Bu test o gercegin kaybolmamasini sagliyor.
-            var settings = RunSimulator.Settings.Default();
+            var settings = ReferenceSettings();
 
             var planner = new EconomyPlanner(
-                EconomyPlanner.Costs.Default(),
+                ReferenceCosts(),
                 EconomyPlanner.Policy.Default(),
                 Place,
                 settings.TotalWaves);
@@ -190,9 +192,28 @@ namespace Colony.Tests
                 "gerekcesi olcume dayanmiyor.");
         }
 
-        private Averages MeasureWithNoisy(RunSimulator.Targeting targeting, float dps, int seedCount)
+        /// <summary>Referans run'in oynandigi kosullar. Bugunku dengeden bagimsizdir.</summary>
+        private static RunSimulator.Settings ReferenceSettings()
         {
             var settings = RunSimulator.Settings.Default();
+            settings.HpGrowthPerWave = 0.15f;
+            return settings;
+        }
+
+        /// <summary>Referans run'in fiyatlari.</summary>
+        private static EconomyPlanner.Costs ReferenceCosts()
+        {
+            var costs = EconomyPlanner.Costs.Default();
+            costs.NoisyCost = 12;
+            costs.SilentCost = 24;
+            costs.LureCost = 16;
+            costs.ResinCost = 16;
+            return costs;
+        }
+
+        private Averages MeasureWithNoisy(RunSimulator.Targeting targeting, float dps, int seedCount)
+        {
+            var settings = ReferenceSettings();
             int wins = 0;
             float killed = 0f, leaked = 0f, towers = 0f, food = 0f, w8 = 0f;
 
@@ -203,7 +224,7 @@ namespace Colony.Tests
                 policy.NoisyDps = dps;
 
                 var planner = new EconomyPlanner(
-                    EconomyPlanner.Costs.Default(), policy, Place, settings.TotalWaves);
+                    ReferenceCosts(), policy, Place, settings.TotalWaves);
 
                 var built = new List<RunSimulator.TowerSpec>();
                 var result = sim.Run(built, settings, seed: 1000 + s * 37, planner: planner);

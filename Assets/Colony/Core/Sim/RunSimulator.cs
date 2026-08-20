@@ -77,7 +77,7 @@ namespace Colony.Core
                 return new Settings
                 {
                     BaseBugHp = 10f,
-                    HpGrowthPerWave = 0.15f,
+                    HpGrowthPerWave = 0.10f,
                     BaseBugsPerWave = 8,
                     BugsAddedPerWave = 1f,
                     TotalWaves = 15,

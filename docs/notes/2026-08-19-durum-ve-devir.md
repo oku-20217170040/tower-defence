@@ -77,11 +77,11 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Gürültücü kule | **alan hasarı, 2,5 dps** | Alan hasarı ~4 kat değer katıyor; 2,5 splash = 10 tek hedefli. 4 dps oyunu kolaylaştırıyor, 1,5 ölü |
 | Sessiz kule DPS | 4 | 3'te hiç öldürmüyor, 4'te hepsini öldürüyor — eşik keskin |
 | Gürültücü kule DPS | 10 | Önünden geçen kalmadığı için gerçek DPS'i çok daha düşük |
-| Böcek canı | 10 × (1 + 0,15 × (dalga−1)) | Asıl zorluk düğmesi bu |
+| Böcek canı | 10 × (1 + **0,10** × (dalga−1)) | 0,15'te ekonominin hiçbir düğmesi çalışmıyordu: yetersiz kule → az öldürme → az gelir → çöküş sarmalı. 0,10'da eşik yumuşadı |
 | İlk dalga böcek | 8 | 10 iken oyuncu toparlanamadan 4. dalgada kaybediyordu |
 | Yuva canı | 30 | Zayıf düğme: 50 yapmak kayıp dalgasını 10'dan 11'e taşıdı |
 | Başlangıç besini | 50 | 20 Ağu taraması; 40'ta oyuncu ilk dalgalarda iki kule bile kuramıyor |
-| Kule fiyatları | Gürültücü 12 · Yem 16 · Sessiz 24, aynı türde **+5** | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
+| Kule fiyatları | Gürültücü **20** · Yem/Reçine **26** · Sessiz **40**, aynı türde +5 | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
 
 **Ölçülen eğri (20 Ağu):** optimal oyuncu run'ların %85'ini kazanıyor, 8. dalgada ortalama 5,6 kule, yuva canının 30'da 22'si gidiyor. Eski 3/5/6/9 hedefi ölçümde hiç kazanmıyordu — geçersiz.
 

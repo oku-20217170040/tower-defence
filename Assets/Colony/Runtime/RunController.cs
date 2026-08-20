@@ -37,8 +37,12 @@ namespace Colony.Runtime
         [Tooltip("Ilk dalgadaki bocek cani.")]
         public float baseBugHp = 10f;
 
-        [Tooltip("Her dalga canin artis orani. 0.15 = dalga basina %15.")]
-        public float hpGrowthPerWave = 0.15f;
+        [Tooltip("Her dalga canin artis orani. 0,10 olcumle secildi: 0,15'te " +
+                 "ekonominin HICBIR dugmesi calismiyordu. Yetersiz kule sayisi " +
+                 "hizla oldurme kaybina, o da gelir kaybina donusup kendini " +
+                 "besleyen bir cokuse yol aciyordu. 0,10'da esik yumusuyor ve " +
+                 "fiyatlar gercek bir ayar dugmesi haline geliyor.")]
+        public float hpGrowthPerWave = 0.10f;
 
         [Tooltip("Ilk dalgadaki bocek sayisi. 8 olcumle secildi: 10 iken oyuncu " +
                  "yeterli kuleyi kuramadan 4. dalgada kaybediyordu.")]

@@ -137,4 +137,33 @@ Sarmalın kaynağı **`hpGrowthPerWave = 0,15`**. Böcek canı her dalga %15 bü
 
 **Yine de 6-8 bandına ulaşılamadı; en düşük kazanan değer 12.** Bandı açmak için kule *sayısını* değil kule *gücünü* ölçeklendiren bir sistem (yükseltme) gerekiyor — bu Plan 5'in konusu.
 
-**Karar bekliyor:** can büyümesini %10'a düşürüp ekonomiyi yeniden mi ayarlayalım, yoksa mevcut bandı (14 kule) kabul edip hedefi mi güncelleyelim.
+### Uygulanan karar (kullanıcı, 20 Ağu): can büyümesi %10
+
+`hpGrowthPerWave` 0,15 → **0,10**, ve fiyatlar birlikte yükseltildi (sessiz 24→40, gürültücü 12→20, yem/reçine 16→26). **İkisi birlikte** yapılmalıydı: tek başına can düşürülseydi oyun kolaylaşırdı.
+
+Ölçülen yeni denge (20 seed):
+
+| | Öncesi (%15, ucuz) | Sonrası (%10, pahalı) |
+|---|---|---|
+| Kazanma | %100 | %100 |
+| Sızıntı | 20,6 | 22,1 |
+| Kule (dalga 8) | 15,6 | **12,0** |
+| Kule (dalga 5) | — | 7,0 |
+| Artan besin | 69,5 | 120,6 |
+
+**Kazanılan:** kule sayısı hedefe yaklaştı, zorluk korundu, ve ekonomi artık ayarlanabilir — %15'te hiçbir düğme çalışmıyordu.
+
+**Kalan sorun:** artan besin 120'ye çıktı. Fiyat yükselince aynı parayla daha az kule alınıyor, kalan para birikiyor. Paranın harcanacak ikinci bir yeri yok (yükseltme sistemi Plan 5).
+
+### Hedef bant artık ULAŞILABİLİR — ama bedeli var
+
+Can %10 olunca 6-8 bandı ölçümde göründü. Dalga gelirini 10'dan 5'e indirmek yetiyor:
+
+| dalga geliri | fiyat adımı | kazanma | sızıntı | w8 | w15 |
+|---|---|---|---|---|---|
+| 10 (mevcut) | 5 | %100 | 22,5 | 12,0 | 24,0 |
+| 5 | 5 | %66 | 27,7 | 8,8 | 16,0 |
+| 5 | 8 | %58 | 27,8 | **7,3** | 13,5 |
+| 5 (öldürme geliri 1) | 5 | %41 | 28,8 | 6,7 | 8,8 |
+
+Hedef bandı tutturmanın bedeli: kazanma %58-66'ya iniyor ve sızıntı yuva canının %93'üne çıkıyor — her run bıçak sırtı olur. **Karar bekliyor.**
