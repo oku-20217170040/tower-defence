@@ -18,7 +18,8 @@ Roster, mevcut eksene uyarlanarak alındı.
 | Yem | Var | Pazarlıksız. Spec 3.4'ün "aha anı" ona bağlı. |
 | **Reçine** | Yeni | Yavaşlatır. Böcek koridorda uzun kalır → sessiz kulelerin gerçek DPS'i katlanır. **Ölçülecek soru:** tehdit yazsın mı? Yazarsa yönlendirici, yazmazsa muhtemelen fazla güçlü. |
 | **Işın** | Yeni | Delip geçen hat hasarı. Kalabalık koridoru cezalandırır; koloninin tek koridora yığılmasıyla doğrudan çatışır. |
-| **Saat (clock)** | Yeni — kullanıcı isteği | Zaman yavaşlatıcı. **Açık soru:** kule mi, cooldown'lu aktif yetenek mi? Aktif yetenek olursa oyunun tek anlık müdahale aracı olur; kule olursa Reçine ile rolü çakışır. Karar Plan 7 Görev 1'de verilecek. |
+
+**Saat (clock) kulesi — eklenmedi (20 Ağustos kararı).** Kısa süre düşünüldü, sonra çıkarıldı: Reçine zaten yavaşlatmayı sağlıyor. Reçine yerel ve kalıcı (menzilindeki böcek yavaş ilerler, bir *yerleştirme* kararıdır), Saat global ve anlık olacaktı (bir *zamanlama* kararı). Farklı eksende olsalar da oyuncunun kafasında ikisi aynı yere düşer ve roster'ı kalabalıklaştırır. Anlık müdahale aracı ilerde gerekirse Plan 5'te (meta ilerleme) yeniden değerlendirilir.
 
 **Yükseltme:** Draft zaten kalıcı hasar/menzil pasifi veriyor. Kule başına ayrı yükseltme ekonomiye üçüncü para deliği açar; Görev 4 eğrisi kilitlenmeden eklenmeyecek. Eklenirse en fazla 2 seviye.
 
@@ -54,6 +55,6 @@ Bir böcek türü feromon/öğrenme ile etkileşmiyorsa yalnızca bir can rakam�
 ## Sıra
 
 1. Plan 4 Görev 4 — ekonomi eğrisi ölçülüp kilitlenir (**önce bu**)
-2. Plan 7 Görev 1 — Saat kararı + Reçine (ölçüm modeli düzeltilecek) ve Işın
+2. Plan 7 Görev 1 — Reçine (ölçüm modeli düzeltilecek) ve Işın
 3. **Işın için uyarı:** mevcut simülasyon böcekleri *sıralı* işliyor, aynı anda kaç böceğin hizada olduğunu modellemiyor. Delici hat hasarının değeri tam olarak buna bağlı; Işın ölçülmeden önce simülasyonun eşzamanlı hale getirilmesi gerekiyor. Bu, reçineden daha büyük bir iş.
 3. Plan 8 — böcek türleri, her biri kendi öğrenme testiyle
