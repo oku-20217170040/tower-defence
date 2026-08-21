@@ -208,6 +208,15 @@ namespace Frontline.Core
             /// bunun sonraki dalgadaki payla karsilastirilmasiyla olculur.
             /// </summary>
             public int[][] WaveSoldierArrivals;
+
+            /// <summary>
+            /// [dalga][sutun] = o dalgada o sutunda OLEN birlik sayisi.
+            /// Kuluckanin iddiasi ("oyuncunun kendi tuzagi orduya
+            /// 'buradan gitme' diye isaretlenir") ancak bunun sonraki
+            /// dalgadaki payla karsilastirilmasiyla olculur - askerin
+            /// civilemesinin tersi.
+            /// </summary>
+            public int[][] WaveDeathColumns;
         }
 
         private sealed class Unit
@@ -280,13 +289,15 @@ namespace Frontline.Core
                 ColumnUsage = new int[grid.Width],
                 WaveEntropy = new float[settings.TotalWaves + 1],
                 WaveColumnUsage = new int[settings.TotalWaves + 1][],
-                WaveSoldierArrivals = new int[settings.TotalWaves + 1][]
+                WaveSoldierArrivals = new int[settings.TotalWaves + 1][],
+                WaveDeathColumns = new int[settings.TotalWaves + 1][]
             };
 
             for (int w = 0; w <= settings.TotalWaves; w++)
             {
                 result.WaveColumnUsage[w] = new int[grid.Width];
                 result.WaveSoldierArrivals[w] = new int[grid.Width];
+                result.WaveDeathColumns[w] = new int[grid.Width];
             }
             int midRow = grid.Height / 2;
 
@@ -373,12 +384,18 @@ namespace Frontline.Core
                             recon.WeakenTrail(unit.Visited,
                                 settings.WeakenOnDeath * unit.Profile.WeakenMultiplier);
                             result.TotalKilled++;
+
+                            // Nerede oldu: kuluckanin olum-izi iddiasi
+                            // ancak bununla olculebilir.
+                            if (wave < result.WaveDeathColumns.Length)
+                                result.WaveDeathColumns[wave][grid.X(unit.Path[unit.PathIndex])]++;
                             if (planner != null) planner.OnUnitKilled();
 
                             // Kulucka: oldugu yerden yavrular ayrilir. Yavru
                             // tekrar bolunmez, yoksa tek birlik ordu uretir.
                             if (unit.Profile.SplitCount > 0 && !unit.IsSpawnling)
-                                Split(unit, active, pool);
+                                Split(unit, active, pool, finder, model, random,
+                                      BaseExplorationNoise);
 
                             Recycle(unit, active, pool, i);
                             continue;
@@ -399,6 +416,11 @@ namespace Frontline.Core
                             // Kralice usya varirsa ordunun korkusu silinir.
                             // Kapsam ve kaliciligi Plan 8 Gorev 6'da olculecek.
                             if (unit.Profile.ClearsThreat) threat.Clear();
+
+                            // Ordunun ogrendigi her sey silinir. Oyuncunun
+                            // kurdugu yonlendirme degil, ORDUNUN HAFIZASI
+                            // sifirlanir - kralicenin asil sildigi sey budur.
+                            if (unit.Profile.ClearsRecon) recon.Clear();
 
                             result.TotalLeaked++;
                             baseHp--;
@@ -702,7 +724,9 @@ namespace Frontline.Core
         /// Yavrular ana birligin rotasini paylasir - yeni rota aramazlar,
         /// cunku ayrilma bir KARAR degil, bir kazadir.
         /// </summary>
-        private void Split(Unit parent, List<Unit> active, List<Unit> pool)
+        private void Split(Unit parent, List<Unit> active, List<Unit> pool,
+                           RoutePathfinder finder, RouteCostModel model, Random random,
+                           float baseNoise)
         {
             for (int n = 0; n < parent.Profile.SplitCount; n++)
             {
@@ -720,6 +744,26 @@ namespace Frontline.Core
                 child.Hp = BaseHpOf(parent) * parent.Profile.SplitHpMultiplier;
                 child.SpawnHp = child.Hp;
                 child.Alive = true;
+
+                // Yavru yeni rota arayabilir: kulucka olunce surusu dagilir.
+                if (parent.Profile.SplitlingsRepath)
+                {
+                    model.IgnoresRecon = parent.Profile.IgnoresRecon;
+                    model.IgnoresDecoy = parent.Profile.IgnoresDecoy;
+                    model.ExplorationNoise = parent.Profile.SplitlingNoise > 0f
+                        ? parent.Profile.SplitlingNoise
+                        : baseNoise;
+                    model.BeginQuery(random.Next(), grid);
+
+                    var fresh = new List<int>();
+                    if (finder.FindPath(parent.Path[parent.PathIndex], baseCell, fresh))
+                    {
+                        child.Path.Clear();
+                        child.Path.AddRange(fresh);
+                        child.PathIndex = 0;
+                        child.Progress = 0f;
+                    }
+                }
 
                 active.Add(child);
             }

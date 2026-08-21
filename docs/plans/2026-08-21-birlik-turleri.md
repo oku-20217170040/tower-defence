@@ -1,7 +1,7 @@
 # Birlik Türleri — Plan 8
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Görev 1-3 bitti (altyapı, izci, asker). Sırada Görev 4 — Kör birlik.
+**Durum:** Görev 1, 2, 3, 6 bitti (altyapı, izci, asker, kraliçe). Görev 4 (kör) ölçüm aracı yetersizliğinden ertelendi, Görev 5 (kuluçka) ölçümle elendi. Sırada Görev 7 — runtime doğrulaması.
 **Ön koşul:** Plan 7 bitti (pusu, batarya, yem, mayın tarlası, ışın).
 
 ## Pazarlıksız kural
@@ -94,29 +94,66 @@ Ortalama entropi askeri ölçemedi: pekiştirme x1→x8 ortalamayı 0,568'den 0,
 
 > **Doğrulanmamış kalan:** askerin oyunda büyük/koyu/yavaş göründüğü ve geçtiği koridorun sonraki dalgada tercih edildiği — **oynayarak doğrulanmalı.**
 
-### Görev 4 — Kör birlik
+### Görev 4 — Kör birlik — **ERTELENDİ (ölçüm aracı yetersiz)**
 
-Ölçülecek: oranı ve can çarpanı. Davranış ikili (bakar/bakmaz), ayarlanacak sayı yok.
+Dört varyant, %10'dan **%100'e** kadar denendi. Hiçbiri ölçülebilir bir şey üretmedi (yem alan oyuncuya karşı sızıntı):
 
-Aranan davranış: yem ağırlıklı oyuncunun sızıntısı artmalı, tehdit (batarya) ağırlıklı oyuncununki artmamalı. Ölçüm: iki politika (yem ağırlıklı / batarya ağırlıklı) kör birlik oranına karşı taranır.
+| Varyant | Sızıntı |
+|---|---|
+| kör yok | 6,3 |
+| ize + yeme kör | 6,3 |
+| yalnız yeme kör | 6,3 |
+| yalnız ize kör | 6,3 |
+| yalanı silen kör (yeni mekanik denendi) | 6,2 |
+| kör %100 | 6,4 |
 
-Kabul edilmez sonuç: kör birlik yemi tümüyle işe yaramaz hale getirirse. Yem spec 3.4'ün "aha anı"na bağlı ve pazarlıksız; kör birliğin oranı bunu bozamayacak kadar düşük olmalı.
+**Sebep kör birlikte değil, ölçüm modelinde.** Simülatörün oyuncu modeli kuleleri her koridora eşit dağıtıyor; dolayısıyla ordunun hangi koridoru seçtiği hayatta kalmayı etkilemiyor. Tuzak koridoru yerleşimi de denendi — kör birlik olmadan da %10 kazanıyor (ölçülmüş tasarım gerçeği #3 hâlâ geçerli).
 
-### Görev 5 — Kuluçka
+Ayrıca yemin değeri **koridor seçiminden değil, ordunun toplanmasından** geliyor: yem sürüyü topluyor, toplanan sürü bataryanın alan hasarını besliyor. Kör birlikler o toplanmayı bozmaya yetmiyor.
 
-Ölçülecek: bölünme sayısı (2), yavruların can/hız çarpanı, `WeakenMultiplier`.
+**Açılması için gereken:** simülatörün oyuncusu kuleleri ordunun gerçekten gittiği yere kurmalı (uyarlamalı yerleştirme). Bu, ışının son ayarı ve yem stratejisinin ölçümü için de gerekli.
 
-Aranan davranış: oyuncunun en çok öldürdüğü koridor, ordunun *kaçındığı* koridor haline gelmeli — yani tuzak kendini bozmalı. Ölçüm metriği: öldürme yoğunluğu ile sonraki dalga koridor payı arasındaki ilişki.
+**Bu görev sırasında bulunan hata:** `RunSimulator` yemi **hiç uygulamıyordu** — bu tarihe kadarki bütün denge ölçümlerinde yem kulesi etkisizdi. Düzeltildi; yem ek kule olarak sızıntıyı 13,3'ten 6,3'e indiriyor.
 
-Bu, oyunun tersine çevrilmiş sezgisini (spec 3.2) doğrudan besleyen tür; muhtemelen en değerlisi.
+### Görev 5 — Kuluçka — **EKLENMEDİ (kanalı zaten bedava)**
 
-### Görev 6 — Kraliçe
+Metrik eklendi (`WaveDeathColumns`): en çok ölünen sütunun sonraki dalgadaki pay değişimi. Negatif = ordu tuzaktan kaçınıyor.
 
-Ölçülecek: hangi dalgalarda çıkacağı, can çarpanı, tehdit silmenin kapsamı (tümü mü, menzil içi mi) ve kalıcılığı.
+| Kurulum | Kaçınma | Öldürme | Sızıntı |
+|---|---|---|---|
+| **kuluçka yok** | **−0,1115** | 212,5 | 12,5 |
+| sönümleme x1 | −0,1176 | 273,8 | 19,8 |
+| sönümleme x10 | −0,1184 | 273,7 | 19,8 |
 
-Aranan davranış: kraliçe dalgasından sonra oyuncunun yönlendirmeyi *yeniden kurması* gerekmeli — ama kurabilmeli. Ölçüm: kraliçe sonrası 2 dalgada sızıntı sıçraması.
+**Ordu, kuluçka olmadan da tuzaktan kaçınıyor** (−0,111). Sebep: taban `WeakenOnDeath = 2,5` zaten her ölen birliğin izini söndürüyor. Kuluçkanın `WeakenMultiplier`'ı x1'den x10'a çıkarken kaçınmayı yalnızca −0,1176'dan −0,1184'e taşıyor — yani **iddia ettiği kanal zaten oyunun taban davranışı.**
 
-Kabul edilmez sonuç: tehdidin tamamen ve kalıcı silinmesi. Ölçülmüş sabit "batarya tehdit gücü 4, doymuş bir izi 5-6 dalgada kırar" — sıfırlama bu yatırımı bir anda çöpe atarsa batarya ölü kule olur.
+"Yavrular yeni rota arasın" varyantı da denendi (dağıtıcı bir kanal olur umuduyla): entropi 0,556 → 0,558. Hiçbir şey.
+
+Geriye kalan tek etkisi bölünme: öldürme 212 → 273, sızıntı 12,5 → 19,8. Bu bir **zorluk/ekonomi çarpanı**, öğrenme kanalı değil. Plan 8'in pazarlıksız kuralına göre eklenmez.
+
+> Altyapı kodda duruyor (`SplitCount`, `SplitlingsRepath`) ve test ediliyor. İleride zorluk eğrisi sıkılaştırılmak istenirse kuluçka **bilinçli olarak "sadece zorluk" türü** diye eklenebilir — ama o zaman öyle adlandırılmalı.
+
+### Görev 6 — Kraliçe — **TAMAMLANDI (21 Ağustos)**
+
+**Seçilen:** pay **%5** (5. dalgadan itibaren), can **x8**, hız **x0,7**, **keşif izini siler** (tehdidi değil).
+
+**Bu planın kendi tanımı yanlıştı.** Plan "kraliçe tehdit alanını temizler — ordunun korkusunu siler" diyordu. Ölçüm bunun hiçbir şey yapmadığını gösterdi:
+
+| Kraliçe (pay %8) | Sızıntı | Entropi |
+|---|---|---|
+| tehdit **siler** | 26,4 | 0,507 |
+| tehdit **silmez** | 26,4 | 0,507 |
+| **hafıza (keşif izi) siler** | **25,2** | **0,552** |
+
+**Tehdit alanı ordunun hafızası değil** — her dalga başında kulelerden yeniden kurulan, oyuncunun kule yerleşiminin statik bir fonksiyonu. Silmenin etkisi olamaz. Ordunun gerçekten öğrendiği şey **keşif izi**. Kraliçe onu silince kanal ortaya çıktı.
+
+**Kanal candan bağımsız:** zayıf kraliçede (can x2) bile entropi 0,520 → 0,535. Askerdeki ayrımın aynısı — kraliçe "büyük canlı birlik" değil, orduya unutturan birlik.
+
+Pay: %3'te etki zar zor görünüyor (+0,026), %8'te run %65 kazanmaya düşüyor. **%5** seçildi (+0,032, kazanma %95).
+
+**Uygulandı:** `UnitProfile.ClearsRecon`, `UnitRoster.QueenShare/QueenFirstWave`, `UnitAgent` hafıza silme, spawner'da kraliçenin görsel ayrımı (en büyük, mor). `QueenTests` (4 test).
+
+> **Doğrulanmamış kalan:** kraliçe üsse vardığında keşif izi katmanının gözle görülür biçimde silinmesi — **oynayarak doğrulanmalı.** Bu, oyunun en dramatik anı olmalı.
 
 ### Görev 7 — Runtime ve görsel ayrım
 

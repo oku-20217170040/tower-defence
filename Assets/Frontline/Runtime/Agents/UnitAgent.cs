@@ -136,6 +136,12 @@ namespace Frontline.Runtime
             // Basarili rota guclenir - ordun ogrenmesi budur.
             world.Recon.DepositTrail(visited, reinforceOnSuccess * profile.ReinforceMultiplier);
 
+            // Kralice usya varirsa ordu ogrendigi her seyi unutur.
+            // Tehdit alani DEGIL kesif izi silinir: ordunun hafizasi odur
+            // (tehdit her dalga kulelerden yeniden kurulur).
+            if (profile.ClearsRecon) world.Recon.Clear();
+            if (profile.ClearsThreat && world.Threat != null) world.Threat.Clear();
+
             // Varan birlik de listeden cikmali. Cikmazsa kuleler yok edilmis
             // hedeflere ates etmeye devam eder.
             world.UnregisterUnit(this);

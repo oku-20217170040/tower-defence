@@ -32,6 +32,10 @@ namespace Frontline.Runtime
                  "koridoru orduya civileyen birlik.")]
         public Color soldierColor = new Color(0.75f, 0.35f, 0.3f);
 
+        [Tooltip("Kralice rengi. En buyuk ve mor: usya varirsa ordunun " +
+                 "kesif izini siler, yani oyuncunun butun ogretisi gider.")]
+        public Color queenColor = new Color(0.7f, 0.4f, 0.85f);
+
         [Tooltip("Birlik capinin hucre boyutuna orani.")]
         [Range(0.1f, 1f)]
         public float unitScale = 0.55f;
@@ -117,6 +121,12 @@ namespace Frontline.Runtime
                 scale *= 1.35f;
                 color = soldierColor;
                 label = "Unit_Soldier";
+            }
+            else if (profile.Type == UnitType.Queen)
+            {
+                scale *= 1.8f;
+                color = queenColor;
+                label = "Unit_Queen";
             }
 
             float diameter = world.Space.CellSize * scale;

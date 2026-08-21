@@ -40,8 +40,14 @@ namespace Frontline.Core
         Brood = 4,
 
         /// <summary>
-        /// Tehdit alanini siler - ordunun korkusunu sifirlar, ogrenmeyi
-        /// resetler. Oyuncu yonlendirmeyi yeniden kurmak zorunda kalir.
+        /// Ordunun HAFIZASINI siler: usya varirsa kesif izi sifirlanir ve
+        /// ordu ogrendigi her seyi unutur.
+        ///
+        /// Tasarim belgesi "tehdit alanini temizler" diyordu; olcum bunun
+        /// yanlis oldugunu gosterdi. Tehdit alani ordunun hafizasi degil,
+        /// kulelerin STATIK haritasidir ve her dalga kulelerden yeniden
+        /// kurulur - silmenin hicbir etkisi olmuyor (sizinti 26,4 -> 26,4).
+        /// Ordunun gercek hafizasi kesif izidir.
         /// </summary>
         Queen = 5
     }
@@ -92,8 +98,28 @@ namespace Frontline.Core
         /// <summary>Yavrularin ana birlige gore can carpani.</summary>
         public float SplitHpMultiplier;
 
-        /// <summary>Tehdit alanini siler (kralice).</summary>
+        /// <summary>
+        /// Yavrular ANA BIRLIGIN rotasini surdurmek yerine YENI rota arar.
+        /// Kacisma karsiligidir: kulucka olunce surusu dagilir.
+        /// </summary>
+        public bool SplitlingsRepath;
+
+        /// <summary>Yavrularin rota ararken kullandigi sapma. 0 = taban.</summary>
+        public float SplitlingNoise;
+
+        /// <summary>
+        /// Tehdit alanini siler (kralice). UYARI: tehdit alani ordunun
+        /// HAFIZASI DEGILDIR - her dalga basinda kulelerden yeniden
+        /// kurulur. Bu yuzden silmenin olculebilir bir etkisi yoktur.
+        /// Ordunun gercek hafizasi kesif izidir; bkz. ClearsRecon.
+        /// </summary>
         public bool ClearsThreat;
+
+        /// <summary>
+        /// Kesif izini siler: ordunun OGRENDIGI her seyi sifirlar.
+        /// Kralicenin "ogrenmeyi resetler" iddiasinin gercek karsiligi.
+        /// </summary>
+        public bool ClearsRecon;
 
         /// <summary>
         /// Gectigi hucrelerdeki yemi siler (kor birlik). Yalan onun
@@ -176,9 +202,19 @@ namespace Frontline.Core
             }
             else if (type == UnitType.Queen)
             {
+                // Olculen (21 Agu 2026, pay %8):
+                //   tehdit siler   -> sizinti 26,4 · entropi 0,507
+                //   tehdit silmez  -> sizinti 26,4 · entropi 0,507  (AYNI)
+                //   HAFIZA siler   -> sizinti 25,2 · entropi 0,552
+                //
+                // Hafiza silme candan BAGIMSIZ bir kanal: zayif kralicede
+                // (can x2) bile entropi 0,520 -> 0,535. Yani kralice
+                // "buyuk canli birlik" degil, ordunun ogrendigini
+                // unutturan birliktir.
                 profile.HpMultiplier = 8f;
                 profile.SpeedMultiplier = 0.7f;
-                profile.ClearsThreat = true;
+                profile.ClearsThreat = false;
+                profile.ClearsRecon = true;
             }
 
             return profile;

@@ -2,8 +2,8 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 162 EditMode testi, 162 geçiyor (21 Ağu 2026)
-**Sıradaki iş:** Plan 8 Görev 4 — Kör birlik. Görev 1-3 bitti (altyapı, izci, asker); **Plan 7 de bitti**. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Test durumu:** 166 EditMode testi, 166 geçiyor (21 Ağu 2026)
+**Sıradaki iş:** Plan 8 Görev 7 — runtime doğrulaması. Görev 1/2/3/6 bitti (altyapı, izci, asker, kraliçe); Görev 4 (kör) ölçüm aracı yetersizliğinden ertelendi, Görev 5 (kuluçka) ölçümle elendi. **Plan 7 de bitti**. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 

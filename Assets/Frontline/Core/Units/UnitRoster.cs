@@ -23,6 +23,19 @@ namespace Frontline.Core
         public const int SoldierFirstWave = 3;
 
         /// <summary>
+        /// Kralice payi. 0,05 olcumle secildi: %3'te hafiza silmenin etkisi
+        /// zar zor gorunuyor (entropi +0,026), %8'te run %65 kazanmaya
+        /// dusuyordu. %5'te entropi +0,032 ve kazanma %95.
+        /// </summary>
+        public const float QueenShare = 0.05f;
+
+        /// <summary>
+        /// Kralice 5. dalgadan itibaren cikar: silinecek bir hafiza
+        /// olusmadan hafiza silmenin anlami olmaz.
+        /// </summary>
+        public const int QueenFirstWave = 5;
+
+        /// <summary>
         /// Bugunku bilesim: dortte bir izci, beste bir asker, gerisi piyade.
         ///
         /// Izci 1. dalgadan itibaren cikar. Sebebi: taban kesif sapmasi
@@ -33,9 +46,12 @@ namespace Frontline.Core
         /// ogrenmesi icindir, civilenecek bir tercih olusmadan asker
         /// gondermenin anlami olmaz.
         ///
-        /// Ikisi birbirinin TERSI yonde calisir - izci dagitir, asker
-        /// toplar. Dalga basina koridor entropisi: izci yok 0,428 ·
-        /// izci %25 0,575 · izci %25 + asker %20 0,525.
+        /// Kralice 5. dalgadan itibaren, %5 payla. Usya varirsa ordunun
+        /// kesif izini siler: ogrendigi her sey gider.
+        ///
+        /// Uc tur ucgen kurar: izci DAGITIR, asker TOPLAR, kralice
+        /// UNUTTURUR. Dalga basina koridor entropisi: izci yok 0,428 ·
+        /// izci %25 0,575 · izci + asker 0,525 · uzerine kralice ~0,55.
         /// </summary>
         public static UnitMix[] Default()
         {
@@ -52,6 +68,12 @@ namespace Frontline.Core
                     Profile = UnitProfile.For(UnitType.Soldier),
                     Share = SoldierShare,
                     FirstWave = SoldierFirstWave
+                },
+                new UnitMix
+                {
+                    Profile = UnitProfile.For(UnitType.Queen),
+                    Share = QueenShare,
+                    FirstWave = QueenFirstWave
                 }
             };
         }
