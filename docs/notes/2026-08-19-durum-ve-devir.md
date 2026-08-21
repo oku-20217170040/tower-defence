@@ -1,11 +1,24 @@
 # Durum ve Devir Notu
 
-**Tarih:** 19 Ağustos 2026
+**Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
 **Test durumu:** 139 EditMode testi, 139 geçiyor (20 Ağu 2026)
-**Sıradaki iş:** Plan 7 — kalan kule sınıfı (Işın) ve Plan 8 — birlik türleri. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Sıradaki iş:** (1) yeni dengenin gerçek run'da doğrulanması — aşağıya bak, (2) Plan 8 — birlik türleri (tank, asker, keşif). Plan 7'den yalnızca Işın kulesi kaldı. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
+
+## ⚠ Yeni oturum için ilk iş: denge ölçümü gerçekle uyuşmuyor
+
+**21 Ağustos, kullanıcı run'ı (ekran görüntüsüyle):** 15/15 dalga KAZANDI, **üs canı 26/30 — yani yalnızca 4 sızıntı**, 221 öldürme, 70 besin artmış.
+
+Simülasyon aynı ayarlarla **21,8 sızıntı** öngörüyordu. Gerçek 4. Bu, kalibrasyonun bozulduğu anlamına gelir; sebebi araştırılmadan yeni denge sayısı seçilmemeli.
+
+Muhtemel sebepler (ölçülmedi):
+1. Yeni tempo (8 sn hazırlık + ilk 4 dalga 6 sn ara) oyuncuya simülasyonun modellemediği bir avantaj veriyor olabilir — sim dalga arası beklemeyi hiç modellemiyor.
+2. Batarya kulesinin alan hasarı gerçek oyunda simülasyondakinden etkili olabilir (gerçek oyunda kuleler sürekli ateş ediyor, sim tick tabanlı).
+3. Oyuncu kule yerleşimini simülasyondaki sabit şablondan iyi yapıyor olabilir.
+
+`RunCalibrationTests` hâlâ **eski** referans run'a (20 Ağustos, 16 sızıntı) bağlı ve geçiyor — yani araç eski koşullarda doğru. Yeni denge için **yeni bir referans run** alınmalı: kullanıcıdan bir run'ın kule dağılımı + sonucu istenip `RunCalibrationTests`'e ikinci bir referans olarak eklenmeli.
 
 ## Oyun nedir
 

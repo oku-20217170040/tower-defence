@@ -169,9 +169,9 @@ namespace Frontline.Runtime
         private static string TurkishName(TowerKind kind)
         {
             if (kind == TowerKind.Battery) return "batarya";
-            if (kind == TowerKind.Ambush) return "sessiz";
+            if (kind == TowerKind.Ambush) return "pusu";
             if (kind == TowerKind.Minefield) return "mayin tarlasi";
-            return "yem";
+            return "sahte hedef";
         }
     }
 }

@@ -81,8 +81,8 @@ namespace Frontline.Runtime
                 GUILayout.Space(8f);
                 GUILayout.Label("Secili: " + TurkishName(placer.Selected), labelStyle);
                 GUILayout.Label(PriceLine(TowerKind.Battery, "1 Batarya") + "   " +
-                                PriceLine(TowerKind.Ambush, "2 Sessiz"), labelStyle);
-                GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Yem") + "   " +
+                                PriceLine(TowerKind.Ambush, "2 Pusu"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Sahte") + "   " +
                                 PriceLine(TowerKind.Minefield, "4 Mayin tarlasi"), labelStyle);
             }
 
@@ -119,9 +119,9 @@ namespace Frontline.Runtime
         private static string TurkishName(TowerKind kind)
         {
             if (kind == TowerKind.Battery) return "Batarya";
-            if (kind == TowerKind.Ambush) return "Sessiz";
-            if (kind == TowerKind.Minefield) return "Mayin tarlasi";
-            return "Yem";
+            if (kind == TowerKind.Ambush) return "Pusu";
+            if (kind == TowerKind.Minefield) return "Mayin";
+            return "Sahte hedef";
         }
     }
 }
