@@ -98,7 +98,7 @@ Karışımda pusuyla **başa baş** (5,3 / 5,6) → gerçek bir seçim. Spam'de 
 
 **Uygulandı:** `TowerKind.Beam`, `RunSimulator.Targeting.Beam` (periyodik atış sayacı), `EconomyPlanner` ışın alanları, `TowerWeapon.BindBeam/UpdateBeam`, `TowerPlacer` 5 tuşu + renk, `EconomyRunner.beamCost`, draft seçenekleri, HUD. `BeamTowerTests` (5 test) kararları kilitliyor.
 
-> **Doğrulanmamış kalan:** runtime zinciri (5 tuşu → yerleştirme → periyodik atış → hasar). Bu projede ölçülebilir her şey EditMode testinde, görsel/zamanlamalı her şey oyuncuda — **oynayarak doğrulanmalı.**
+**Runtime doğrulaması yapıldı (21 Ağustos, kullanıcı run'ı, ekran görüntüsüyle):** ışın ağırlıklı bir kurulumla 15/15 dalga KAZANILDI, üs 24/30, 219 öldürme, 6 sızıntı. Yani 5 tuşu → yerleştirme → periyodik atış → hasar zinciri gerçekten çalışıyor. Simülatör aynı bandı söylüyordu (ışınlı karışım: 5,3 sızıntı, üs 24,7) — gerçek 6 sızıntı / üs 24. **Bu, ışın için ayrı bir kalibrasyon noktasıdır.**
 
 ## Sıra
 

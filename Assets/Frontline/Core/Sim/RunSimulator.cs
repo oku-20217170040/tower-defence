@@ -97,6 +97,15 @@ namespace Frontline.Core
             /// <summary>Bir dalganin en fazla kac saniye surebilecegi (kilitlenme koruma).</summary>
             public float WaveTimeout;
 
+            /// <summary>
+            /// Dalga bilesimi. null ya da bos ise HEPSI PIYADEDIR.
+            ///
+            /// Varsayilanin piyade kalmasi sarttir: RunCalibrationTests ve
+            /// CurrentRunCalibrationTests gercek run'lara bagli; varsayilan
+            /// bilesim degisirse ikisi de sessizce yanlis seyi olcer.
+            /// </summary>
+            public UnitMix[] Composition;
+
             public static Settings Default()
             {
                 return new Settings
@@ -151,6 +160,13 @@ namespace Frontline.Core
             public float Progress;
             public float Hp;
             public bool Alive;
+            public UnitProfile Profile;
+
+            /// <summary>Dogdugu andaki can. Kulucka yavrusunun cani bundan turetilir.</summary>
+            public float SpawnHp;
+
+            /// <summary>Kulucka yavrusu mu (tekrar bolunmesin diye).</summary>
+            public bool IsSpawnling;
         }
 
         private readonly BattleGrid grid;
@@ -187,11 +203,13 @@ namespace Frontline.Core
             var threat = new ThreatField(grid);
             var slow = new SlowField(grid);
 
+            const float BaseExplorationNoise = 0.35f;
+
             var model = new RouteCostModel(recon, decoy, threat)
             {
                 ThreatWeight = 3f,
                 AttractionWeight = 3f,
-                ExplorationNoise = 0.35f
+                ExplorationNoise = BaseExplorationNoise
             };
             var finder = new RoutePathfinder(grid, model);
             var random = new Random(seed);
@@ -231,7 +249,10 @@ namespace Frontline.Core
                     spawnTimer -= dt;
                     if (toSpawn > 0 && spawnTimer <= 0f)
                     {
-                        var unit = Spawn(finder, model, random, recon, unitHp, pool, settings);
+                        UnitProfile profile = PickProfile(settings.Composition, wave, random);
+
+                        var unit = Spawn(finder, model, random, recon, unitHp, pool,
+                                         settings, profile, BaseExplorationNoise);
                         if (unit != null) active.Add(unit);
 
                         toSpawn--;
@@ -258,9 +279,16 @@ namespace Frontline.Core
                         if (unit.Hp <= 0f)
                         {
                             unit.Alive = false;
-                            recon.WeakenTrail(unit.Visited, settings.WeakenOnDeath);
+                            recon.WeakenTrail(unit.Visited,
+                                settings.WeakenOnDeath * unit.Profile.WeakenMultiplier);
                             result.TotalKilled++;
                             if (planner != null) planner.OnUnitKilled();
+
+                            // Kulucka: oldugu yerden yavrular ayrilir. Yavru
+                            // tekrar bolunmez, yoksa tek birlik ordu uretir.
+                            if (unit.Profile.SplitCount > 0 && !unit.IsSpawnling)
+                                Split(unit, active, pool);
+
                             Recycle(unit, active, pool, i);
                             continue;
                         }
@@ -268,7 +296,13 @@ namespace Frontline.Core
                         if (unit.PathIndex >= unit.Path.Count - 1)
                         {
                             unit.Alive = false;
-                            recon.DepositTrail(unit.Visited, settings.ReinforceOnSuccess);
+                            recon.DepositTrail(unit.Visited,
+                                settings.ReinforceOnSuccess * unit.Profile.ReinforceMultiplier);
+
+                            // Kralice usya varirsa ordunun korkusu silinir.
+                            // Kapsam ve kaliciligi Plan 8 Gorev 6'da olculecek.
+                            if (unit.Profile.ClearsThreat) threat.Clear();
+
                             result.TotalLeaked++;
                             baseHp--;
                             Recycle(unit, active, pool, i);
@@ -305,7 +339,8 @@ namespace Frontline.Core
         }
 
         private Unit Spawn(RoutePathfinder finder, RouteCostModel model, Random random,
-                          ReconMap recon, float hp, List<Unit> pool, Settings settings)
+                          ReconMap recon, float hp, List<Unit> pool, Settings settings,
+                          UnitProfile profile, float baseNoise)
         {
             Unit unit = pool.Count > 0 ? pool[pool.Count - 1] : new Unit();
             if (pool.Count > 0) pool.RemoveAt(pool.Count - 1);
@@ -314,8 +349,19 @@ namespace Frontline.Core
             unit.Visited.Clear();
             unit.PathIndex = 0;
             unit.Progress = 0f;
-            unit.Hp = hp;
+            unit.Hp = hp * profile.HpMultiplier;
+            unit.SpawnHp = unit.Hp;
             unit.Alive = true;
+            unit.Profile = profile;
+            unit.IsSpawnling = false;
+
+            // Rota algisi birlige ozeldir: kor birlik ize ve yeme bakmaz,
+            // izci daha yuksek sapmayla yola cikar.
+            model.IgnoresRecon = profile.IgnoresRecon;
+            model.IgnoresDecoy = profile.IgnoresDecoy;
+            model.ExplorationNoise = profile.ExplorationNoiseOverride > 0f
+                ? profile.ExplorationNoiseOverride
+                : baseNoise;
 
             model.BeginQuery(random.Next(), grid);
             int spawnCell = spawnCells[random.Next(spawnCells.Count)];
@@ -327,7 +373,7 @@ namespace Frontline.Core
             }
 
             unit.Visited.Add(unit.Path[0]);
-            recon.Deposit(unit.Path[0], settings.DepositPerCell);
+            recon.Deposit(unit.Path[0], settings.DepositPerCell * profile.DepositMultiplier);
             return unit;
         }
 
@@ -339,7 +385,7 @@ namespace Frontline.Core
             if (factor < SlowField.None) factor = SlowField.None;
 
             // Yavaslatma gecis suminefieldi carpar, yani hizi boler.
-            unit.Progress += settings.CellsPerSecond / factor * dt;
+            unit.Progress += settings.CellsPerSecond * unit.Profile.SpeedMultiplier / factor * dt;
 
             while (unit.Progress >= 1f && unit.PathIndex < unit.Path.Count - 1)
             {
@@ -348,7 +394,7 @@ namespace Frontline.Core
 
                 int cell = unit.Path[unit.PathIndex];
                 unit.Visited.Add(cell);
-                recon.Deposit(cell, settings.DepositPerCell);
+                recon.Deposit(cell, settings.DepositPerCell * unit.Profile.DepositMultiplier);
             }
         }
 
@@ -428,6 +474,68 @@ namespace Frontline.Core
             float dx = grid.X(cell) - tower.X;
             float dy = grid.Y(cell) - tower.Y;
             return dx * dx + dy * dy;
+        }
+
+        /// <summary>
+        /// Dalga bilesiminden bir tur secer. Paylarin toplami 1'den kucukse
+        /// kalan pay piyadeye gider; bilesim bos ise hepsi piyadedir.
+        /// </summary>
+        private static UnitProfile PickProfile(UnitMix[] composition, int wave, Random random)
+        {
+            if (composition == null || composition.Length == 0)
+                return UnitProfile.Infantry();
+
+            float roll = (float)random.NextDouble();
+            float cursor = 0f;
+
+            for (int i = 0; i < composition.Length; i++)
+            {
+                UnitMix mix = composition[i];
+                if (wave < mix.FirstWave) continue;
+                if (mix.Share <= 0f) continue;
+
+                cursor += mix.Share;
+                if (roll < cursor) return mix.Profile;
+            }
+
+            return UnitProfile.Infantry();
+        }
+
+        /// <summary>
+        /// Kulucka olunce yavrular ayni yol uzerinde, oldugu noktada belirir.
+        /// Yavrular ana birligin rotasini paylasir - yeni rota aramazlar,
+        /// cunku ayrilma bir KARAR degil, bir kazadir.
+        /// </summary>
+        private void Split(Unit parent, List<Unit> active, List<Unit> pool)
+        {
+            for (int n = 0; n < parent.Profile.SplitCount; n++)
+            {
+                Unit child = pool.Count > 0 ? pool[pool.Count - 1] : new Unit();
+                if (pool.Count > 0) pool.RemoveAt(pool.Count - 1);
+
+                child.Path.Clear();
+                child.Path.AddRange(parent.Path);
+                child.Visited.Clear();
+                child.Visited.AddRange(parent.Visited);
+                child.PathIndex = parent.PathIndex;
+                child.Progress = parent.Progress;
+                child.Profile = parent.Profile;
+                child.IsSpawnling = true;
+                child.Hp = BaseHpOf(parent) * parent.Profile.SplitHpMultiplier;
+                child.SpawnHp = child.Hp;
+                child.Alive = true;
+
+                active.Add(child);
+            }
+        }
+
+        /// <summary>
+        /// Yavrunun cani ana birligin BASLANGIC canindan turetilir; olum
+        /// anindaki cani 0 oldugu icin ondan turetilemez.
+        /// </summary>
+        private static float BaseHpOf(Unit parent)
+        {
+            return parent.SpawnHp;
         }
 
         private static void Recycle(Unit unit, List<Unit> active, List<Unit> pool, int index)

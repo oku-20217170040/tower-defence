@@ -37,6 +37,16 @@ namespace Frontline.Core
         /// </summary>
         public float ExplorationNoise { get; set; } = 0f;
 
+        /// <summary>
+        /// Kesif izini yok sayar. Kor birlik icindir (Plan 8): yem kanalini
+        /// kapatir ama tehdit kanali calismaya devam eder. Sorgu basina
+        /// ayarlanir; BeginQuery'den ONCE verilmelidir.
+        /// </summary>
+        public bool IgnoresRecon { get; set; }
+
+        /// <summary>Yemi yok sayar. Kor birlik icindir.</summary>
+        public bool IgnoresDecoy { get; set; }
+
         private float[] queryNoise;
         private int gridWidth;
 
@@ -87,7 +97,9 @@ namespace Frontline.Core
         /// </summary>
         public float StepCost(int index)
         {
-            float attraction = recon.Get(index) + decoy.Get(index);
+            float attraction = 0f;
+            if (!IgnoresRecon) attraction += recon.Get(index);
+            if (!IgnoresDecoy) attraction += decoy.Get(index);
             float normalized = attraction / attractionSaturation;
             if (normalized > 1f) normalized = 1f;
 
