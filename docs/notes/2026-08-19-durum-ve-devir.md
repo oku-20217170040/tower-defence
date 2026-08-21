@@ -2,8 +2,8 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 142 EditMode testi (21 Ağu 2026; +3 `CurrentRunCalibrationTests`)
-**Sıradaki iş:** (1) Plan 8 — birlik türleri (tank, asker, keşif). Plan 7'den yalnızca Işın kulesi kaldı. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Test durumu:** 147 EditMode testi, 147 geçiyor (21 Ağu 2026)
+**Sıradaki iş:** Plan 8 — birlik türleri (izci, asker, kör, kuluçka, kraliçe). **Plan 7 bitti** (Işın 21 Ağu'da ölçülüp eklendi). Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 
@@ -146,7 +146,7 @@ Bunlar tasarımda yoktu; ancak ölçünce ortaya çıktılar ve spec'e işlendil
 | Plan 2 — Görselleştirme | **Bitti.** Mekanik oyuncu tarafından doğrulandı |
 | Plan 3 — Savaş | **Bitti.** Can, hasar, üs, run akışı, arayüz, zorluk eğrisi |
 | Plan 4 — Ekonomi ve draft | **Bitti.** Ekonomi, draft, eğri ölçümü. Açık: Görev 5 Adım 2 (kullanıcı testi) |
-| Plan 7 — Kule sınıfları (Mayın tarlası, Işın, Saat) | Taslak yazıldı, karar alındı |
+| Plan 7 — Kule sınıfları (Mayın tarlası, Batarya alan hasarı, Işın) | **Bitti** (21 Ağu). Saat kulesi ölçümle elendi |
 | Plan 8 — Birlik türleri (izci, asker, kör, kuluçka, kraliçe) | Karar alındı, plan yazılmadı |
 | Plan 5 — Meta ilerleme, nemesis | Yazılmadı |
 | Plan 6 — Blender asset'leri, ses | Yazılmadı |
@@ -178,4 +178,4 @@ Dosyalar: `Core/Draft/DraftOption.cs`, `Core/Draft/DraftGenerator.cs`, `Runtime/
 - Unity MCP ve Blender MCP kullanıcı seviyesinde tanımlı, ikisi de bağlanabiliyor
 - Blender bağlantısı: 3D görünümde **N** → **BlenderMCP** sekmesi → **Connect to Claude** (port 9876)
 - Unity MCP portu 8080 — Brick Havoc projesiyle paylaşılıyor, aynı anda tek Unity açık tutulmalı
-- Oyun kontrolleri: **1** batarya, **2** pusu, **3** yem, sol tık kurulum şeridine yerleştirir
+- Oyun kontrolleri: **1** batarya, **2** pusu, **3** yem, **4** mayın tarlası, **5** ışın; sol tık kurulum şeridine yerleştirir

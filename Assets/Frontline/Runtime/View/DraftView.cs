@@ -171,6 +171,7 @@ namespace Frontline.Runtime
             if (kind == TowerKind.Battery) return "batarya";
             if (kind == TowerKind.Ambush) return "pusu";
             if (kind == TowerKind.Minefield) return "mayin tarlasi";
+            if (kind == TowerKind.Beam) return "isin";
             return "sahte hedef";
         }
     }

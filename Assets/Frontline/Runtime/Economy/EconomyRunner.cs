@@ -59,6 +59,12 @@ namespace Frontline.Runtime
                  "yalnizca bir pusu mevzisiyle eslestiginde ortaya cikiyor.")]
         public int minefieldCost = 26;
 
+        [Tooltip("Isin kulesi. Pusu ile mayin tarlasi arasinda fiyatlandi. " +
+                 "Olcum fiyatin isin icin ZAYIF bir dugme oldugunu gosterdi " +
+                 "(20 ile 50 arasi sizintiyi 15,3'ten 15,9'a tasiyor) cunku " +
+                 "kulelerin cogu draft'tan bedava geliyor.")]
+        public int beamCost = 34;
+
         [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
                  "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]
         public int costStepPerSameKind = 5;
@@ -71,8 +77,11 @@ namespace Frontline.Runtime
         public int maxDiscountPercent = 60;
 
         // Kule turu basina birikmis indirim ve bedava kule hakki.
-        private readonly int[] discountPercent = new int[4];
-        private readonly int[] freeVouchers = new int[4];
+        // Uzunluk TowerKind'dan turetilir; elle yazilan sabit bir kez
+        // IndexOutOfRange'e sebep oldu (yeni tur eklenince).
+        private static readonly int KindCount = System.Enum.GetValues(typeof(TowerKind)).Length;
+        private readonly int[] discountPercent = new int[KindCount];
+        private readonly int[] freeVouchers = new int[KindCount];
 
         private UnitSpawner spawner;
         private RunController run;
@@ -171,6 +180,7 @@ namespace Frontline.Runtime
             if (kind == TowerKind.Battery) return batteryCost;
             if (kind == TowerKind.Decoy) return decoyCost;
             if (kind == TowerKind.Minefield) return minefieldCost;
+            if (kind == TowerKind.Beam) return beamCost;
             return ambushCost;
         }
 

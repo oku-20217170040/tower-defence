@@ -24,6 +24,22 @@ namespace Frontline.Runtime
                  "tek hedefli kule 2, alan hasarli 8 olduruyor.")]
         public bool splash;
 
+        [Tooltip("Acikken kule bir ISINDIR: belirli araliklarla ates eder ve ates " +
+                 "aninda kendi SATIRI uzerindeki her birlige ayni hasari verir.")]
+        public bool beam;
+
+        [Tooltip("Isinin bir atista verdigi hasar. 20 olcumle secildi.")]
+        public float beamShotDamage = 20f;
+
+        [Tooltip("Isinin atislari arasindaki sure. ASIL denge dugmesi budur: " +
+                 "surekli hasarda isin her ayarda ya olu ya baskin cikiyordu.")]
+        public float beamShotInterval = 1f;
+
+        [Tooltip("Isin hattinin yatay yarim uzunlugu (hucre).")]
+        public float beamHalfLength = 20f;
+
+        private float beamTimer;
+
         private Battlefield world;
         private float worldRange;
 
@@ -36,9 +52,29 @@ namespace Frontline.Runtime
             worldRange = rangeInCells * world.Space.CellSize;
         }
 
+        /// <summary>Isin baglama. Menzil yerine hat uzunlugu ve atis araligi alir.</summary>
+        public void BindBeam(Battlefield world, float halfLengthInCells,
+                             float shotDamage, float shotInterval)
+        {
+            this.world = world;
+            beam = true;
+            beamHalfLength = halfLengthInCells;
+            beamShotDamage = shotDamage;
+            beamShotInterval = shotInterval;
+            beamTimer = shotInterval;
+        }
+
         private void Update()
         {
-            if (world == null || damagePerSecond <= 0f) return;
+            if (world == null) return;
+
+            if (beam)
+            {
+                UpdateBeam();
+                return;
+            }
+
+            if (damagePerSecond <= 0f) return;
 
             float damage = damagePerSecond * Time.deltaTime;
 
@@ -52,6 +88,51 @@ namespace Frontline.Runtime
             if (target == null) return;
 
             target.TakeDamage(damage);
+        }
+
+        /// <summary>
+        /// Isin: sayac dolunca kulenin durdugu SATIR boyunca ates eder ve o
+        /// satirdaki her birlige ayni hasari verir - kac birlik oldugundan
+        /// bagimsiz.
+        ///
+        /// Neden surekli hasar degil (20 Agu 2026 olcumu): surekli hasarli
+        /// isin her ayarda ya olu ya baskin cikiyordu. Bedava draft kulesi
+        /// tamamen kapatilip her strateji cokerken 7 surekli isin oyunu tek
+        /// basina kazaniyordu, cunku bir koridoru bastan sona kaplayan sey
+        /// spec 3.5'i ("korunmayan koridor her zaman bulunur") siler.
+        /// Periyodik atis bunu cozer: hat 1 hucre kalinligindadir, hizli
+        /// birlik iki atis arasinda karsiya gecebilir, yavaslatilmis
+        /// kalabalik tam yer. Bu yuzden isin mayin tarlasiyla eslesir.
+        /// </summary>
+        private void UpdateBeam()
+        {
+            beamTimer -= Time.deltaTime;
+            if (beamTimer > 0f) return;
+
+            beamTimer += beamShotInterval > 0f ? beamShotInterval : 1f;
+
+            var units = world.ActiveUnits;
+            if (units == null || units.Count == 0) return;
+
+            Vector2 origin = transform.position;
+            float cell = world.Space.CellSize;
+            float halfRow = cell * 0.5f;
+            float halfLength = beamHalfLength * cell;
+
+            for (int i = units.Count - 1; i >= 0; i--)
+            {
+                UnitAgent unit = units[i];
+                if (unit == null) continue;
+
+                UnitHealth health = unit.Health;
+                if (health == null || !health.IsAlive) continue;
+
+                Vector2 offset = (Vector2)unit.transform.position - origin;
+                if (Mathf.Abs(offset.y) > halfRow) continue;
+                if (Mathf.Abs(offset.x) > halfLength) continue;
+
+                health.TakeDamage(beamShotDamage);
+            }
         }
 
         /// <summary>

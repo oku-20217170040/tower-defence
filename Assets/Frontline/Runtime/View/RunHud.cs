@@ -84,6 +84,7 @@ namespace Frontline.Runtime
                                 PriceLine(TowerKind.Ambush, "2 Pusu"), labelStyle);
                 GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Sahte") + "   " +
                                 PriceLine(TowerKind.Minefield, "4 Mayin tarlasi"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Beam, "5 Isin"), labelStyle);
             }
 
             GUILayout.EndArea();
@@ -121,6 +122,7 @@ namespace Frontline.Runtime
             if (kind == TowerKind.Battery) return "Batarya";
             if (kind == TowerKind.Ambush) return "Pusu";
             if (kind == TowerKind.Minefield) return "Mayin";
+            if (kind == TowerKind.Beam) return "Isin";
             return "Sahte hedef";
         }
     }

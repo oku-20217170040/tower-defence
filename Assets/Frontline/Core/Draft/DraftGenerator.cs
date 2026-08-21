@@ -70,7 +70,8 @@ namespace Frontline.Core
             float[] shares = context.CorridorShares;
             if (shares == null || shares.Length == 0) shares = new[] { 1f };
 
-            var kinds = new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Decoy, TowerKind.Minefield };
+            var kinds = new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Decoy,
+                                TowerKind.Minefield, TowerKind.Beam };
 
             for (int c = 0; c < shares.Length; c++)
             {
@@ -99,7 +100,8 @@ namespace Frontline.Core
         private static void AddGlobalOptions(
             DraftContext context, List<DraftOption> pool, List<float> weights)
         {
-            var kinds = new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Decoy, TowerKind.Minefield };
+            var kinds = new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Decoy,
+                                TowerKind.Minefield, TowerKind.Beam };
             for (int k = 0; k < kinds.Length; k++)
             {
                 pool.Add(new DraftOption

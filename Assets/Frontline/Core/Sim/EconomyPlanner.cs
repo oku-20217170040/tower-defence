@@ -27,6 +27,7 @@ namespace Frontline.Core
             public int AmbushCost;
             public int DecoyCost;
             public int MinefieldCost;
+            public int BeamCost;
             public int CostStep;
 
             /// <summary>EconomyRunner varsayilanlari ile ayni.</summary>
@@ -41,6 +42,7 @@ namespace Frontline.Core
                     AmbushCost = 40,
                     DecoyCost = 26,
                     MinefieldCost = 26,
+                    BeamCost = 34,
                     CostStep = 5
                 };
             }
@@ -55,6 +57,17 @@ namespace Frontline.Core
             public float BatteryDps;
             public float TowerRadius;
             public float MinefieldSlowFactor;
+            /// <summary>Isinin bir atista verdigi hasar.</summary>
+            public float BeamShotDamage;
+
+            /// <summary>Isinin atislari arasindaki sure (saniye). Asil denge dugmesi.</summary>
+            public float BeamShotInterval;
+
+            /// <summary>Isin hattinin yatay yarim uzunlugu (hucre).</summary>
+            public float BeamWidth;
+
+            /// <summary>Isinin tehdit gucu. 0 ise ordu isini algilayamaz.</summary>
+            public float BeamThreatStrength;
             public float BatteryThreatStrength;
 
             /// <summary>
@@ -95,6 +108,9 @@ namespace Frontline.Core
                     BatteryDps = 2.5f,
                     TowerRadius = 4f,
                     MinefieldSlowFactor = 2f,
+                    BeamShotDamage = 20f,
+                    BeamShotInterval = 1f,
+                    BeamWidth = 20f,
                     BatteryThreatStrength = 4f,
                     BatteryTargeting = RunSimulator.Targeting.Splash,
                     DraftGivesFreeTower = true,
@@ -241,6 +257,15 @@ namespace Frontline.Core
                 spec.Targeting = policy.BatteryTargeting;
             }
             else if (kind == TowerKind.Minefield) spec.SlowFactor = policy.MinefieldSlowFactor;
+            else if (kind == TowerKind.Beam)
+            {
+                spec.Dps = 1f;   // sifir olursa Fire() kuleyi atlar
+                spec.ShotDamage = policy.BeamShotDamage;
+                spec.ShotInterval = policy.BeamShotInterval;
+                spec.Width = policy.BeamWidth;
+                spec.ThreatStrength = policy.BeamThreatStrength;
+                spec.Targeting = RunSimulator.Targeting.Beam;
+            }
 
             return spec;
         }
@@ -254,6 +279,7 @@ namespace Frontline.Core
             if (kind == TowerKind.Battery) baseCost = costs.BatteryCost;
             else if (kind == TowerKind.Decoy) baseCost = costs.DecoyCost;
             else if (kind == TowerKind.Minefield) baseCost = costs.MinefieldCost;
+            else if (kind == TowerKind.Beam) baseCost = costs.BeamCost;
             else baseCost = costs.AmbushCost;
 
             return baseCost + costs.CostStep * count;

@@ -28,7 +28,17 @@ namespace Frontline.Core
             Single = 0,
 
             /// <summary>Menzildeki TUM birliklere ayni anda vurur.</summary>
-            Splash = 1
+            Splash = 1,
+
+            /// <summary>
+            /// Isin. Belirli araliklarla ates eder ve ates ettigi anda
+            /// HATTI UZERINDEKI herkese ayni hasari verir. Surekli degil,
+            /// ORNEKLEYEN bir silahtir: hat 1 hucre kalinliginda oldugu
+            /// icin hizli birlik iki atis arasinda karsiya gecebilir,
+            /// yavaslatilmis ya da sira olmus bir kalabalik tam yer.
+            /// Dengeleyici dugme dps degil, ATIS ARALIGIDIR.
+            /// </summary>
+            Beam = 2
         }
 
         public struct TowerSpec
@@ -45,6 +55,21 @@ namespace Frontline.Core
 
             /// <summary>Batarya icin tehdit gucu; digerlerinde 0.</summary>
             public float ThreatStrength;
+
+            /// <summary>
+            /// Isin hattinin yatay yarim uzunlugu (hucre). Hat YATAYDIR:
+            /// kulenin durdugu satir boyunca uzanir ve butun koridorlari
+            /// keser. Dikey kalinligi her zaman 1 hucredir - bir koridoru
+            /// bastan sona kapatan her sey spec 3.5'i ("korunmayan koridor
+            /// her zaman bulunur") siler; olcumde tam olarak bu oldu.
+            /// </summary>
+            public float Width;
+
+            /// <summary>Isinin bir atista verdigi hasar.</summary>
+            public float ShotDamage;
+
+            /// <summary>Isinin atislari arasindaki sure (saniye).</summary>
+            public float ShotInterval;
         }
 
         public struct Settings
@@ -177,6 +202,9 @@ namespace Frontline.Core
             var active = new List<Unit>();
             var pool = new List<Unit>();
 
+            // Isin atis sayaclari; kule indeksiyle hizali.
+            var beamTimers = new List<float>();
+
             for (int wave = 1; wave <= settings.TotalWaves && baseHp > 0; wave++)
             {
                 if (planner != null) planner.OnWaveStart(wave, towers);
@@ -217,7 +245,10 @@ namespace Frontline.Core
                     // Ates. Kuleler hedeflerini AYNI anlik durumdan secer;
                     // sirali modelde bu adim yoktu ve her birlik her kulenin
                     // tam DPS'ini aliyordu.
-                    Fire(towers, active, settings, dt);
+                    // Yeni kurulan isinlar icin sayac yeri acilir.
+                    while (beamTimers.Count < towers.Count) beamTimers.Add(0f);
+
+                    Fire(towers, active, settings, dt, beamTimers);
 
                     // Sonuclari isle
                     for (int i = active.Count - 1; i >= 0; i--)
@@ -264,7 +295,8 @@ namespace Frontline.Core
                 TowerSpec t = towers[i];
                 int cell = grid.Index(t.X, t.Y);
 
-                if (t.Kind == TowerKind.Battery && t.ThreatStrength > 0f)
+                // Tehdit yazan her kule; tur adiyla degil, ALANIYLA belirlenir.
+                if (t.ThreatStrength > 0f)
                     threat.AddSource(cell, t.Radius, t.ThreatStrength);
 
                 if (t.Kind == TowerKind.Minefield && t.SlowFactor > SlowField.None)
@@ -320,7 +352,8 @@ namespace Frontline.Core
             }
         }
 
-        private void Fire(List<TowerSpec> towers, List<Unit> active, Settings settings, float dt)
+        private void Fire(List<TowerSpec> towers, List<Unit> active, Settings settings,
+                          float dt, List<float> beamTimers)
         {
             for (int t = 0; t < towers.Count; t++)
             {
@@ -328,6 +361,31 @@ namespace Frontline.Core
                 if (tower.Dps <= 0f) continue;
 
                 float radiusSq = tower.Radius * tower.Radius;
+
+                if (tower.Targeting == Targeting.Beam)
+                {
+                    // Ates zamani gelmediyse hicbir sey yapmaz.
+                    beamTimers[t] -= dt;
+                    if (beamTimers[t] > 0f) continue;
+                    beamTimers[t] += tower.ShotInterval > 0f ? tower.ShotInterval : 1f;
+
+                    // Hat uzerindeki HERKES ayni hasari alir - kac birlik
+                    // oldugundan bagimsiz. Degeri "atis aninda kac birlik
+                    // hatta" sorusuna baglidir; sirali modelde olculemezdi.
+                    for (int i = 0; i < active.Count; i++)
+                    {
+                        Unit unit = active[i];
+                        if (!unit.Alive || unit.Hp <= 0f) continue;
+
+                        int cell = unit.Path[unit.PathIndex];
+                        if (grid.Y(cell) != tower.Y) continue;
+
+                        float dx = grid.X(cell) - tower.X;
+                        if (dx < 0f) dx = -dx;
+                        if (dx <= tower.Width) unit.Hp -= tower.ShotDamage;
+                    }
+                    continue;
+                }
 
                 if (tower.Targeting == Targeting.Splash)
                 {

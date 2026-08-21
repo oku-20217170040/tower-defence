@@ -32,6 +32,20 @@ namespace Frontline.Core
         /// birlik pusu mevzisilerin menzilinde daha uzun kalir. Tek basina
         /// degersizdir - degeri pusu mevzisiyle eslesmesinden gelir.
         /// </summary>
-        Minefield = 3
+        Minefield = 3,
+
+        /// <summary>
+        /// Delip gecen hat hasari. Yalnizca kendi SUTUNUNDA, menzili
+        /// icindeki birliklere vurur - ama oradaki HERKESE ayni anda.
+        /// Tehdit yazmaz.
+        ///
+        /// Roldeki fark: batarya bir dairedeki herkese vurur ve tehdit
+        /// yazdigi icin ordu ondan kacar; isin dar bir hatta vurur ve
+        /// gorunmez oldugu icin ordu kacmaz. Boylece spec 3.5'in
+        /// "korunmayan koridor her zaman bulunur" gercegiyle dogrudan
+        /// catisir: ordu tek koridora yigildiginda isin en pahaliya
+        /// mal olan sey haline gelir.
+        /// </summary>
+        Beam = 4
     }
 }

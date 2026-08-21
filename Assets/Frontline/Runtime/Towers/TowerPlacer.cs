@@ -7,7 +7,8 @@ namespace Frontline.Runtime
     /// Kule yerlestirme girisi. Sandbox icin klavye + fare; dokunmatik
     /// arayuz Plan 3'un isi.
     ///
-    /// 1 = Batarya, 2 = Sessiz, 3 = Yem, 4 = Mayin tarlasi. Sol tik yerlestirir.
+    /// 1 = Batarya, 2 = Pusu, 3 = Yem, 4 = Mayin tarlasi, 5 = Isin.
+    /// Sol tik yerlestirir.
     /// Kuleler YALNIZCA kurulum seridine kurulur; koridora kule konsaydi
     /// yolu kapatirdi ve oyun labirent kurmaya donerdi (spec 3.6).
     /// </summary>
@@ -22,6 +23,7 @@ namespace Frontline.Runtime
         public Color ambushColor = new Color(0.45f, 0.5f, 0.55f);
         public Color decoyColor = new Color(0.3f, 0.9f, 0.5f);
         public Color minefieldColor = new Color(0.95f, 0.8f, 0.3f);
+        public Color beamColor = new Color(0.6f, 0.75f, 1f);
 
         [Tooltip("Kule capinin hucre boyutuna orani.")]
         [Range(0.2f, 1f)]
@@ -36,6 +38,19 @@ namespace Frontline.Runtime
         [Tooltip("Pusu mevzisinin saniyelik hasari. Dusuktur ama surekli is gorur - " +
                  "tuzak koridorunda gercek katliami bu yapar.")]
         public float ambushDps = 4f;
+
+        [Tooltip("Isinin bir atista verdigi hasar. 20 olcumle secildi; karisimda " +
+                 "10 ile 45 arasi ayni sonucu veriyor, farki SPAM davranisi " +
+                 "belirledi (20'de isin spam'i batarya spam'iyle basa bas).")]
+        public float beamShotDamage = 20f;
+
+        [Tooltip("Isinin atislari arasindaki sure. Isinin ASIL denge dugmesi " +
+                 "budur; hasar degil. 0,5 sn'de isin spam'i oyunu coz")]
+        public float beamShotInterval = 1f;
+
+        [Tooltip("Isin hattinin yatay yarim uzunlugu (hucre). Hat butun " +
+                 "koridorlari kesecek kadar uzundur.")]
+        public float beamHalfLength = 20f;
 
         [Header("Draft Pasifleri")]
         [Tooltip("Draft'tan gelen kalici hasar carpani.")]
@@ -63,6 +78,7 @@ namespace Frontline.Runtime
             if (Input.GetKeyDown(KeyCode.Alpha2)) Select(TowerKind.Ambush);
             if (Input.GetKeyDown(KeyCode.Alpha3)) Select(TowerKind.Decoy);
             if (Input.GetKeyDown(KeyCode.Alpha4)) Select(TowerKind.Minefield);
+            if (Input.GetKeyDown(KeyCode.Alpha5)) Select(TowerKind.Beam);
 
             if (Input.GetMouseButtonDown(0))
                 TryPlaceAt(Input.mousePosition);
@@ -126,8 +142,15 @@ namespace Frontline.Runtime
             float dps = kind == TowerKind.Battery ? batteryDps
                       : (kind == TowerKind.Ambush ? ambushDps : 0f);
 
+            // Isin surekli hasar vermez; kendi baglama yolu var.
+            if (kind == TowerKind.Beam)
+            {
+                go.AddComponent<TowerWeapon>().BindBeam(
+                    world, beamHalfLength * rangeMultiplier,
+                    beamShotDamage * damageMultiplier, beamShotInterval);
+            }
             // Alan hasari YALNIZCA batarya kulede: sürüyü bicen odur.
-            if (dps > 0f)
+            else if (dps > 0f)
                 go.AddComponent<TowerWeapon>().Bind(
                     world, tower.radius * rangeMultiplier, dps * damageMultiplier,
                     kind == TowerKind.Battery);
@@ -157,6 +180,7 @@ namespace Frontline.Runtime
             if (kind == TowerKind.Battery) return batteryColor;
             if (kind == TowerKind.Decoy) return decoyColor;
             if (kind == TowerKind.Minefield) return minefieldColor;
+            if (kind == TowerKind.Beam) return beamColor;
             return ambushColor;
         }
     }
