@@ -27,6 +27,11 @@ namespace Frontline.Runtime
         [Tooltip("Olurse o ana kadarki rotadan silinen miktar. Olumle biten rota sonumlenir.")]
         public float weakenOnDeath = 2.5f;
 
+        [Tooltip("Birlik gittigi yone donerken saniyede kac derece doner. " +
+                 "Aninda donmek tirtikli gorunur; koridor donuslerinde " +
+                 "yumusak bir yalpalama istiyoruz.")]
+        public float turnDegreesPerSecond = 720f;
+
         /// <summary>
         /// Bu birligin turu ve carpanlari. Varsayilan piyadedir; spawner
         /// dalga bilesimine gore degistirir.
@@ -87,6 +92,11 @@ namespace Frontline.Runtime
             transform.position = world.Space.CellToWorld(spawnCell);
             EnterCell(path[0]);
 
+            // Dogum aninda yon ANINDA kurulur; yoksa her birlik yola
+            // yanlis bakarak cikip ilk karede donuyor gibi gorunur.
+            if (path.Count > 1)
+                FaceInstantly((Vector2)world.Space.CellToWorld(path[1]) - (Vector2)transform.position);
+
             Health = GetComponent<UnitHealth>();
             world.RegisterUnit(this);
 
@@ -107,6 +117,11 @@ namespace Frontline.Runtime
 
             Vector2 target = world.Space.CellToWorld(path[nextIndex]);
 
+            // Gittigi yone bakar. Sprite'in burnu YEREL -Y'dedir
+            // (bkz. tools/blender/units.py: kama burnu -Y'de uretiliyor),
+            // o yuzden hedef aci yonun acisi + 90 derecedir.
+            TurnToward(target - (Vector2)transform.position, Time.deltaTime);
+
             // Mayin tarlasi alanindaki hucrede gecis suresi uzar. Birlik bunu
             // ALGILAMAZ - rota degismez, yalnizca yavaslar.
             float slow = world.Slow != null ? world.Slow.Get(path[pathIndex]) : SlowField.None;
@@ -120,6 +135,28 @@ namespace Frontline.Runtime
                 pathIndex = nextIndex;
                 EnterCell(path[pathIndex]);
             }
+        }
+
+        /// <summary>Yon acisi: sprite'in yerel -Y ekseni verilen yone bakar.</summary>
+        private static float AngleFor(Vector2 direction)
+        {
+            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + 90f;
+        }
+
+        private void FaceInstantly(Vector2 direction)
+        {
+            if (direction.sqrMagnitude < 0.000001f) return;
+
+            transform.rotation = Quaternion.Euler(0f, 0f, AngleFor(direction));
+        }
+
+        private void TurnToward(Vector2 direction, float deltaTime)
+        {
+            if (direction.sqrMagnitude < 0.000001f) return;
+
+            Quaternion wanted = Quaternion.Euler(0f, 0f, AngleFor(direction));
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation, wanted, turnDegreesPerSecond * deltaTime);
         }
 
         private void EnterCell(int cell)
