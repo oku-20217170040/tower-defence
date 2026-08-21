@@ -31,6 +31,16 @@ namespace Frontline.Tests
     /// kalinligindadir. Artik bir koridoru kapatmaz, ORNEKLER: hizli birlik
     /// iki atis arasinda karsiya gecebilir, yavaslatilmis kalabalik tam yer.
     /// Asil denge dugmesi hasar degil, ATIS ARALIGIDIR.
+    ///
+    /// ACIK IS - ISININ ATIS ARALIGI PLAN 8 BITINCE YENIDEN OLCULMELI.
+    /// Aralik 1 sn, ordunun SAF PIYADE oldugu bir bilesimde secildi ve
+    /// kullanicinin run'iyla dogrulandi. Plan 8 her tur eklendiginde
+    /// ordunun toplanmasini degistiriyor, isinin degeri de dogrudan buna
+    /// bagli. Su an aralik 3 sn karisimi tabana yaklastiriyor (10,8 / 13,3)
+    /// ama simdi ayarlamak yanlis olur: Gorev 4-6 bunu yine kaydiracak ve
+    /// ust uste iki ayar hangi degisikligin ne yaptigini olculemez kilar
+    /// (Plan 8'in kendi uyarisi). Bu yuzden asagidaki testler SAYI degil
+    /// ILISKI iddia eder.
     /// </summary>
     public class BeamTowerTests
     {
@@ -99,11 +109,14 @@ namespace Frontline.Tests
             // artik sahip olmadigi bir kosulu. Ayni tuzak kalibrasyon
             // testlerinde bir kez yasandi.
             //
-            // Fark buyuk: izcisiz orduda isin spam'i 12,9 sizinti veriyor
-            // (batarya spam'i 20,9) yani BASKIN cikiyor; izciler orduyu
-            // dagittigi icin canli kosulda 18,7'ye donuyor (batarya 17,3).
-            // Isin dar bir hatta vurdugu icin degeri ordunun ne kadar
-            // toplandigina baglidir - kesif ile isin dogrudan bagli.
+            // Isin dar bir hatta vurdugu icin degeri ORDUNUN NE KADAR
+            // TOPLANDIGINA baglidir. Bu yuzden bilesim degistikce isinin
+            // gucu de degisir; olculen (B,A,B,ISIN,M, sizinti):
+            //   saf piyade            -> isin karisimda ~5,3 · taban ~5,6
+            //   izci %25              -> isin  3,6 · taban  3,3
+            //   izci %25 + asker %20  -> isin  3,9 · taban 13,3
+            // Yani asker orduyu koridora civileyince isin ONUN PANZEHIRI
+            // haline geliyor - plandaki niyet tam buydu.
             settings.Composition = UnitRoster.Default();
 
             int wins = 0;
@@ -151,40 +164,49 @@ namespace Frontline.Tests
         };
 
         [Test]
-        public void Beam_InAMix_IsAnEvenTradeWithAnAmbush()
+        public void Beam_IsTheCounterToAConcentratedArmy()
         {
-            // Olculen (canli kosul): pusu yerine isin -> sizinti 3,3 -> 3,6.
-            // Yani gercek bir secim; ne bedava guc ne olu secenek. Mayin
-            // tarlasi da tam boyle secilmisti (x2, saf pusuyle basa bas).
+            // Asker orduyu bir koridora civiler; isin de tam olarak orayi
+            // cezalandirir. Olculen (izci %25 + asker %20): isinsiz 13,3
+            // sizinti, isinli 3,9.
+            //
+            // Bu bir denge SAYISI degil, bir ILISKI iddiasidir: bilesim
+            // degistikce sayilar kayar ama iliski kalmalidir. Sayi
+            // iddiasi Plan 8 bitince yeniden olculecek (asagiya bak).
             var baseline = Measure(Baseline, ShotDamage, ShotInterval, seedCount: 20);
             var withBeam = Measure(WithBeam, ShotDamage, ShotInterval, seedCount: 20);
 
-            Assert.That(withBeam.Leaked, Is.EqualTo(baseline.Leaked).Within(4f),
-                "Isin artik pusuyle basa bas degil: isinli=" + withBeam.Leaked +
+            Assert.Less(withBeam.Leaked, baseline.Leaked - 3f,
+                "Isin artik toplanmis orduyu cezalandirmiyor - kimligi " +
+                "kaybolmus olabilir. isinli=" + withBeam.Leaked +
                 " isinsiz=" + baseline.Leaked);
         }
 
         [Test]
-        public void BeamSpam_IsNoBetterThanBatterySpam()
+        public void BeamAlone_IsNotAStrategy()
         {
-            // Isinin dusme noktasi burasi. Tek turden kule diken oyuncu
-            // isinla, bataryayla oldugundan iyi olmamali - olursa isin
-            // baskin strateji olur ve oyun karar barindirmayi birakir.
-            // Olculen (canli kosul): isin 18,7 · batarya 17,3.
+            // Isin bir UZMANDIR: dengeli bir karisimin icinde deger uretir,
+            // tek basina cozum degildir. Mayin tarlasi da boyle secilmisti.
+            // Olculen: yalnizca isin 19,7 sizinti · dengeli karisim 3,9.
+            //
+            // Bu testin dustugu gun isin baskin strateji olmus demektir -
+            // isinin ilk tasariminda (surekli hat) tam olarak bu olmustu.
             var beamSpam = Measure(new[] { TowerKind.Beam }, ShotDamage, ShotInterval, seedCount: 20);
-            var batterySpam = Measure(new[] { TowerKind.Battery }, ShotDamage, ShotInterval, seedCount: 20);
+            var balancedMix = Measure(WithBeam, ShotDamage, ShotInterval, seedCount: 20);
 
-            Assert.GreaterOrEqual(beamSpam.Leaked, batterySpam.Leaked - 4f,
-                "Isin spam'i batarya spam'ini geride birakti - baskin strateji " +
-                "olma yolunda. isin=" + beamSpam.Leaked + " batarya=" + batterySpam.Leaked);
+            Assert.Greater(beamSpam.Leaked, balancedMix.Leaked + 5f,
+                "Yalnizca isin diken oyuncu artik dengeli karisim kadar iyi - " +
+                "isin baskin strateji oluyor. spam=" + beamSpam.Leaked +
+                " karisim=" + balancedMix.Leaked);
         }
 
         [Test]
         public void ShotInterval_IsTheBalanceKnob_NotDamage()
         {
             // Olculen: karisimda hasar 10 ile 45 arasi AYNI sonucu veriyor,
-            // ama aralik 1 sn -> 0,5 sn yapilinca isin spam'i sizintiyi
-            // 18,7'den 4,5'e dusuruyor. Denge dugmesi aralik.
+            // ama aralik kisaldikca isin spam'i cozume yaklasir
+            // (aralik 1 -> 19,7 sizinti · aralik 0,5 -> 3,5). Denge
+            // dugmesi hasar degil, ARALIK.
             var fast = Measure(new[] { TowerKind.Beam }, ShotDamage, 0.5f, seedCount: 20);
             var chosen = Measure(new[] { TowerKind.Beam }, ShotDamage, ShotInterval, seedCount: 20);
 
@@ -199,7 +221,7 @@ namespace Frontline.Tests
         {
             // Isinin kimligi bu: hat 1 hucre kalinliginda oldugu icin degeri
             // "atis aninda kac birlik hatta" sorusuna bagli. Yavaslatilan
-            // birlik hatta daha uzun kalir. Olculen: 22,3 -> 17,9.
+            // birlik hatta daha uzun kalir. Olculen: 25,9 -> 17,9.
             var withMinefield = Measure(
                 new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Beam,
                         TowerKind.Minefield, TowerKind.Ambush },

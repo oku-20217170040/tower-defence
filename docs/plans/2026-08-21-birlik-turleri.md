@@ -1,7 +1,7 @@
 # Birlik Türleri — Plan 8
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Plan yazıldı, uygulama başlıyor.
+**Durum:** Görev 1-3 bitti (altyapı, izci, asker). Sırada Görev 4 — Kör birlik.
 **Ön koşul:** Plan 7 bitti (pusu, batarya, yem, mayın tarlası, ışın).
 
 ## Pazarlıksız kural
@@ -67,13 +67,32 @@ Planın öngördüğü risk gerçekleşti: taban 0,35'te bırakılınca izci iş
 
 > **Doğrulanmamış kalan:** izcinin runtime'da gerçekten hızlı/kırılgan göründüğü ve ordunun izcisiz saplanması — **oynayarak doğrulanmalı.**
 
-### Görev 3 — Asker
+### Görev 3 — Asker — **TAMAMLANDI (21 Ağustos)**
 
-Ölçülecek: can çarpanı, hız çarpanı, `ReinforceMultiplier`.
+**Seçilen:** pay **%20** (3. dalgadan itibaren), pekiştirme **x6**, can **x3**, hız **x0,6**.
 
-Aranan davranış: askerin geçtiği koridor sonraki 2-3 dalga boyunca ordunun tercihi olmalı. Ölçüm metriği: askerin vardığı koridorun sonraki dalgalardaki payı.
+Ortalama entropi askeri ölçemedi: pekiştirme x1→x8 ortalamayı 0,568'den 0,512'ye taşıyor ve bu, askerin **canından** gelen etkiden ayırt edilemiyor. Doğru metrik: askerin **üsse vardığı sütunun sonraki dalgadaki pay artışı** ("çivileme / lift").
 
-Bilinen eşik riski: iz doyması. Ölçülmüş sabit "çekim ağırlığı 3; 6 iken doymuş iz bir duvar". Asker doğrudan buraya bastığı için **askerin pekiştirmesi 6'ya denk gelen bir doyma üretebilir** — yani asker tek başına oyunu çözebilir. Işın'da olan tam buydu; aynı tuzak burada da var.
+| Pekiştirme | Çivileme (lift) | Sızıntı |
+|---|---|---|
+| x1 | **−0,009** (çivileme yok) | 11,8 |
+| x3 | +0,014 | 12,4 |
+| **x6** | **+0,041** | 12,5 |
+| x20 | +0,070 (kazancı azalıyor) | 13,6 |
+
+**Bulgu 1 — pekiştirme bir zorluk düğmesi değil, karakter düğmesi.** x1'den x20'ye sızıntı yalnızca 11,8 → 13,6. Zorluk askerin **canından** geliyor ve orada eşik yine keskin (x2 → 4,0 · x3 → 13,2 · x4 → 22,6). İkisini ayırmak şarttı; ayırmasaydık askeri "güçlü piyade" diye ekler ve Plan 8'in kuralını çiğnerdik.
+
+**Bulgu 2 — korkulan doyma tuzağı çıkmadı.** Pekiştirme x20'de bile ordu durdurulamaz hale gelmiyor (sızıntı 13,6). Işın'daki gibi bir çözülme yok.
+
+**Bulgu 3 — asker ile izci birbirinin tersi.** İzci dağıtır, asker toplar. Dalga başına entropi: izci yok 0,428 · izci %25 0,575 · izci %25 + asker %20 0,525. Ordu yine de geç dalgalarda dağılıyor (erken 0,467 → geç 0,678).
+
+**Bulgu 4 — asker ışını güçlendirdi ve bu tasarım niyetiydi.** Asker orduyu koridora çivileyince ışın onun panzehiri oluyor: ışınsız 13,3 sızıntı, ışınlı 3,9. Plandaki "ışın kalabalık koridoru cezalandırır" ifadesinin ta kendisi.
+
+> **Işının atış aralığı Plan 8 bitince yeniden ölçülmeli.** Aralık 1 sn, ordunun **saf piyade** olduğu bir bileşimde seçildi. Şu an aralık 3 sn karışımı tabana yaklaştırıyor (10,8 / 13,3) ama **şimdi ayarlamak yanlış**: Görev 4-6 bunu yine kaydıracak ve üst üste iki ayar hangi değişikliğin ne yaptığını ölçülemez kılar (bu planın kendi uyarısı). Bu yüzden `BeamTowerTests` artık **sayı değil ilişki** iddia ediyor.
+
+**Uygulandı:** `UnitProfile.For(Soldier)`, `UnitRoster.SoldierShare/SoldierFirstWave`, `RunSimulator.WaveColumnUsage` + `WaveSoldierArrivals` (çivileme metriği), spawner'da askerin görsel ayrımı (büyük, koyu kırmızı). `SoldierTests` (5 test).
+
+> **Doğrulanmamış kalan:** askerin oyunda büyük/koyu/yavaş göründüğü ve geçtiği koridorun sonraki dalgada tercih edildiği — **oynayarak doğrulanmalı.**
 
 ### Görev 4 — Kör birlik
 

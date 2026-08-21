@@ -136,9 +136,25 @@ namespace Frontline.Core
             }
             else if (type == UnitType.Soldier)
             {
+                // Olculen (21 Agu 2026). Metrik: askerin USYA VARDIGI
+                // sutunun SONRAKI dalgadaki pay artisi ("civileme").
+                // Ortalama entropi bunu gormuyordu - dalgadan dalgaya
+                // bakmak gerekti.
+                //
+                //   pekistirme x1  -> lift -0,009  (civileme YOK)
+                //   pekistirme x3  -> lift +0,014
+                //   pekistirme x6  -> lift +0,041  (secilen)
+                //   pekistirme x20 -> lift +0,070  (kazanci azaliyor)
+                //
+                // Pekistirme bir ZORLUK dugmesi DEGIL: x1'den x20'ye
+                // sizinti yalnizca 11,8 -> 13,6. Karakter dugmesidir,
+                // tipki bataryanin alan hasari gibi.
+                //
+                // Can ise keskin bir zorluk esigi (bu projede kacinci kez):
+                //   can x2 -> sizinti  4,0   can x3 -> 13,2   can x4 -> 22,6
                 profile.HpMultiplier = 3f;
                 profile.SpeedMultiplier = 0.6f;
-                profile.ReinforceMultiplier = 3f;
+                profile.ReinforceMultiplier = 6f;
             }
             else if (type == UnitType.Blind)
             {

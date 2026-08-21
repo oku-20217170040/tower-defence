@@ -194,6 +194,20 @@ namespace Frontline.Core
             /// ancak buna bakarak gorulur - ortalama onu duzler.
             /// </summary>
             public float[] WaveEntropy;
+
+            /// <summary>
+            /// [dalga][sutun] = o dalgada o sutundan gecmeyi SECEN birlik
+            /// sayisi. Ortalama entropi bir turun etkisini duzler; turlerin
+            /// birbirini etkilemesi ancak dalgadan dalgaya bakarak gorulur.
+            /// </summary>
+            public int[][] WaveColumnUsage;
+
+            /// <summary>
+            /// [dalga][sutun] = o dalgada o sutundan USYA VARAN asker sayisi.
+            /// Askerin iddiasi ("vardigi koridoru orduya civiler") ancak
+            /// bunun sonraki dalgadaki payla karsilastirilmasiyla olculur.
+            /// </summary>
+            public int[][] WaveSoldierArrivals;
         }
 
         private sealed class Unit
@@ -264,8 +278,16 @@ namespace Frontline.Core
             {
                 LostAtWave = -1,
                 ColumnUsage = new int[grid.Width],
-                WaveEntropy = new float[settings.TotalWaves + 1]
+                WaveEntropy = new float[settings.TotalWaves + 1],
+                WaveColumnUsage = new int[settings.TotalWaves + 1][],
+                WaveSoldierArrivals = new int[settings.TotalWaves + 1][]
             };
+
+            for (int w = 0; w <= settings.TotalWaves; w++)
+            {
+                result.WaveColumnUsage[w] = new int[grid.Width];
+                result.WaveSoldierArrivals[w] = new int[grid.Width];
+            }
             int midRow = grid.Height / 2;
 
             var waveColumns = new int[grid.Width];
@@ -316,6 +338,8 @@ namespace Frontline.Core
                             active.Add(unit);
                             RecordCorridorChoice(unit, midRow, result.ColumnUsage);
                             RecordCorridorChoice(unit, midRow, waveColumns);
+                            if (wave < result.WaveColumnUsage.Length)
+                                RecordCorridorChoice(unit, midRow, result.WaveColumnUsage[wave]);
                         }
 
                         toSpawn--;
@@ -361,6 +385,12 @@ namespace Frontline.Core
                             unit.Alive = false;
                             recon.DepositTrail(unit.Visited,
                                 settings.ReinforceOnSuccess * unit.Profile.ReinforceMultiplier);
+
+                            // Asker hangi koridordan vardi: iz civilemesinin
+                            // olculebilmesi icin gerekli.
+                            if (unit.Profile.Type == UnitType.Soldier
+                                && wave < result.WaveSoldierArrivals.Length)
+                                RecordCorridorChoice(unit, midRow, result.WaveSoldierArrivals[wave]);
 
                             // Kralice usya varirsa ordunun korkusu silinir.
                             // Kapsam ve kaliciligi Plan 8 Gorev 6'da olculecek.

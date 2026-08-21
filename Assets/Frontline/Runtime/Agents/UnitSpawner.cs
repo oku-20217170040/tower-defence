@@ -28,6 +28,10 @@ namespace Frontline.Runtime
                  "edilemeyen tur oyuncu icin yok demektir.")]
         public Color scoutColor = new Color(0.55f, 0.9f, 0.95f);
 
+        [Tooltip("Asker rengi. Buyuk ve koyu: yavas, cok canli ve gectigi " +
+                 "koridoru orduya civileyen birlik.")]
+        public Color soldierColor = new Color(0.75f, 0.35f, 0.3f);
+
         [Tooltip("Birlik capinin hucre boyutuna orani.")]
         [Range(0.1f, 1f)]
         public float unitScale = 0.55f;
@@ -94,18 +98,34 @@ namespace Frontline.Runtime
             var go = new GameObject("Unit");
             go.transform.SetParent(transform, false);
 
-            // Izci kucuk ve acik mavi: hizli, kirilgan ve kesfi tasiyan
-            // birlik oldugu bakisla anlasilmali.
-            bool isScout = profile.Type == UnitType.Scout;
-            float scale = unitScale * (isScout ? 0.7f : 1f);
+            // Turler bakista ayirt edilebilmeli; ayirt edilemeyen tur
+            // oyuncu icin yok demektir.
+            //   izci   -> kucuk, acik mavi (hizli, kirilgan, kesfi tasir)
+            //   asker  -> buyuk, koyu kirmizi (yavas, canli, izi civiler)
+            float scale = unitScale;
+            Color color = unitColor;
+            string label = "Unit";
+
+            if (profile.Type == UnitType.Scout)
+            {
+                scale *= 0.7f;
+                color = scoutColor;
+                label = "Unit_Scout";
+            }
+            else if (profile.Type == UnitType.Soldier)
+            {
+                scale *= 1.35f;
+                color = soldierColor;
+                label = "Unit_Soldier";
+            }
 
             float diameter = world.Space.CellSize * scale;
             go.transform.localScale = new Vector3(diameter, diameter, 1f);
-            go.name = isScout ? "Unit_Scout" : "Unit";
+            go.name = label;
 
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = PrimitiveSprites.Circle();
-            renderer.color = isScout ? scoutColor : unitColor;
+            renderer.color = color;
             renderer.sortingOrder = sortingOrder;
 
             var health = go.AddComponent<UnitHealth>();
