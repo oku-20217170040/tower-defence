@@ -13,6 +13,34 @@ namespace Frontline.Runtime
     public static class PrimitiveSprites
     {
         private static Sprite circle;
+        private static Sprite square;
+
+        /// <summary>
+        /// Beyaz dolu kare, tam 1 dunya birimi. Atis izleri bunu gerip
+        /// cizgiye cevirir (bkz. ShotFlash).
+        /// </summary>
+        public static Sprite Square()
+        {
+            if (square != null) return square;
+
+            const int size = 4;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                name = "PrimitiveSquare"
+            };
+
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+
+            texture.SetPixels(pixels);
+            texture.Apply(false);
+
+            square = Sprite.Create(texture, new Rect(0f, 0f, size, size),
+                                   new Vector2(0.5f, 0.5f), size);
+            return square;
+        }
 
         /// <summary>Beyaz dolu daire. Renk SpriteRenderer.color ile verilir.</summary>
         public static Sprite Circle()

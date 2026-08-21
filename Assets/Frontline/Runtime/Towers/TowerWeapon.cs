@@ -24,21 +24,50 @@ namespace Frontline.Runtime
                  "tek hedefli kule 2, alan hasarli 8 olduruyor.")]
         public bool splash;
 
-        [Tooltip("Acikken kule bir ISINDIR: belirli araliklarla ates eder ve ates " +
-                 "aninda kendi SATIRI uzerindeki her birlige ayni hasari verir.")]
+        [Tooltip("Acikken kule bir ISINDIR: belirli araliklarla ates eder, " +
+                 "namlusunu en yakin birlige dogrultur ve o dogrultuda onune " +
+                 "cikan HERKESI yarip gecer.")]
         public bool beam;
 
-        [Tooltip("Isinin bir atista verdigi hasar. 20 olcumle secildi.")]
-        public float beamShotDamage = 20f;
+        [Tooltip("Isinin bir atista verdigi hasar. 3 olcumle secildi: nisan " +
+                 "aldigi icin iskalamiyor, o yuzden dusuk tutuldu.")]
+        public float beamShotDamage = 3f;
 
         [Tooltip("Isinin atislari arasindaki sure. ASIL denge dugmesi budur: " +
-                 "surekli hasarda isin her ayarda ya olu ya baskin cikiyordu.")]
-        public float beamShotInterval = 1f;
+                 "0,5 sn'de isin tek basina oyunu cozuyor, 2 sn'de tek basina " +
+                 "ise yaramiyor ama karisimda deger uretiyor.")]
+        public float beamShotInterval = 2f;
 
-        [Tooltip("Isin hattinin yatay yarim uzunlugu (hucre).")]
-        public float beamHalfLength = 20f;
+        [Tooltip("Isin hattinin yarim KALINLIGI (hucre). Hat incedir.")]
+        public float beamHalfWidth = 0.6f;
+
+        [Tooltip("Bir atisin gorsel olarak ne kadar sure gorunecegi.")]
+        public float beamFlashSeconds = 0.12f;
+
+        [Header("Atis izi (KOZMETIK)")]
+        [Tooltip("Iki gorsel iz arasindaki sure. Hasar SUREKLI uygulanir; " +
+                 "iz yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
+        public float tracerInterval = 0.18f;
+
+        [Tooltip("Iz rengi. Pusu SOLUK ve ince, batarya PARLAK ve kalin - " +
+                 "gorsel hiyerarsi mekanikle ayni kalmali (spec 9.1).")]
+        public Color tracerColor = new Color(0.75f, 0.82f, 0.88f, 0.45f);
+
+        [Tooltip("Iz kalinligi (hucre orani).")]
+        public float tracerThickness = 0.05f;
+
+        [Tooltip("Izin ne kadar sure gorunecegi.")]
+        public float tracerSeconds = 0.07f;
+
+        private float tracerTimer;
 
         private float beamTimer;
+
+        /// <summary>Son atisin yonu; kule govdesi buna doner.</summary>
+        public Vector2 AimDirection { get; private set; } = Vector2.down;
+
+        /// <summary>Su an menzilde bir hedef var mi (kule ona doner).</summary>
+        public bool HasTarget { get; private set; }
 
         private Battlefield world;
         private float worldRange;
@@ -52,13 +81,15 @@ namespace Frontline.Runtime
             worldRange = rangeInCells * world.Space.CellSize;
         }
 
-        /// <summary>Isin baglama. Menzil yerine hat uzunlugu ve atis araligi alir.</summary>
-        public void BindBeam(Battlefield world, float halfLengthInCells,
-                             float shotDamage, float shotInterval)
+        /// <summary>Isin baglama: menzil, atis basina hasar ve atis araligi.</summary>
+        public void BindBeam(Battlefield world, float rangeInCells,
+                             float shotDamage, float shotInterval, float halfWidth)
         {
             this.world = world;
             beam = true;
-            beamHalfLength = halfLengthInCells;
+            range = rangeInCells;
+            worldRange = rangeInCells * world.Space.CellSize;
+            beamHalfWidth = halfWidth;
             beamShotDamage = shotDamage;
             beamShotInterval = shotInterval;
             beamTimer = shotInterval;
@@ -78,16 +109,44 @@ namespace Frontline.Runtime
 
             float damage = damagePerSecond * Time.deltaTime;
 
-            if (splash)
+            // Namlu her karede en yakin hedefi takip eder; kule govdesi
+            // buna doner (TowerTurret). Alan hasarli batarya da doner:
+            // "kime bakiyor" bilgisi oyuncuya nereye vurdugunu soyler.
+            UnitHealth target = FindNearestTarget();
+            HasTarget = target != null;
+
+            if (HasTarget)
             {
-                DamageEveryoneInRange(damage);
-                return;
+                Vector2 delta = (Vector2)target.transform.position - (Vector2)transform.position;
+                if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
             }
 
-            UnitHealth target = FindNearestTarget();
-            if (target == null) return;
+            if (splash) DamageEveryoneInRange(damage);
+            else if (HasTarget) target.TakeDamage(damage);
 
-            target.TakeDamage(damage);
+            EmitTracer(target);
+        }
+
+        /// <summary>
+        /// Gorsel iz. Hasarla ILGISI YOKTUR: hasar surekli uygulanir, iz
+        /// yalnizca sabit araliklarla cizilir. Ayrilmasinin sebebi, izin
+        /// sikligini dengeye dokunmadan ayarlayabilmek.
+        /// </summary>
+        private void EmitTracer(UnitHealth target)
+        {
+            if (!HasTarget || target == null) return;
+
+            tracerTimer -= Time.deltaTime;
+            if (tracerTimer > 0f) return;
+
+            tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
+
+            Vector2 origin = transform.position;
+            float length = Vector2.Distance(origin, target.transform.position);
+
+            ShotFlash.Line(origin, AimDirection, length,
+                           tracerThickness * world.Space.CellSize,
+                           tracerColor, tracerSeconds);
         }
 
         /// <summary>
@@ -106,18 +165,37 @@ namespace Frontline.Runtime
         /// </summary>
         private void UpdateBeam()
         {
+            // Nisan her karede guncellenir: kule govdesi hedefi TAKIP eder,
+            // yalnizca ates aninda donmez. Ates etmeyen kule cansiz durur.
+            UnitHealth nearest = FindNearestTarget();
+            HasTarget = nearest != null;
+            if (HasTarget)
+            {
+                Vector2 delta = (Vector2)nearest.transform.position - (Vector2)transform.position;
+                if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
+            }
+
             beamTimer -= Time.deltaTime;
             if (beamTimer > 0f) return;
 
             beamTimer += beamShotInterval > 0f ? beamShotInterval : 1f;
+            if (!HasTarget) return;
 
+            Fire(AimDirection);
+        }
+
+        /// <summary>
+        /// Verilen dogrultuda onune cikan HERKESI yarip gecer - kac birlik
+        /// oldugundan bagimsiz, hepsi ayni hasari alir.
+        /// </summary>
+        private void Fire(Vector2 direction)
+        {
             var units = world.ActiveUnits;
             if (units == null || units.Count == 0) return;
 
             Vector2 origin = transform.position;
-            float cell = world.Space.CellSize;
-            float halfRow = cell * 0.5f;
-            float halfLength = beamHalfLength * cell;
+            float halfWidth = beamHalfWidth * world.Space.CellSize;
+            int hits = 0;
 
             for (int i = units.Count - 1; i >= 0; i--)
             {
@@ -127,12 +205,23 @@ namespace Frontline.Runtime
                 UnitHealth health = unit.Health;
                 if (health == null || !health.IsAlive) continue;
 
-                Vector2 offset = (Vector2)unit.transform.position - origin;
-                if (Mathf.Abs(offset.y) > halfRow) continue;
-                if (Mathf.Abs(offset.x) > halfLength) continue;
+                Vector2 v = (Vector2)unit.transform.position - origin;
+
+                // Namlu dogrultusundaki mesafe: arkada kalan vurulmaz.
+                float along = Vector2.Dot(v, direction);
+                if (along < 0f || along > worldRange) continue;
+
+                // Hatta dik uzaklik: hat ne kadar inceyse o kadar secici.
+                float perp = Mathf.Abs(v.x * direction.y - v.y * direction.x);
+                if (perp > halfWidth) continue;
 
                 health.TakeDamage(beamShotDamage);
+                hits++;
             }
+
+            BeamFlash.Spawn(origin, direction, worldRange,
+                            world.Space.CellSize * beamHalfWidth * 2f,
+                            beamFlashSeconds, hits);
         }
 
         /// <summary>

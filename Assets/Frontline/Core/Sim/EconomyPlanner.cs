@@ -63,8 +63,11 @@ namespace Frontline.Core
             /// <summary>Isinin atislari arasindaki sure (saniye). Asil denge dugmesi.</summary>
             public float BeamShotInterval;
 
-            /// <summary>Isin hattinin yatay yarim uzunlugu (hucre).</summary>
+            /// <summary>Isin hattinin yarim kalinligi (hucre). Hat incedir.</summary>
             public float BeamWidth;
+
+            /// <summary>Isinin menzili (hucre). Namlu bu menzil icinde hedef arar.</summary>
+            public float BeamRange;
 
             /// <summary>Isinin tehdit gucu. 0 ise ordu isini algilayamaz.</summary>
             public float BeamThreatStrength;
@@ -108,9 +111,10 @@ namespace Frontline.Core
                     BatteryDps = 2.5f,
                     TowerRadius = 4f,
                     MinefieldSlowFactor = 2f,
-                    BeamShotDamage = 20f,
-                    BeamShotInterval = 1f,
-                    BeamWidth = 20f,
+                    BeamShotDamage = 3f,
+                    BeamShotInterval = 2f,
+                    BeamWidth = 0.6f,
+                    BeamRange = 8f,
                     BatteryThreatStrength = 4f,
                     BatteryTargeting = RunSimulator.Targeting.Splash,
                     DraftGivesFreeTower = true,
@@ -263,6 +267,7 @@ namespace Frontline.Core
                 spec.ShotDamage = policy.BeamShotDamage;
                 spec.ShotInterval = policy.BeamShotInterval;
                 spec.Width = policy.BeamWidth;
+                spec.Radius = policy.BeamRange > 0f ? policy.BeamRange : policy.TowerRadius;
                 spec.ThreatStrength = policy.BeamThreatStrength;
                 spec.Targeting = RunSimulator.Targeting.Beam;
             }

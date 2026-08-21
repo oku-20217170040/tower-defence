@@ -31,12 +31,16 @@ namespace Frontline.Core
             Splash = 1,
 
             /// <summary>
-            /// Isin. Belirli araliklarla ates eder ve ates ettigi anda
-            /// HATTI UZERINDEKI herkese ayni hasari verir. Surekli degil,
-            /// ORNEKLEYEN bir silahtir: hat 1 hucre kalinliginda oldugu
-            /// icin hizli birlik iki atis arasinda karsiya gecebilir,
-            /// yavaslatilmis ya da sira olmus bir kalabalik tam yer.
-            /// Dengeleyici dugme dps degil, ATIS ARALIGIDIR.
+            /// Isin. Belirli araliklarla ates eder: namlusunu menzildeki EN
+            /// YAKIN birlige dogrultur ve O DOGRULTUDA onune cikan HERKESI
+            /// yarip gecer. Delici hat hasari.
+            ///
+            /// Surekli degil ORNEKLEYEN bir silahtir: hat incedir, hizli
+            /// birlik iki atis arasinda hattan cikabilir; sira olmus ya da
+            /// yavaslatilmis kalabalik ise tam yer. Bu yuzden may in
+            /// tarlasiyla eslesir ve toplanmis orduyu cezalandirir.
+            ///
+            /// Dengeleyici dugme hasar degil, ATIS ARALIGIDIR.
             /// </summary>
             Beam = 2
         }
@@ -57,11 +61,13 @@ namespace Frontline.Core
             public float ThreatStrength;
 
             /// <summary>
-            /// Isin hattinin yatay yarim uzunlugu (hucre). Hat YATAYDIR:
-            /// kulenin durdugu satir boyunca uzanir ve butun koridorlari
-            /// keser. Dikey kalinligi her zaman 1 hucredir - bir koridoru
-            /// bastan sona kapatan her sey spec 3.5'i ("korunmayan koridor
-            /// her zaman bulunur") siler; olcumde tam olarak bu oldu.
+            /// Isin hattinin YARIM KALINLIGI (hucre). Hattin yonu sabit
+            /// degildir: kule namlusunu hedefe dogrultur, hat o dogrultuda
+            /// uzanir. Menzil Radius'tur.
+            ///
+            /// Kalinlik kucuk tutulmali. Bir koridoru bastan sona kaplayan
+            /// her sey spec 3.5'i ("korunmayan koridor her zaman bulunur")
+            /// siler; olcumde tam olarak bu oldu (surekli isin denemesi).
             /// </summary>
             public float Width;
 
@@ -584,20 +590,47 @@ namespace Frontline.Core
                     if (beamTimers[t] > 0f) continue;
                     beamTimers[t] += tower.ShotInterval > 0f ? tower.ShotInterval : 1f;
 
-                    // Hat uzerindeki HERKES ayni hasari alir - kac birlik
-                    // oldugundan bagimsiz. Degeri "atis aninda kac birlik
-                    // hatta" sorusuna baglidir; sirali modelde olculemezdi.
+                    // 1) Namluyu menzildeki en yakin birlige dogrult.
+                    Unit aim = null;
+                    float aimSq = tower.Radius * tower.Radius;
+
+                    for (int i = 0; i < active.Count; i++)
+                    {
+                        Unit unit = active[i];
+                        if (!unit.Alive || unit.Hp <= 0f) continue;
+
+                        float sq = DistanceSq(unit, tower);
+                        if (sq <= aimSq) { aimSq = sq; aim = unit; }
+                    }
+
+                    if (aim == null) continue;
+
+                    int aimCell = aim.Path[aim.PathIndex];
+                    float dirX = grid.X(aimCell) - tower.X;
+                    float dirY = grid.Y(aimCell) - tower.Y;
+                    float len = (float)Math.Sqrt(dirX * dirX + dirY * dirY);
+                    if (len < 0.0001f) { dirX = 0f; dirY = -1f; }
+                    else { dirX /= len; dirY /= len; }
+
+                    // 2) O dogrultuda onune cikan HERKESI yarip gec.
+                    //    Hedef sayisindan bagimsiz, hepsi ayni hasari alir.
                     for (int i = 0; i < active.Count; i++)
                     {
                         Unit unit = active[i];
                         if (!unit.Alive || unit.Hp <= 0f) continue;
 
                         int cell = unit.Path[unit.PathIndex];
-                        if (grid.Y(cell) != tower.Y) continue;
+                        float vx = grid.X(cell) - tower.X;
+                        float vy = grid.Y(cell) - tower.Y;
 
-                        float dx = grid.X(cell) - tower.X;
-                        if (dx < 0f) dx = -dx;
-                        if (dx <= tower.Width) unit.Hp -= tower.ShotDamage;
+                        // Namlu dogrultusundaki mesafe: arkada kalan vurulmaz.
+                        float along = vx * dirX + vy * dirY;
+                        if (along < 0f || along > tower.Radius) continue;
+
+                        // Hatta dik uzaklik: hat ne kadar inceyse o kadar secici.
+                        float perp = vx * dirY - vy * dirX;
+                        if (perp < 0f) perp = -perp;
+                        if (perp <= tower.Width) unit.Hp -= tower.ShotDamage;
                     }
                     continue;
                 }

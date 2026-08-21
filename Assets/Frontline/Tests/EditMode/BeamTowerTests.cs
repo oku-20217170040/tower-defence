@@ -27,9 +27,16 @@ namespace Frontline.Tests
     /// Tehdit yazdirmak da cozmedi (spam sizintisi 1,9 -> 2,6), cunku her
     /// koridorda isin varken ordunun kacacak koridoru kalmiyor.
     ///
-    /// COZUM: isin SUREKLI degil PERIYODIK ates eder ve hat 1 hucre
-    /// kalinligindadir. Artik bir koridoru kapatmaz, ORNEKLER: hizli birlik
-    /// iki atis arasinda karsiya gecebilir, yavaslatilmis kalabalik tam yer.
+    /// COZUM: isin SUREKLI degil PERIYODIK ates eder. Namlusunu menzildeki
+    /// en yakin birlige dogrultur ve O DOGRULTUDA onune cikan herkesi
+    /// yarip gecer. Bir koridoru kapatmaz.
+    ///
+    /// MEKANIK DUZELTMESI (22 Agu 2026): isin once "kulenin satiri boyunca
+    /// sabit yatay hat" olarak yazilmisti. Kullanici tarifi farkliydi ve
+    /// dogrusu odur: namlu doner, hedefe nisan alir, hattaki herkesi deler.
+    /// Nisan aldigi icin ISKALAMIYOR - bu yuzden ayni sayilarla cok guclu
+    /// cikti (spam sizinti 0,0) ve hasar 20 -> 3, aralik 1 -> 2 sn yapildi.
+    ///
     /// Asil denge dugmesi hasar degil, ATIS ARALIGIDIR.
     ///
     /// ACIK IS - ISININ ATIS ARALIGI PLAN 8 BITINCE YENIDEN OLCULMELI.
@@ -148,8 +155,8 @@ namespace Frontline.Tests
             };
         }
 
-        private const float ShotDamage = 20f;
-        private const float ShotInterval = 1f;
+        private const float ShotDamage = 3f;
+        private const float ShotInterval = 2f;
 
         private static readonly TowerKind[] Baseline =
         {
@@ -167,8 +174,11 @@ namespace Frontline.Tests
         public void Beam_IsTheCounterToAConcentratedArmy()
         {
             // Asker orduyu bir koridora civiler; isin de tam olarak orayi
-            // cezalandirir. Olculen (izci %25 + asker %20): isinsiz 13,3
-            // sizinti, isinli 3,9.
+            // cezalandirir. Olculen: isinsiz 20,7 sizinti, isinli 15,7.
+            //
+            // Ozellik nisan alan surumde de duruyor: DAGINIK orduda isinin
+            // kazanci 1,2 sizinti (3,3 -> 2,1), TOPLANMIS orduda 5,0
+            // (20,7 -> 15,7). Yani isin yaklasik dort kat daha degerli.
             //
             // Bu bir denge SAYISI degil, bir ILISKI iddiasidir: bilesim
             // degistikce sayilar kayar ama iliski kalmalidir. Sayi
@@ -187,7 +197,8 @@ namespace Frontline.Tests
         {
             // Isin bir UZMANDIR: dengeli bir karisimin icinde deger uretir,
             // tek basina cozum degildir. Mayin tarlasi da boyle secilmisti.
-            // Olculen: yalnizca isin 19,7 sizinti · dengeli karisim 3,9.
+            // Olculen: yalnizca isin 30,0 sizinti (kazanma %0) · dengeli
+            // karisim 15,7.
             //
             // Bu testin dustugu gun isin baskin strateji olmus demektir -
             // isinin ilk tasariminda (surekli hat) tam olarak bu olmustu.
@@ -203,10 +214,9 @@ namespace Frontline.Tests
         [Test]
         public void ShotInterval_IsTheBalanceKnob_NotDamage()
         {
-            // Olculen: karisimda hasar 10 ile 45 arasi AYNI sonucu veriyor,
-            // ama aralik kisaldikca isin spam'i cozume yaklasir
-            // (aralik 1 -> 19,7 sizinti · aralik 0,5 -> 3,5). Denge
-            // dugmesi hasar degil, ARALIK.
+            // Olculen: aralik kisaldikca isin spam'i cozume yaklasir
+            // (aralik 2 -> 30,0 sizinti · aralik 0,5 -> 0,2). Denge
+            // dugmesi ARALIK.
             var fast = Measure(new[] { TowerKind.Beam }, ShotDamage, 0.5f, seedCount: 20);
             var chosen = Measure(new[] { TowerKind.Beam }, ShotDamage, ShotInterval, seedCount: 20);
 
@@ -219,17 +229,20 @@ namespace Frontline.Tests
         [Test]
         public void Beam_IsWorthMoreWhenPairedWithAMinefield()
         {
-            // Isinin kimligi bu: hat 1 hucre kalinliginda oldugu icin degeri
-            // "atis aninda kac birlik hatta" sorusuna bagli. Yavaslatilan
-            // birlik hatta daha uzun kalir. Olculen: 25,9 -> 17,9.
+            // Isinin kimligi bu: hat ince oldugu icin degeri "atis aninda
+            // kac birlik hatta diziliyor" sorusuna bagli. Yavaslatilan
+            // birlik hatta daha uzun kalir. Olculen: 23,0 -> 15,7.
+            // Karsilastirma DENGELI bir karisim uzerinden yapilir: tek
+            // bataryali kurulumlar artik ikisi de kaybediyor (30/30) ve
+            // fark olculemiyordu.
             var withMinefield = Measure(
-                new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Beam,
-                        TowerKind.Minefield, TowerKind.Ambush },
+                new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Battery,
+                        TowerKind.Beam, TowerKind.Minefield },
                 ShotDamage, ShotInterval, seedCount: 20);
 
             var withoutMinefield = Measure(
-                new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Beam,
-                        TowerKind.Ambush, TowerKind.Ambush },
+                new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Battery,
+                        TowerKind.Beam, TowerKind.Ambush },
                 ShotDamage, ShotInterval, seedCount: 20);
 
             Assert.Less(withMinefield.Leaked, withoutMinefield.Leaked - 1.5f,

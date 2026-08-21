@@ -25,9 +25,10 @@ namespace Frontline.Runtime
         public Color minefieldColor = new Color(0.95f, 0.8f, 0.3f);
         public Color beamColor = new Color(0.6f, 0.75f, 1f);
 
-        [Tooltip("Kule capinin hucre boyutuna orani.")]
-        [Range(0.2f, 1f)]
-        public float towerScale = 0.8f;
+        [Tooltip("Kule capinin hucre boyutuna orani. 1,0 = hucreyi tam " +
+                 "doldurur. 0,8 denendi ve kuleler kucuk duruyordu.")]
+        [Range(0.2f, 1.5f)]
+        public float towerScale = 1.0f;
 
         [Header("Silah")]
         [Tooltip("Batarya kulenin saniyelik hasari. ALAN hasari verdigi icin " +
@@ -39,18 +40,32 @@ namespace Frontline.Runtime
                  "tuzak koridorunda gercek katliami bu yapar.")]
         public float ambushDps = 4f;
 
-        [Tooltip("Isinin bir atista verdigi hasar. 20 olcumle secildi; karisimda " +
-                 "10 ile 45 arasi ayni sonucu veriyor, farki SPAM davranisi " +
-                 "belirledi (20'de isin spam'i batarya spam'iyle basa bas).")]
-        public float beamShotDamage = 20f;
+        [Tooltip("Isinin bir atista verdigi hasar. 3 olcumle secildi: isin " +
+                 "namlusunu hedefe dogrulttugu icin ISKALAMIYOR, o yuzden " +
+                 "atis basina hasari dusuk.")]
+        public float beamShotDamage = 3f;
 
         [Tooltip("Isinin atislari arasindaki sure. Isinin ASIL denge dugmesi " +
-                 "budur; hasar degil. 0,5 sn'de isin spam'i oyunu coz")]
-        public float beamShotInterval = 1f;
+                 "budur; hasar degil. Olculen: 0,5 sn'de isin tek basina " +
+                 "oyunu cozuyor (sizinti 0,2), 2 sn'de tek basina ise " +
+                 "yaramiyor (30) ama karisimda deger uretiyor (20,7 -> 15,7).")]
+        public float beamShotInterval = 2f;
 
-        [Tooltip("Isin hattinin yatay yarim uzunlugu (hucre). Hat butun " +
-                 "koridorlari kesecek kadar uzundur.")]
-        public float beamHalfLength = 20f;
+        [Tooltip("Isinin menzili (hucre).")]
+        public float beamRange = 8f;
+
+        [Tooltip("Isin hattinin yarim KALINLIGI (hucre). Hat incedir; " +
+                 "kalinlasirsa bir koridoru bastan sona kaplar ve spec 3.5'i " +
+                 "siler.")]
+        public float beamHalfWidth = 0.6f;
+
+        [Header("Atis izleri (KOZMETIK)")]
+        [Tooltip("Pusu izi: SOLUK ve ince. Oyuncu pusunun calistigini gorur " +
+                 "ama ekranda gurultu yapan batarya olur (spec 9.1).")]
+        public Color ambushTracer = new Color(0.72f, 0.80f, 0.86f, 0.40f);
+
+        [Tooltip("Batarya izi: PARLAK ve kalin. Tek gurultulu kule odur.")]
+        public Color batteryTracer = new Color(1f, 0.62f, 0.25f, 0.85f);
 
         [Header("Draft Pasifleri")]
         [Tooltip("Draft'tan gelen kalici hasar carpani.")]
@@ -158,17 +173,38 @@ namespace Frontline.Runtime
                       : (kind == TowerKind.Ambush ? ambushDps : 0f);
 
             // Isin surekli hasar vermez; kendi baglama yolu var.
+            TowerWeapon weapon = null;
+
             if (kind == TowerKind.Beam)
             {
-                go.AddComponent<TowerWeapon>().BindBeam(
-                    world, beamHalfLength * rangeMultiplier,
-                    beamShotDamage * damageMultiplier, beamShotInterval);
+                weapon = go.AddComponent<TowerWeapon>();
+                weapon.BindBeam(world, beamRange * rangeMultiplier,
+                                beamShotDamage * damageMultiplier,
+                                beamShotInterval, beamHalfWidth);
             }
             // Alan hasari YALNIZCA batarya kulede: sürüyü bicen odur.
             else if (dps > 0f)
-                go.AddComponent<TowerWeapon>().Bind(
-                    world, tower.radius * rangeMultiplier, dps * damageMultiplier,
-                    kind == TowerKind.Battery);
+            {
+                weapon = go.AddComponent<TowerWeapon>();
+                weapon.Bind(world, tower.radius * rangeMultiplier,
+                            dps * damageMultiplier, kind == TowerKind.Battery);
+
+                // Iz gorseli mekanigi yansitir: batarya parlak, pusu soluk.
+                bool loud = kind == TowerKind.Battery;
+                weapon.tracerColor = loud ? batteryTracer : ambushTracer;
+                weapon.tracerThickness = loud ? 0.10f : 0.045f;
+                weapon.tracerInterval = loud ? 0.22f : 0.14f;
+                weapon.tracerSeconds = loud ? 0.09f : 0.06f;
+            }
+
+            // Namlu YALNIZCA hasar veren kulelerde doner. Donen bir sey
+            // oyuncuya "bu beni hedefliyor" der; hasarsiz kule (yem,
+            // mayin tarlasi) bunu soylememeli.
+            if (weapon != null)
+            {
+                var turret = go.AddComponent<TowerTurret>();
+                turret.degreesPerSecond = kind == TowerKind.Battery ? 260f : 420f;
+            }
 
             // Titresim halkasi YALNIZCA batarya kulede. Halkasizlik,
             // "ordu beni goremiyor" demenin gorsel yoludur (spec 9.1).
