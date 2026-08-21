@@ -880,7 +880,27 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 6113295629bac9849a381c90fed654ad, type: 3}
     scale: 1.8
     tint: {r: 1, g: 1, b: 1, a: 0}
-  towers: []
+  towers:
+  - kind: 0
+    sprite: {fileID: 21300000, guid: 786b8122d0531304899dc8e6e29b3962, type: 3}
+    scale: 0
+    tint: {r: 1, g: 1, b: 1, a: 0}
+  - kind: 1
+    sprite: {fileID: 21300000, guid: 07ef1f3195e49734793645b9f95b9402, type: 3}
+    scale: 0
+    tint: {r: 1, g: 1, b: 1, a: 0}
+  - kind: 2
+    sprite: {fileID: 21300000, guid: bee0a6b61b0586c4381d0c61a3f53dd7, type: 3}
+    scale: 0
+    tint: {r: 1, g: 1, b: 1, a: 0}
+  - kind: 3
+    sprite: {fileID: 21300000, guid: a553cc64b896dd6448d2b7b7757f29a2, type: 3}
+    scale: 0
+    tint: {r: 1, g: 1, b: 1, a: 0}
+  - kind: 4
+    sprite: {fileID: 21300000, guid: aef181e02f2ca38459bb2a0b1eb6a6b4, type: 3}
+    scale: 0
+    tint: {r: 1, g: 1, b: 1, a: 0}
 --- !u!4 &1639044363
 Transform:
   m_ObjectHideFlags: 0

@@ -1,7 +1,7 @@
 # Görsel Üretim — Plan 6
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Birlikler üretildi ve oyuna bağlandı (4/4). Sırada kuleler.
+**Durum:** Birlikler (4/4) ve kuleler (5/5) üretildi, oyuna bağlandı. Sırada üs ve harita zemini.
 **Sanat yönü:** **Sade askeri silüet, düşük poli** (21 Ağustos kullanıcı kararı).
 
 ## Neden bu yön
@@ -47,17 +47,25 @@ Tür ayrımı **üç kanaldan birden**: silüet + vurgu rengi + ölçek. Üçü 
 
 Unity import: Sprite, PPU 256 (sprite tam 1 dünya birimi — kod ile üretilen daireyle aynı), alphaIsTransparency açık. `ArtLibrary` sahneye kuruldu ve dört tür atandı; tint alpha 0 bırakıldı, yani sprite'lar kendi renkleriyle çiziliyor.
 
-### Kuleler (5)
+### Kuleler (5) — **BİTTİ (22 Ağustos)**
 
-| Tür | Rol | Mevcut renk |
+Üreteç: `tools/blender/towers.py`.
+
+**Görsel dil kuralı (spec 9.1) bu dosyanın asıl işi.** Titreşim halkası yalnızca bataryada; halkasızlık "ordu beni göremiyor" demenin görsel yolu. Model bunu sürdürüyor — **yükseklik bir süs değil, bilgi:**
+
+| Tür | Model | Neden |
 |---|---|---|
-| **Pusu mevzisi** | Tek hedef, sürekli. Ordu onu **göremez** — görsel olarak sessiz/gizli durmalı | gri-mavi |
-| **Batarya** | Alan hasarı + tehdit yazar. Tek "gürültülü" kule; titreşim halkası var | turuncu-kırmızı |
-| **Yem (sahte hedef)** | Hasar vermez, sürüyü çeker | yeşil |
-| **Mayın tarlası** | Yavaşlatır, tehdit yazmaz | sarı |
-| **Işın** | Periyodik yatay hat | açık mavi |
+| **Batarya** | Yüksek taret, öne bakan tek namlu, omuz plakaları, turuncu | Tehdit **yazar**. Tek "gürültülü" kule; ordu onu görür ve kaçar |
+| **Pusu mevzisi** | Alçak sekizgen pad, ortada dar mazgal, kamuflaj kanatları | Tehdit **yazmaz**. Asıl katil ama görünmemeli (spec 3.2) |
+| **Mayın tarlası** | Yassı plaka + dağılmış sarı tümsekler, **dikey yapı yok** | Tehdit **yazmaz**; ordu algılayamaz |
+| **Yem** | İnce direk + tepede parlak yeşil başlık, yayın kolları | Çekim yaydığını anlatır |
+| **Işın** | X ekseninde uzun ray, iki uçta mercek, açık mavi | Yatay hat mekaniğini silüet anlatır |
 
-**Görsel dil kuralı (spec 9.1):** titreşim halkası YALNIZCA bataryada. Halkasızlık, "ordu beni göremiyor" demenin görsel yoludur. Bu, modelde de sürdürülmeli — pusu ve mayın tarlası bastırılmış, batarya öne çıkan olmalı.
+**Elenen üç deneme (yorumlara yazıldı):** bataryada dikey namlu tepeden "delik" gibi okunuyordu; karşılıklı iki namlu gövdeyi delip geçen bir çubuğa dönüşüyordu; emisyon 1,4-1,6'da renk beyaza patlıyordu (0,35'e indirildi, renk base'ten gelir).
+
+**Gövde rengi 0,20'den 0,30'a açıldı:** koyu haritada kule gömülüyordu ve emisyonlu parçaların yanındaki gövde neredeyse siyah çıkıyordu.
+
+Unity import: Sprite, PPU 512 (sprite tam 1 dünya birimi), ölçek `ArtLibrary`'de 0 bırakıldı — yani `TowerPlacer.towerScale` (0,8) geçerli.
 
 ### Sonraki tur
 
