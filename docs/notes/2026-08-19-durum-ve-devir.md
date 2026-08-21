@@ -1,9 +1,9 @@
 # Durum ve Devir Notu
 
-**Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
+**Tarih:** 19 Ağustos 2026 · **son güncelleme 22 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 166 EditMode testi, 166 geçiyor (21 Ağu 2026)
-**Sıradaki iş:** Plan 8 Görev 7 — runtime doğrulaması. Görev 1/2/3/6 bitti (altyapı, izci, asker, kraliçe); Görev 4 (kör) ölçüm aracı yetersizliğinden ertelendi, Görev 5 (kuluçka) ölçümle elendi. **Plan 7 de bitti**. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Test durumu:** 166 EditMode testi, 166 geçiyor (22 Ağu 2026)
+**Sıradaki iş:** görsel tarafta **kraliçenin hafıza silme efekti** (oyunun en dramatik anı, şu an hiç görünmüyor) ve **üs görseli**. Denge tarafında üç açık iş: uyarlamalı yerleştirme (Plan 8 Görev 4'ü açar), ekonomi sıkılaştırması, kör birlik. **Plan 6 (görsel) neredeyse bitti, Plan 7 bitti, Plan 8'in ölçülebilir kısmı bitti.** Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 
@@ -109,7 +109,10 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Dalga temposu | ilk dalga öncesi 8 sn, ilk 4 dalga arası 6 sn, sonra 2 sn | Erken oyunda düşünme süresi zorluktan değerli; oyuncu ilk kulelerini kurmadan boğulmamalı |
 | Üs canı | 30 | Zayıf düğme: 50 yapmak kayıp dalgasını 10'dan 11'e taşıdı |
 | Başlangıç besini | **90** | 50'de ilk dalgada YALNIZCA 1 kule kurulabiliyordu (3 koridor varken) — oyuncu geri bildirimi doğrulandı. Dalga geliri 6, öldürme geliri 1 ile birlikte: erken oyun açılıyor, toplam zorluk aynı kalıyor |
-| Kule fiyatları | Batarya **20** · Yem/Mayın tarlası **26** · Pusu **40**, aynı türde +5 | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
+| Işın | **3 hasar / 2 sn, nişan alan delici hat, menzil 40** | Nişan aldığı için ıskalamıyor. hasar 20/aralık 1 → tek başına oyunu çözüyor; 3/2 sn'de karışımda değerli (20,7 → 11,9) ama tek başına işe yaramıyor (30,0) |
+| Işın hat kalınlığı | 0,6 hücre (yarı) | Kalınlaşırsa koridoru baştan sona kaplar ve spec 3.5'i siler |
+| Kule ölçeği | 1,0 (hücre boyutu) | 0,8'de kuleler küçük duruyordu (oyuncu geri bildirimi) |
+| Kule fiyatları | Batarya **20** · Yem/Mayın tarlası **26** · **Işın 34** · Pusu **40**, aynı türde +5 | 20 Ağu taraması: +10 artış run'ı öldürüyordu (kazanma %10 → +5'te %85) |
 
 **Ölçülen eğri (20 Ağu):** optimal oyuncu run'ların %85'ini kazanıyor, 8. dalgada ortalama 5,6 kule, üs canının 30'da 22'si gidiyor. Eski 3/5/6/9 hedefi ölçümde hiç kazanmıyordu — geçersiz.
 
@@ -138,6 +141,22 @@ Bunlar tasarımda yoktu; ancak ölçünce ortaya çıktılar ve spec'e işlendil
 
 ---
 
+## Görsel üretim başladı — 22 Ağustos
+
+Sanat yönü: **sade askeri silüet, düşük poli** (kullanıcı kararı). Üreteçler repoda ve tekrarlanabilir: `tools/blender/units.py`, `towers.py`, `tiles.py` — Blender'da `exec` edilir.
+
+**En önemli ders — silüet, anatomi değil.** İlk iki birlik denemesi anatomik askerdi (omuz + kask + tüfek) ve 30 pikselde blob oluyordu. Gövde **yön belirten bir kamaya** çevrilince okunabilirlik geldi. Telefonda bir birlik ~30 piksel; o ölçekte okunan şey dış hattır.
+
+**Tür ayrımı üç kanaldan birden:** silüet + vurgu rengi + ölçek. Üçü aynı anda çalışır, renk körlüğünde bile tür ayırt edilir.
+
+**Görsel dil kuralı modele taşındı (spec 9.1): yükseklik bir süs değil, bilgi.** Batarya yüksek taretli ve gürültülü (tehdit yazar), pusu alçak ve gömülü, mayın tarlası tamamen yassı (dikey yapı yok). Ordunun görebildiği kule ile göremediği kule bakışta ayrılıyor.
+
+**Bağlama noktası `ArtLibrary`:** sprite atanmamış her tür otomatik eski daireye düşer. Asset'ler parça parça gelebilir, oyun hiçbir anda bozulmaz. Görsel katman oyunun çalışması için zorunlu değil.
+
+Ayrıntı: `docs/plans/2026-08-21-gorsel-uretim.md`
+
+---
+
 ## Plan durumu
 
 | Plan | Durum |
@@ -149,7 +168,7 @@ Bunlar tasarımda yoktu; ancak ölçünce ortaya çıktılar ve spec'e işlendil
 | Plan 7 — Kule sınıfları (Mayın tarlası, Batarya alan hasarı, Işın) | **Bitti** (21 Ağu). Saat kulesi ölçümle elendi |
 | Plan 8 — Birlik türleri (izci, asker, kör, kuluçka, kraliçe) | Karar alındı, plan yazılmadı |
 | Plan 5 — Meta ilerleme, nemesis | Yazılmadı |
-| Plan 6 — Blender asset'leri, ses | Yazılmadı |
+| Plan 6 — Blender görselleri | **Neredeyse bitti** (22 Ağu). 4 birlik + 5 kule + 3 döşeme üretildi ve bağlandı; dönme ve atış animasyonları çalışıyor. Kalan: üs görseli, kraliçe efekti, ses |
 
 ---
 
@@ -179,3 +198,4 @@ Dosyalar: `Core/Draft/DraftOption.cs`, `Core/Draft/DraftGenerator.cs`, `Runtime/
 - Blender bağlantısı: 3D görünümde **N** → **BlenderMCP** sekmesi → **Connect to Claude** (port 9876)
 - Unity MCP portu 8080 — Brick Havoc projesiyle paylaşılıyor, aynı anda tek Unity açık tutulmalı
 - Oyun kontrolleri: **1** batarya, **2** pusu, **3** yem, **4** mayın tarlası, **5** ışın; sol tık kurulum şeridine yerleştirir
+- **Play Mode açıkken kod derlemeyin.** Domain reload, serialize edilmeyen alanları (`EconomyRunner.Economy` gibi) null bırakıyor ve konsol sahte `NullReferenceException` + "referenced script missing" hatalarıyla doluyor. Bir kez yarım saat kaybettirdi; hatalar gerçek değildi. Play'den çıkıp konsolu temizleyince sıfır hata.

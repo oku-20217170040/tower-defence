@@ -17,7 +17,7 @@ Roster, mevcut eksene uyarlanarak alındı.
 | Batarya / topçu | **Yapıldı** (20 Ağu) | **Alan hasarı, 2,5 dps.** Menzildeki tüm birliklere aynı anda vurur. Yüksek tehdit yazımı; yönlendirme aracı. |
 | Yem | Var | Pazarlıksız. Spec 3.4'ün "aha anı" ona bağlı. |
 | **Mayın tarlası** | **Yapıldı** (20 Ağu) | Yavaşlatır (x2), tehdit yazmaz, fiyat 16. Birlik pusu mevzisinin menzilinde uzun kalır. Tek başına değersiz. |
-| **Işın** | **Yapıldı** (21 Ağu) | **Periyodik yatay hat.** 1 sn'de bir ateş eder, o anda kendi SATIRI üzerindeki herkese 20 hasar. Kalabalığı ve yavaşlatılmış birliği cezalandırır. |
+| **Işın** | **Yapıldı** (21 Ağu), **mekaniği düzeltildi** (22 Ağu) | **Nişan alan delici hat.** 2 sn'de bir ateş eder; namlusunu en yakın birliğe döndürür ve o doğrultuda önüne çıkan herkese 3 hasar verir. Menzil harita boyu. |
 
 **Saat (clock) kulesi — eklenmedi (20 Ağustos kararı).** Kısa süre düşünüldü, sonra çıkarıldı: Mayın tarlası zaten yavaşlatmayı sağlıyor. Mayın tarlası yerel ve kalıcı (menzilindeki birlik yavaş ilerler, bir *yerleştirme* kararıdır), Saat global ve anlık olacaktı (bir *zamanlama* kararı). Farklı eksende olsalar da oyuncunun kafasında ikisi aynı yere düşer ve roster'ı kalabalıklaştırır. Anlık müdahale aracı ilerde gerekirse Plan 5'te (meta ilerleme) yeniden değerlendirilir.
 
@@ -99,6 +99,36 @@ Karışımda pusuyla **başa baş** (5,3 / 5,6) → gerçek bir seçim. Spam'de 
 **Uygulandı:** `TowerKind.Beam`, `RunSimulator.Targeting.Beam` (periyodik atış sayacı), `EconomyPlanner` ışın alanları, `TowerWeapon.BindBeam/UpdateBeam`, `TowerPlacer` 5 tuşu + renk, `EconomyRunner.beamCost`, draft seçenekleri, HUD. `BeamTowerTests` (5 test) kararları kilitliyor.
 
 **Runtime doğrulaması yapıldı (21 Ağustos, kullanıcı run'ı, ekran görüntüsüyle):** ışın ağırlıklı bir kurulumla 15/15 dalga KAZANILDI, üs 24/30, 219 öldürme, 6 sızıntı. Yani 5 tuşu → yerleştirme → periyodik atış → hasar zinciri gerçekten çalışıyor. Simülatör aynı bandı söylüyordu (ışınlı karışım: 5,3 sızıntı, üs 24,7) — gerçek 6 sızıntı / üs 24. **Bu, ışın için ayrı bir kalibrasyon noktasıdır.**
+
+## Işın mekaniği düzeltildi — 22 Ağustos
+
+İlk uygulama "kulenin **satırı** boyunca sabit yatay hat" idi. Kullanıcı tarifi farklıydı ve doğru olan o: **namlu döner, hedefe nişan alır, o doğrultudaki herkesi deler.**
+
+Nişan aldığı için **ıskalamıyor** — aynı sayılarla oyunu tek başına çözüyordu. Yeniden ölçüldü (taban, ışınsız: 20,7 sızıntı):
+
+| Ayar | Karışımda | Tek başına |
+|---|---|---|
+| hasar 20 / aralık 1 | 1,7 | 0,0 (baskın) |
+| hasar 5 / aralık 1 | 7,3 | 0,5 (baskın) |
+| **hasar 3 / aralık 2** | **11,9** | **30,0 (%0)** |
+
+**Menzil 8 → 40 (harita boyu).** Sebebi görsel: ışın sahneyi delip ekran dışında bitiyor, menzili 8'de bırakmak görseli **yalancı** yapardı. Bedeli ölçüldü — karışımda 15,7 → 11,9, ama tek başına hâlâ işe yaramıyor.
+
+Korunan özellikler: mayın sinerjisi (11,9 / 18,0) ve toplanmış orduyu cezalandırma (dağınık orduda kazanç 1,2 sızıntı, toplanmış orduda 5,0 — dört kat).
+
+## Kule güç sıralaması — 22 Ağustos ölçümü
+
+Aynı koşulda (izci %25 + asker %20 + kraliçe %5), üç farklı soru üç farklı sıralama veriyor:
+
+**Vazgeçilmezlik** (o tür hiç olmazsa): **Batarya ve Pusu olmadan oyun kazanılamıyor** (%0). Işın çıkarılırsa 11,9 → 20,7; mayın tarlası çıkarılırsa 11,9 → 18,0.
+
+**Bir yuvayı hangisine versem** (B,A,B,[X],M): Işın 11,9 › Batarya 17,2 › Pusu 20,7 › Mayın 25,7 › Yem 27,2
+
+**Bir kule daha alsam** (6. kule): Batarya 3,9 ≈ Pusu 4,2 ≈ Işın 4,5 › Yem 7,7 › Mayın 8,8
+
+**Tek başına: beşi de kaybediyor** (%0-5). Spec 3.4'ün "tek araç yetmiyor" ilkesi ölçümde birebir duruyor.
+
+> **Yem ve mayın tarlası sıralamada yanıltıcı.** İkisi de *yerine konduğunda* en kötü (hasar vermiyorlar), *eklendiğinde* değer üretiyorlar. Yemin mekanizması sayıda değil davranışta: entropiyi 0,568 → 0,461 düşürüyor, yani sürüyü topluyor — toplanan sürü bataryanın alan hasarını ve ışının delici hattını besliyor. **Yem öldürmüyor, öldürtüyor.**
 
 ## Sıra
 

@@ -1,7 +1,7 @@
 # Görsel Üretim — Plan 6
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Birlikler (4/4) ve kuleler (5/5) üretildi, oyuna bağlandı. Sırada üs ve harita zemini.
+**Durum:** Birlikler (4/4), kuleler (5/5), harita döşemeleri (3/3) üretildi ve oyuna bağlandı. Dönme + atış animasyonları çalışıyor. Sırada üs görseli.
 **Sanat yönü:** **Sade askeri silüet, düşük poli** (21 Ağustos kullanıcı kararı).
 
 ## Neden bu yön
@@ -79,11 +79,39 @@ Unity import: Sprite, PPU 512 (sprite tam 1 dünya birimi), ölçek `ArtLibrary`
 4. Unity'ye import: Sprite (2D and UI), Pixels Per Unit hücre boyutuna göre ayarlanır, Filter Mode Bilinear, Compression yok (mobilde sonra ayarlanır).
 5. `ArtLibrary` listesine ata. Tint alpha 0 bırak.
 
-## Animasyon
+### Harita döşemeleri (3) — **BİTTİ (22 Ağustos)**
 
-Bu tur **statik sprite** yeterli — mevcut oyunda birlikler zaten pozisyon interpolasyonuyla hareket ediyor ve okunuyor.
+Üreteç: `tools/blender/tiles.py`. Koridor / kurulum şeridi / duvar.
 
-Animasyon ikinci turda ve öncelik sırası şu: (1) kraliçe üsse varınca keşif izinin silinme efekti — oyunun en dramatik anı, (2) ışının atış çakması, (3) birlik ölüm efekti (bugün `DeathPuff` var).
+**Pazarlıksız kural: zemin dikkat çekmemeli.** `GridTileRenderer`'ın kendi yorumu bunu zaten söylüyordu ve haklı — oyuncunun bakması gereken şey keşif izi; zemin kontrastlı olursa oyunun **ana geri bildirim kanalı** körelir. Döşemeler bu yüzden düşük doygunluk, düşük kontrast (detaylar gövde renginin ±%15 bandında) ve kenarlarda düz payla üretildi (dikiş görünmesin).
+
+| Döşeme | İçerik | Neden |
+|---|---|---|
+| Koridor | En koyu, en sakin; soluk tekerlek izleri + birkaç çakıl | Birliklerin yürüdüğü yer |
+| Kurulum şeridi | Plaka hissi: içten çerçeve + köşe perçinleri | Oyuncu "buraya kurabilirim"i zeminden okur — bu bir süs değil, **arayüz** |
+| Duvar | Kütleli bloklar | Duvar olduğunu **renk değil kütle** anlatır |
+
+`GridTileRenderer` atlasa yükseltildi: döşemeler tek dokuya blit edilir, ızgara ne kadar büyürse büyüsün **tek SpriteRenderer, tek çizim çağrısı** kalır. Üçü de atanmazsa eski tek-texel zemine düşülür; Read/Write kapalıysa da düz zemine düşülüp uyarı yazılır.
+
+## Animasyon — **BİTTİ (22 Ağustos)**
+
+Hepsi **kozmetiktir**: hasar `TowerWeapon` içinde uygulanır, görsel katman denge sayılarına dokunmaz.
+
+**Birlik dönüşü.** Birlikler gittikleri yöne döner. Sprite'ın burnu yerel −Y'de üretildiği için hedef açı = yönün açısı + 90°. Doğum anında yön **anında** kurulur (yoksa her birlik yola yanlış bakarak çıkar), yürürken 720°/sn ile yumuşak döner, hedef hücreye varırken yön vektörü sıfıra yaklaştığı için dönüş durdurulur.
+
+**Kule dönüşü (`TowerTurret`).** Namlu hedefi her karede takip eder — yalnızca ateş anında değil, yoksa kule cansız durur. **Sadece hasar veren kulelerde**: dönen bir şey oyuncuya "bu beni hedefliyor" der, hasarsız kule (yem, mayın tarlası) bunu söylememeli. Batarya ağır (260°/sn), pusu çevik (420°/sn).
+
+**Atış izleri (`ShotFlash`).** Havuzlanmış; kalabalık dalgada onlarca iz doğar, her biri için GameObject yaratmak çöp toplayıcıyı boğar. Görsel dil kuralı burada da geçerli: **pusu soluk ve ince, batarya parlak ve kalın.** Oyuncu pusunun çalıştığını görür — "asıl katil pusu" keşfine ancak böyle varabilir — ama ekranda gürültü yapan hep batarya olur.
+
+> **İz sıklığı hasardan ayrıldı:** hasar sürekli uygulanır, iz sabit aralıklarla çizilir. Böylece görselin sıklığı dengeye dokunmadan ayarlanabilir.
+
+**Işın çakması (`BeamFlash`).** İnce çizgi, ucu **ekran dışında** biter — uzunluk sabit bir sayı değil kameradan hesaplanır, yoksa yakınlaştırma değişince uç görünür hale gelir. Görsel kalınlık hasar kalınlığından **ayrıdır**: biri denge sayısı (0,6 hücre), diğeri sanat kararı (0,05 hücre). İlk sürümde ikisi aynı sayıdan türetiliyordu ve ışın ekranı kaplayan bir bant gibi duruyordu. Vurduğu birlik sayısı arttıkça ışın **parlar, kalınlaşmaz** — kalınlaşma inceliği bozuyordu.
+
+**Kule ölçeği** 0,8 → 1,0 (hücreyi tam doldurur).
+
+### Sıradaki animasyonlar
+
+Öncelik sırası: (1) **kraliçe üsse varınca keşif izinin silinmesi** — oyunun en dramatik anı olmalı ve şu an hiç görünmüyor, (2) üs görseli, (3) birlik ölüm efektinin iyileştirilmesi (bugün `DeathPuff` var).
 
 ## Blender bağlantısı
 
