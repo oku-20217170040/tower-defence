@@ -1,7 +1,7 @@
 # Görsel Üretim — Plan 6
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Unity tarafı hazır, Blender bağlantısı bekleniyor.
+**Durum:** Birlikler üretildi ve oyuna bağlandı (4/4). Sırada kuleler.
 **Sanat yönü:** **Sade askeri silüet, düşük poli** (21 Ağustos kullanıcı kararı).
 
 ## Neden bu yön
@@ -26,16 +26,26 @@ Kurulum: sahneye boş GameObject → `ArtLibrary` scripti → listelere tür/spr
 
 Öncelik sırası: birlikler önce, çünkü ekranda en çok onlar var ve tür ayrımı **oynanışın okunabilirliği** demek.
 
-### Birlikler (4)
+### Birlikler (4) — **BİTTİ (22 Ağustos)**
 
-| Tür | Silüet yönü | Mevcut renk kodu | Ölçek |
+Üreteç: `tools/blender/units.py` (tekrarlanabilir; Blender'da `exec` edilir).
+
+**Tasarım kararı — silüet, anatomi değil.** İlk iki deneme anatomik asker (omuz + kask + tüfek) idi ve 30 pikselde blob oluyordu. Gövde **yön belirten bir kamaya** çevrildi: burun −Y'de, yani ekranda aşağı — birliklerin yürüyüş yönü. Okunabilirlik bundan sonra geldi.
+
+Tür ayrımı **üç kanaldan birden**: silüet + vurgu rengi + ölçek. Üçü de aynı anda çalışır, yani renk körlüğünde bile tür ayırt edilir.
+
+| Tür | Silüet | Vurgu rengi | Ölçek |
 |---|---|---|---|
-| **Piyade** | Taban asker silüeti | açık gri-bej | 1,0 |
-| **İzci** | Küçük, ince, hızlı hatlı | açık mavi | 0,7 |
-| **Asker** | İri, ağır, geniş omuz | koyu kırmızı | 1,35 |
-| **Kraliçe** | En iri, ayrıksı siluet | mor | 1,8 |
+| **Piyade** | Dengeli kama, omuzluklu | bej | 1,0 |
+| **İzci** | Dar ve uzun, omuzluk yok, anten var | açık mavi | 0,7 |
+| **Asker** | Geniş, kalın omuzluklu | koyu kırmızı | 1,35 |
+| **Kraliçe** | En iri, taçlı | mor | 1,8 |
 
-Ölçek farkları koddan geliyor ve **kasıtlı**: renk körlüğüne karşı ikinci bir ayrım kanalı.
+**Ayarlanan render değerleri:** ortografik `ortho_scale = 1.0` (birlik kareyi doldurur), key 220 / fill 70 (ilk deneme aşırı aydınlıktı, renkler patlıyordu), `view_transform = Standard` (Filmic/AgX renkleri soldurur — sprite'ta renk olduğu gibi kalmalı).
+
+**Gövde rengi orta tonlu asker yeşili**, koyu değil: haritanın zemini zaten koyu, koyu gövde kaybolurdu.
+
+Unity import: Sprite, PPU 256 (sprite tam 1 dünya birimi — kod ile üretilen daireyle aynı), alphaIsTransparency açık. `ArtLibrary` sahneye kuruldu ve dört tür atandı; tint alpha 0 bırakıldı, yani sprite'lar kendi renkleriyle çiziliyor.
 
 ### Kuleler (5)
 
