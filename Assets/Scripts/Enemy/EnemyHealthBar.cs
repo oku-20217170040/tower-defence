@@ -23,6 +23,14 @@ public class EnemyHealthBar : MonoBehaviour
     private Image fillImage;
     private float displayValue;
 
+    void Awake()
+    {
+        if (enemyHealth == null)
+        {
+            enemyHealth = GetComponentInParent<EnemyHealth>();
+        }
+    }
+
     void Start()
     {
         if (enemyHealth == null || hpSlider == null) return;

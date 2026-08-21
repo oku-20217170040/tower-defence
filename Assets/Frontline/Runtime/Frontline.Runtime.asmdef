@@ -1,0 +1,14 @@
+{
+    "name": "Frontline.Runtime",
+    "rootNamespace": "Frontline.Runtime",
+    "references": [ "Frontline.Core" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

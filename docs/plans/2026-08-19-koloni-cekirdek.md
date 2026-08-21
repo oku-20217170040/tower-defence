@@ -1,10 +1,10 @@
-# Koloni Çekirdeği — Uygulama Planı (Plan 1)
+# Ordu Çekirdeği — Uygulama Planı (Plan 1)
 
 > **Agent'lar için:** Bu plan görev görev uygulanır. Adımlar `- [ ]` kutucuk sözdizimi ile takip edilir.
 
-**Hedef:** Kandırma mekaniğinin matematiksel çekirdeğini (feromon, tehdit, yem, rota maliyeti) ve doğrulanmış prosedürel harita üretimini, MonoBehaviour'suz saf C# olarak ve tam birim testli biçimde kurmak.
+**Hedef:** Kandırma mekaniğinin matematiksel çekirdeğini (keşif izi, tehdit, yem, rota maliyeti) ve doğrulanmış prosedürel harita üretimini, MonoBehaviour'suz saf C# olarak ve tam birim testli biçimde kurmak.
 
-**Mimari:** `Assets/Colony/Core/` altında Unity'ye bağımlı olmayan yeni bir assembly (`Colony.Core`). Hiçbir sınıf MonoBehaviour değildir, hiçbiri sahneye bağlı değildir — bu sayede EditMode testlerinde saniyeler içinde koşar. Mevcut `Assets/Scripts/` dokunulmadan yerinde kalır; eski ve yeni kod bir süre yan yana yaşar.
+**Mimari:** `Assets/Frontline/Core/` altında Unity'ye bağımlı olmayan yeni bir assembly (`Frontline.Core`). Hiçbir sınıf MonoBehaviour değildir, hiçbiri sahneye bağlı değildir — bu sayede EditMode testlerinde saniyeler içinde koşar. Mevcut `Assets/Scripts/` dokunulmadan yerinde kalır; eski ve yeni kod bir süre yan yana yaşar.
 
 **Tech Stack:** Unity 6000.3.21f1, C#, Unity Test Framework 1.6.0 (NUnit), Assembly Definition dosyaları.
 
@@ -12,36 +12,36 @@
 
 - Unity sürümü: 6000.3.21f1
 - Hedef platform: Android, **dikey tutuş**
-- Assembly: `Colony.Core` hiçbir MonoBehaviour içermez ve `Assembly-CSharp`'a referans vermez
-- `Colony.Core` asmdef'inde `noEngineReferences: true` — dolayısıyla `Vector2Int`, `Mathf` gibi Unity tipleri **kullanılamaz**
-- Namespace: tüm çekirdek sınıflar `Colony.Core` altındadır
+- Assembly: `Frontline.Core` hiçbir MonoBehaviour içermez ve `Assembly-CSharp`'a referans vermez
+- `Frontline.Core` asmdef'inde `noEngineReferences: true` — dolayısıyla `Vector2Int`, `Mathf` gibi Unity tipleri **kullanılamaz**
+- Namespace: tüm çekirdek sınıflar `Frontline.Core` altındadır
 - Dil: yorumlar Türkçe, tanımlayıcılar İngilizce
 - **Rota maliyeti asla negatif olamaz** (A* doğruluğu için; bkz. Görev 5)
-- Feromon *çeker*, tehdit *iter* — ikisi aynı maliyet fonksiyonunda birleşir
+- Keşif izi *çeker*, tehdit *iter* — ikisi aynı maliyet fonksiyonunda birleşir
 - Branch: `tasarim/koloni-reboot`
 - Her görev kendi testleriyle biter ve ayrı commit alır
 
 ---
 
-### Görev 1: Test altyapısı ve ColonyGrid
+### Görev 1: Test altyapısı ve BattleGrid
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/Colony.Core.asmdef`
-- Oluştur: `Assets/Colony/Core/Grid/CellKind.cs`
-- Oluştur: `Assets/Colony/Core/Grid/ColonyGrid.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/Colony.Tests.EditMode.asmdef`
-- Oluştur: `Assets/Colony/Tests/EditMode/ColonyGridTests.cs`
+- Oluştur: `Assets/Frontline/Core/Frontline.Core.asmdef`
+- Oluştur: `Assets/Frontline/Core/Grid/CellKind.cs`
+- Oluştur: `Assets/Frontline/Core/Grid/BattleGrid.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/Frontline.Tests.EditMode.asmdef`
+- Oluştur: `Assets/Frontline/Tests/EditMode/BattleGridTests.cs`
 
 **Arayüzler:**
-- Üretir: `Colony.Core.CellKind` enum; `Colony.Core.ColonyGrid` sınıfı — `Width`, `Height`, `CellCount`, `Index(int,int)`, `X(int)`, `Y(int)`, `InBounds(int,int)`, `Get(int)`, `Set(int,CellKind)`, `IsWalkable(int)`, `GetNeighbors(int,int[])`
+- Üretir: `Frontline.Core.CellKind` enum; `Frontline.Core.BattleGrid` sınıfı — `Width`, `Height`, `CellCount`, `Index(int,int)`, `X(int)`, `Y(int)`, `InBounds(int,int)`, `Get(int)`, `Set(int,CellKind)`, `IsWalkable(int)`, `GetNeighbors(int,int[])`
 
 - [ ] **Adım 1: Assembly tanımlarını oluştur**
 
-`Assets/Colony/Core/Colony.Core.asmdef`:
+`Assets/Frontline/Core/Frontline.Core.asmdef`:
 ```json
 {
-    "name": "Colony.Core",
-    "rootNamespace": "Colony.Core",
+    "name": "Frontline.Core",
+    "rootNamespace": "Frontline.Core",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -55,15 +55,15 @@
 }
 ```
 
-`Assets/Colony/Tests/EditMode/Colony.Tests.EditMode.asmdef`:
+`Assets/Frontline/Tests/EditMode/Frontline.Tests.EditMode.asmdef`:
 ```json
 {
-    "name": "Colony.Tests.EditMode",
+    "name": "Frontline.Tests.EditMode",
     "rootNamespace": "Colony.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Colony.Core"
+        "Frontline.Core"
     ],
     "includePlatforms": [ "Editor" ],
     "excludePlatforms": [],
@@ -81,19 +81,19 @@
 
 - [ ] **Adım 2: Başarısız testi yaz**
 
-`Assets/Colony/Tests/EditMode/ColonyGridTests.cs`:
+`Assets/Frontline/Tests/EditMode/BattleGridTests.cs`:
 ```csharp
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
-    public class ColonyGridTests
+    public class BattleGridTests
     {
         [Test]
         public void Index_And_Coordinates_RoundTrip()
         {
-            var grid = new ColonyGrid(11, 20);
+            var grid = new BattleGrid(11, 20);
             int index = grid.Index(7, 13);
             Assert.AreEqual(7, grid.X(index));
             Assert.AreEqual(13, grid.Y(index));
@@ -102,7 +102,7 @@ namespace Colony.Tests
         [Test]
         public void NewGrid_AllCellsBlocked()
         {
-            var grid = new ColonyGrid(4, 4);
+            var grid = new BattleGrid(4, 4);
             for (int i = 0; i < grid.CellCount; i++)
                 Assert.AreEqual(CellKind.Blocked, grid.Get(i));
         }
@@ -110,7 +110,7 @@ namespace Colony.Tests
         [Test]
         public void IsWalkable_OnlyCorridorCounts()
         {
-            var grid = new ColonyGrid(3, 3);
+            var grid = new BattleGrid(3, 3);
             grid.Set(grid.Index(1, 1), CellKind.Corridor);
             grid.Set(grid.Index(2, 2), CellKind.BuildStrip);
 
@@ -122,7 +122,7 @@ namespace Colony.Tests
         [Test]
         public void GetNeighbors_CornerCell_ReturnsTwo()
         {
-            var grid = new ColonyGrid(5, 5);
+            var grid = new BattleGrid(5, 5);
             var buffer = new int[4];
             Assert.AreEqual(2, grid.GetNeighbors(grid.Index(0, 0), buffer));
         }
@@ -130,7 +130,7 @@ namespace Colony.Tests
         [Test]
         public void GetNeighbors_CenterCell_ReturnsFour()
         {
-            var grid = new ColonyGrid(5, 5);
+            var grid = new BattleGrid(5, 5);
             var buffer = new int[4];
             Assert.AreEqual(4, grid.GetNeighbors(grid.Index(2, 2), buffer));
         }
@@ -138,8 +138,8 @@ namespace Colony.Tests
         [Test]
         public void Constructor_RejectsNonPositiveSize()
         {
-            Assert.Throws<System.ArgumentOutOfRangeException>(() => new ColonyGrid(0, 5));
-            Assert.Throws<System.ArgumentOutOfRangeException>(() => new ColonyGrid(5, -1));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => new BattleGrid(0, 5));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => new BattleGrid(5, -1));
         }
     }
 }
@@ -147,40 +147,40 @@ namespace Colony.Tests
 
 - [ ] **Adım 3: Testin başarısız olduğunu doğrula**
 
-Unity MCP `run_tests` aracı, `mode: "EditMode"`, `testFilter: "Colony.Tests.ColonyGridTests"`.
-Beklenen: derleme hatası — `ColonyGrid` tipi bulunamıyor.
+Unity MCP `run_tests` aracı, `mode: "EditMode"`, `testFilter: "Colony.Tests.BattleGridTests"`.
+Beklenen: derleme hatası — `BattleGrid` tipi bulunamıyor.
 
-- [ ] **Adım 4: CellKind ve ColonyGrid'i yaz**
+- [ ] **Adım 4: CellKind ve BattleGrid'i yaz**
 
-`Assets/Colony/Core/Grid/CellKind.cs`:
+`Assets/Frontline/Core/Grid/CellKind.cs`:
 ```csharp
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>Bir grid hücresinin türü.</summary>
     public enum CellKind
     {
         /// <summary>Geçilemez ve üzerine kule kurulamaz.</summary>
         Blocked = 0,
-        /// <summary>Böceklerin yürüdüğü koridor hücresi.</summary>
+        /// <summary>Birliklerin yürüdüğü koridor hücresi.</summary>
         Corridor = 1,
-        /// <summary>Kule kurulabilen şerit. Böcekler buradan geçmez.</summary>
+        /// <summary>Kule kurulabilen şerit. Birlikler buradan geçmez.</summary>
         BuildStrip = 2
     }
 }
 ```
 
-`Assets/Colony/Core/Grid/ColonyGrid.cs`:
+`Assets/Frontline/Core/Grid/BattleGrid.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Oyunun harita ızgarası. Dikey tutuş için tasarlanmıştır:
-    /// y = Height - 1 üst kenar (böceklerin girişi), y = 0 alt kenar (yuva).
+    /// y = Height - 1 üst kenar (birliklerin girişi), y = 0 alt kenar (üs).
     /// Unity'ye bağımlı değildir; koordinatlar düz int indeks olarak taşınır.
     /// </summary>
-    public sealed class ColonyGrid
+    public sealed class BattleGrid
     {
         private readonly CellKind[] cells;
 
@@ -188,7 +188,7 @@ namespace Colony.Core
         public int Height { get; }
         public int CellCount => cells.Length;
 
-        public ColonyGrid(int width, int height)
+        public BattleGrid(int width, int height)
         {
             if (width <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width), "Genişlik pozitif olmalı.");
@@ -238,48 +238,48 @@ namespace Colony.Core
 
 - [ ] **Adım 5: Testlerin geçtiğini doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.ColonyGridTests`.
+Unity MCP `run_tests`, filtre `Colony.Tests.BattleGridTests`.
 Beklenen: 6 test PASS.
 
 - [ ] **Adım 6: Commit**
 
 ```bash
 git add Assets/Colony
-git commit -m "feat: Colony.Core assembly ve ColonyGrid"
+git commit -m "feat: Frontline.Core assembly ve BattleGrid"
 ```
 
 ---
 
-### Görev 2: PheromoneMap — koloni hafızası
+### Görev 2: ReconMap — ordu hafızası
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/Fields/PheromoneMap.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/PheromoneMapTests.cs`
+- Oluştur: `Assets/Frontline/Core/Fields/ReconMap.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/ReconMapTests.cs`
 
 **Arayüzler:**
-- Kullanır: `ColonyGrid` (Görev 1)
-- Üretir: `PheromoneMap` — `Max`, `DecayRate`, `Get(int)`, `Deposit(int,float)`, `Weaken(int,float)`, `DepositTrail(IReadOnlyList<int>,float)`, `WeakenTrail(IReadOnlyList<int>,float)`, `Decay()`, `Clear()`
+- Kullanır: `BattleGrid` (Görev 1)
+- Üretir: `ReconMap` — `Max`, `DecayRate`, `Get(int)`, `Deposit(int,float)`, `Weaken(int,float)`, `DepositTrail(IReadOnlyList<int>,float)`, `WeakenTrail(IReadOnlyList<int>,float)`, `Decay()`, `Clear()`
 
 Tasarım kaynağı: spec bölüm 3 — "işe yarayan rotalar güçlenir, ölümle biten rotalar sönümlenir".
 
 - [ ] **Adım 1: Başarısız testi yaz**
 
-`Assets/Colony/Tests/EditMode/PheromoneMapTests.cs`:
+`Assets/Frontline/Tests/EditMode/ReconMapTests.cs`:
 ```csharp
 using System.Collections.Generic;
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
-    public class PheromoneMapTests
+    public class ReconMapTests
     {
-        private static ColonyGrid NewGrid() => new ColonyGrid(5, 5);
+        private static BattleGrid NewGrid() => new BattleGrid(5, 5);
 
         [Test]
         public void Deposit_IncreasesValue()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.1f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.1f);
             map.Deposit(3, 10f);
             Assert.AreEqual(10f, map.Get(3), 0.001f);
         }
@@ -287,7 +287,7 @@ namespace Colony.Tests
         [Test]
         public void Deposit_ClampsAtMax()
         {
-            var map = new PheromoneMap(NewGrid(), max: 20f, decayRate: 0.1f);
+            var map = new ReconMap(NewGrid(), max: 20f, decayRate: 0.1f);
             map.Deposit(3, 500f);
             Assert.AreEqual(20f, map.Get(3), 0.001f);
         }
@@ -295,7 +295,7 @@ namespace Colony.Tests
         [Test]
         public void Weaken_NeverGoesBelowZero()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.1f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.1f);
             map.Deposit(3, 5f);
             map.Weaken(3, 50f);
             Assert.AreEqual(0f, map.Get(3), 0.001f);
@@ -304,7 +304,7 @@ namespace Colony.Tests
         [Test]
         public void DepositTrail_AffectsEveryCellOnPath()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.1f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.1f);
             map.DepositTrail(new List<int> { 1, 2, 3 }, 7f);
 
             Assert.AreEqual(7f, map.Get(1), 0.001f);
@@ -316,7 +316,7 @@ namespace Colony.Tests
         [Test]
         public void WeakenTrail_ReducesEveryCellOnPath()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.1f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.1f);
             map.DepositTrail(new List<int> { 1, 2 }, 10f);
             map.WeakenTrail(new List<int> { 1, 2 }, 4f);
 
@@ -327,7 +327,7 @@ namespace Colony.Tests
         [Test]
         public void Decay_ReducesAllValuesProportionally()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.25f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.25f);
             map.Deposit(0, 100f);
             map.Decay();
             Assert.AreEqual(75f, map.Get(0), 0.001f);
@@ -336,7 +336,7 @@ namespace Colony.Tests
         [Test]
         public void Decay_RepeatedlyApproachesZero_NeverNegative()
         {
-            var map = new PheromoneMap(NewGrid(), max: 100f, decayRate: 0.5f);
+            var map = new ReconMap(NewGrid(), max: 100f, decayRate: 0.5f);
             map.Deposit(0, 100f);
             for (int i = 0; i < 50; i++) map.Decay();
 
@@ -348,9 +348,9 @@ namespace Colony.Tests
         public void Constructor_RejectsInvalidParameters()
         {
             Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => new PheromoneMap(NewGrid(), max: 0f, decayRate: 0.1f));
+                () => new ReconMap(NewGrid(), max: 0f, decayRate: 0.1f));
             Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => new PheromoneMap(NewGrid(), max: 10f, decayRate: 1.5f));
+                () => new ReconMap(NewGrid(), max: 10f, decayRate: 1.5f));
         }
     }
 }
@@ -358,34 +358,34 @@ namespace Colony.Tests
 
 - [ ] **Adım 2: Testin başarısız olduğunu doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.PheromoneMapTests`.
-Beklenen: derleme hatası — `PheromoneMap` bulunamıyor.
+Unity MCP `run_tests`, filtre `Colony.Tests.ReconMapTests`.
+Beklenen: derleme hatası — `ReconMap` bulunamıyor.
 
-- [ ] **Adım 3: PheromoneMap'i yaz**
+- [ ] **Adım 3: ReconMap'i yaz**
 
-`Assets/Colony/Core/Fields/PheromoneMap.cs`:
+`Assets/Frontline/Core/Fields/ReconMap.cs`:
 ```csharp
 using System;
 using System.Collections.Generic;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
-    /// Kolonin öğrenilmiş rota hafızası. Böcekler geçtikleri hücrelere feromon
-    /// bırakır; yuvaya ulaşan rota güçlenir, ölümle biten rota sönümlenir.
-    /// Yüksek feromon = tercih edilen rota (çeker, itmez).
+    /// Ordun öğrenilmiş rota hafızası. Birlikler geçtikleri hücrelere keşif izi
+    /// bırakır; üsse ulaşan rota güçlenir, ölümle biten rota sönümlenir.
+    /// Yüksek keşif izi = tercih edilen rota (çeker, itmez).
     /// </summary>
-    public sealed class PheromoneMap
+    public sealed class ReconMap
     {
         private readonly float[] values;
 
-        /// <summary>Bir hücrenin taşıyabileceği en yüksek feromon değeri.</summary>
+        /// <summary>Bir hücrenin taşıyabileceği en yüksek keşif izi değeri.</summary>
         public float Max { get; }
 
         /// <summary>Her Decay() çağrısında kaybedilen oran (0-1).</summary>
         public float DecayRate { get; }
 
-        public PheromoneMap(ColonyGrid grid, float max, float decayRate)
+        public ReconMap(BattleGrid grid, float max, float decayRate)
         {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
             if (max <= 0f)
@@ -441,47 +441,47 @@ namespace Colony.Core
 
 - [ ] **Adım 4: Testlerin geçtiğini doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.PheromoneMapTests`.
+Unity MCP `run_tests`, filtre `Colony.Tests.ReconMapTests`.
 Beklenen: 8 test PASS.
 
 - [ ] **Adım 5: Commit**
 
 ```bash
 git add Assets/Colony
-git commit -m "feat: PheromoneMap — koloni rota hafızası"
+git commit -m "feat: ReconMap — ordu rota hafızası"
 ```
 
 ---
 
-### Görev 3: LureField — sahte feromon ve azalan getiri
+### Görev 3: DecoyField — sahte keşif izi ve azalan getiri
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/Fields/LureField.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/LureFieldTests.cs`
+- Oluştur: `Assets/Frontline/Core/Fields/DecoyField.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/DecoyFieldTests.cs`
 
 **Arayüzler:**
-- Kullanır: `ColonyGrid` (Görev 1)
-- Üretir: `LureField` — `BaseStrength`, `DiminishFactor`, `Get(int)`, `Apply(int)`, `ApplyCount(int)`, `Clear()`
+- Kullanır: `BattleGrid` (Görev 1)
+- Üretir: `DecoyField` — `BaseStrength`, `DiminishFactor`, `Get(int)`, `Apply(int)`, `ApplyCount(int)`, `Clear()`
 
 Tasarım kaynağı: spec bölüm 9.2. **Sabit ekleme, oransal değil** — güçlü izleri tek başına çeviremesin. Aynı hücrede **azalan getiri**.
 
 - [ ] **Adım 1: Başarısız testi yaz**
 
-`Assets/Colony/Tests/EditMode/LureFieldTests.cs`:
+`Assets/Frontline/Tests/EditMode/DecoyFieldTests.cs`:
 ```csharp
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
-    public class LureFieldTests
+    public class DecoyFieldTests
     {
-        private static ColonyGrid NewGrid() => new ColonyGrid(5, 5);
+        private static BattleGrid NewGrid() => new BattleGrid(5, 5);
 
         [Test]
         public void Apply_AddsBaseStrength_FirstTime()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             lure.Apply(4);
             Assert.AreEqual(10f, lure.Get(4), 0.001f);
         }
@@ -489,7 +489,7 @@ namespace Colony.Tests
         [Test]
         public void Apply_SecondTime_AddsDiminishedAmount()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             lure.Apply(4);
             lure.Apply(4);
             // 10 + (10 * 0.5) = 15
@@ -499,7 +499,7 @@ namespace Colony.Tests
         [Test]
         public void Apply_ThirdTime_KeepsDiminishing()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             lure.Apply(4);
             lure.Apply(4);
             lure.Apply(4);
@@ -510,7 +510,7 @@ namespace Colony.Tests
         [Test]
         public void Apply_ManyTimes_ConvergesToFiniteCeiling()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             for (int i = 0; i < 200; i++) lure.Apply(4);
             // Geometrik seri limiti: 10 / (1 - 0.5) = 20
             Assert.Less(lure.Get(4), 20.001f);
@@ -520,7 +520,7 @@ namespace Colony.Tests
         [Test]
         public void Apply_IsPerCell_NotGlobal()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             lure.Apply(4);
             lure.Apply(4);
             lure.Apply(7);
@@ -530,7 +530,7 @@ namespace Colony.Tests
         [Test]
         public void Clear_ResetsValuesAndCounts()
         {
-            var lure = new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
+            var lure = new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 0.5f);
             lure.Apply(4);
             lure.Apply(4);
             lure.Clear();
@@ -546,9 +546,9 @@ namespace Colony.Tests
         public void Constructor_RejectsInvalidParameters()
         {
             Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => new LureField(NewGrid(), baseStrength: -1f, diminishFactor: 0.5f));
+                () => new DecoyField(NewGrid(), baseStrength: -1f, diminishFactor: 0.5f));
             Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => new LureField(NewGrid(), baseStrength: 10f, diminishFactor: 1f));
+                () => new DecoyField(NewGrid(), baseStrength: 10f, diminishFactor: 1f));
         }
     }
 }
@@ -556,24 +556,24 @@ namespace Colony.Tests
 
 - [ ] **Adım 2: Testin başarısız olduğunu doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.LureFieldTests`.
-Beklenen: derleme hatası — `LureField` bulunamıyor.
+Unity MCP `run_tests`, filtre `Colony.Tests.DecoyFieldTests`.
+Beklenen: derleme hatası — `DecoyField` bulunamıyor.
 
-- [ ] **Adım 3: LureField'i yaz**
+- [ ] **Adım 3: DecoyField'i yaz**
 
-`Assets/Colony/Core/Fields/LureField.cs`:
+`Assets/Frontline/Core/Fields/DecoyField.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
-    /// Sahte Feromon Yayıcı'nın ürettiği yapay çekim alanı.
-    /// Gerçek feromondan ayrı tutulur çünkü kuralları farklıdır:
+    /// Sahte Keşif izi Yayıcı'nın ürettiği yapay çekim alanı.
+    /// Gerçek keşif izidan ayrı tutulur çünkü kuralları farklıdır:
     /// sabit miktar ekler (oransal değil) ve aynı hücrede azalan getiri verir.
     /// Böylece yem zayıf izleri kolayca yönlendirir, oturmuş güçlü izi çeviremez.
     /// </summary>
-    public sealed class LureField
+    public sealed class DecoyField
     {
         private readonly float[] values;
         private readonly int[] applyCounts;
@@ -584,7 +584,7 @@ namespace Colony.Core
         /// <summary>Her tekrarda önceki eklemenin çarpanı. [0, 1) aralığında.</summary>
         public float DiminishFactor { get; }
 
-        public LureField(ColonyGrid grid, float baseStrength, float diminishFactor)
+        public DecoyField(BattleGrid grid, float baseStrength, float diminishFactor)
         {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
             if (baseStrength < 0f)
@@ -636,42 +636,42 @@ namespace Colony.Core
 
 - [ ] **Adım 4: Testlerin geçtiğini doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.LureFieldTests`.
+Unity MCP `run_tests`, filtre `Colony.Tests.DecoyFieldTests`.
 Beklenen: 7 test PASS.
 
 - [ ] **Adım 5: Commit**
 
 ```bash
 git add Assets/Colony
-git commit -m "feat: LureField — sahte feromon, azalan getiri"
+git commit -m "feat: DecoyField — sahte keşif izi, azalan getiri"
 ```
 
 ---
 
-### Görev 4: ThreatField — yalnızca gürültücü kuleler
+### Görev 4: ThreatField — yalnızca batarya kuleler
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/Fields/ThreatField.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/ThreatFieldTests.cs`
+- Oluştur: `Assets/Frontline/Core/Fields/ThreatField.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/ThreatFieldTests.cs`
 
 **Arayüzler:**
-- Kullanır: `ColonyGrid` (Görev 1)
+- Kullanır: `BattleGrid` (Görev 1)
 - Üretir: `ThreatField` — `Get(int)`, `AddSource(int,float,float)`, `Clear()`
 
-Tasarım kaynağı: spec bölüm 3.1. Sessiz kuleler bu alana **hiç yazmaz** — bu, sınıf ayrımının tek teknik karşılığıdır. Kulenin sessiz mi gürültücü mü olduğu bilgisi burada değil, çağıran tarafta yaşar: sessiz kule `AddSource` çağırmaz.
+Tasarım kaynağı: spec bölüm 3.1. Pusu mevzisiler bu alana **hiç yazmaz** — bu, sınıf ayrımının tek teknik karşılığıdır. Kulenin pusu mi batarya mü olduğu bilgisi burada değil, çağıran tarafta yaşar: pusu mevzisi `AddSource` çağırmaz.
 
 - [ ] **Adım 1: Başarısız testi yaz**
 
-`Assets/Colony/Tests/EditMode/ThreatFieldTests.cs`:
+`Assets/Frontline/Tests/EditMode/ThreatFieldTests.cs`:
 ```csharp
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
     public class ThreatFieldTests
     {
-        private static ColonyGrid NewGrid() => new ColonyGrid(9, 9);
+        private static BattleGrid NewGrid() => new BattleGrid(9, 9);
 
         [Test]
         public void AddSource_CenterHasFullStrength()
@@ -769,23 +769,23 @@ Beklenen: derleme hatası — `ThreatField` bulunamıyor.
 
 - [ ] **Adım 3: ThreatField'i yaz**
 
-`Assets/Colony/Core/Fields/ThreatField.cs`:
+`Assets/Frontline/Core/Fields/ThreatField.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
-    /// Böceklerin algıladığı tehlike haritası. YALNIZCA gürültücü kuleler buraya yazar.
-    /// Sessiz kuleler hiç AddSource çağırmaz; koloni onları öğrenemez.
+    /// Birliklerin algıladığı tehlike haritası. YALNIZCA batarya kuleler buraya yazar.
+    /// Pusu mevzisiler hiç AddSource çağırmaz; ordu onları öğrenemez.
     /// Bu ayrım, oyunun merkezi mekaniğinin tek teknik karşılığıdır.
     /// </summary>
     public sealed class ThreatField
     {
-        private readonly ColonyGrid grid;
+        private readonly BattleGrid grid;
         private readonly float[] values;
 
-        public ThreatField(ColonyGrid grid)
+        public ThreatField(BattleGrid grid)
         {
             this.grid = grid ?? throw new ArgumentNullException(nameof(grid));
             values = new float[grid.CellCount];
@@ -794,7 +794,7 @@ namespace Colony.Core
         public float Get(int index) => values[index];
 
         /// <summary>
-        /// Bir gürültücü kulenin tehdidini alana ekler.
+        /// Bir batarya kulenin tehdidini alana ekler.
         /// Merkezde tam güç, yarıçapın kenarında sıfıra doğrusal düşer.
         /// Yarıçap dışına hiç yazmaz. Değerler birikimlidir.
         /// </summary>
@@ -840,27 +840,27 @@ Beklenen: 7 test PASS.
 
 ```bash
 git add Assets/Colony
-git commit -m "feat: ThreatField — gürültücü kule tehdit alanı"
+git commit -m "feat: ThreatField — batarya kule tehdit alanı"
 ```
 
 ---
 
-### Görev 5: ColonyPathfinder — birleşik maliyet modeli
+### Görev 5: RoutePathfinder — birleşik maliyet modeli
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/Pathing/IndexedMinHeap.cs`
-- Oluştur: `Assets/Colony/Core/Pathing/RouteCostModel.cs`
-- Oluştur: `Assets/Colony/Core/Pathing/ColonyPathfinder.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/RouteCostModelTests.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/ColonyPathfinderTests.cs`
+- Oluştur: `Assets/Frontline/Core/Pathing/IndexedMinHeap.cs`
+- Oluştur: `Assets/Frontline/Core/Pathing/RouteCostModel.cs`
+- Oluştur: `Assets/Frontline/Core/Pathing/RoutePathfinder.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/RouteCostModelTests.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/RoutePathfinderTests.cs`
 
 **Arayüzler:**
-- Kullanır: `ColonyGrid`, `PheromoneMap`, `LureField`, `ThreatField`
+- Kullanır: `BattleGrid`, `ReconMap`, `DecoyField`, `ThreatField`
 - Üretir: `IndexedMinHeap` — `Count`, `Push(int,float)`, `Pop()`, `Contains(int)`, `Update(int,float)`, `Clear()`
 - Üretir: `RouteCostModel` — `ThreatWeight`, `AttractionWeight`, `StepCost(int)`
-- Üretir: `ColonyPathfinder` — `FindPath(int,int,List<int>)`, `bool` döner
+- Üretir: `RoutePathfinder` — `FindPath(int,int,List<int>)`, `bool` döner
 
-**Kritik doğruluk kuralı:** Feromon *çeker*, yani maliyeti düşürmelidir. Ancak negatif kenar maliyeti A*'ı bozar. Çözüm: çekim, sabit bir cezanın **azaltılması** olarak modellenir.
+**Kritik doğruluk kuralı:** Keşif izi *çeker*, yani maliyeti düşürmelidir. Ancak negatif kenar maliyeti A*'ı bozar. Çözüm: çekim, sabit bir cezanın **azaltılması** olarak modellenir.
 
 ```
 stepCost = 1
@@ -872,27 +872,27 @@ stepCost = 1
 
 - [ ] **Adım 1: RouteCostModel testini yaz**
 
-`Assets/Colony/Tests/EditMode/RouteCostModelTests.cs`:
+`Assets/Frontline/Tests/EditMode/RouteCostModelTests.cs`:
 ```csharp
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
     public class RouteCostModelTests
     {
-        private ColonyGrid grid;
-        private PheromoneMap pheromone;
-        private LureField lure;
+        private BattleGrid grid;
+        private ReconMap pheromone;
+        private DecoyField lure;
         private ThreatField threat;
         private RouteCostModel model;
 
         [SetUp]
         public void SetUp()
         {
-            grid = new ColonyGrid(5, 5);
-            pheromone = new PheromoneMap(grid, max: 100f, decayRate: 0.1f);
-            lure = new LureField(grid, baseStrength: 10f, diminishFactor: 0.5f);
+            grid = new BattleGrid(5, 5);
+            pheromone = new ReconMap(grid, max: 100f, decayRate: 0.1f);
+            lure = new DecoyField(grid, baseStrength: 10f, diminishFactor: 0.5f);
             threat = new ThreatField(grid);
             model = new RouteCostModel(pheromone, lure, threat)
             {
@@ -947,7 +947,7 @@ namespace Colony.Tests
         [Test]
         public void StepCost_AttractionSaturates_DoesNotOvershoot()
         {
-            // Feromon zaten tavanda; yem eklemek maliyeti 1'in altına indirmemeli
+            // Keşif izi zaten tavanda; yem eklemek maliyeti 1'in altına indirmemeli
             pheromone.Deposit(3, 100f);
             lure.Apply(3);
             lure.Apply(3);
@@ -964,11 +964,11 @@ Beklenen: derleme hatası — `RouteCostModel` bulunamıyor.
 
 - [ ] **Adım 3: RouteCostModel'i yaz**
 
-`Assets/Colony/Core/Pathing/RouteCostModel.cs`:
+`Assets/Frontline/Core/Pathing/RouteCostModel.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Üç alanı tek bir adım maliyetinde birleştirir.
@@ -977,23 +977,23 @@ namespace Colony.Core
     ///          + ThreatWeight * threat
     ///          + AttractionWeight * (1 - normalizedAttraction)
     ///
-    /// Çekim (feromon + yem) maliyeti DÜŞÜRÜR ama bunu negatif değer üreterek
+    /// Çekim (keşif izi + yem) maliyeti DÜŞÜRÜR ama bunu negatif değer üreterek
     /// değil, sabit bir cezayı azaltarak yapar. Maliyet asla 1'in altına inmez;
     /// bu, A* sezgiselinin kabul edilebilir kalması için zorunludur.
     /// </summary>
     public sealed class RouteCostModel
     {
-        private readonly PheromoneMap pheromone;
-        private readonly LureField lure;
+        private readonly ReconMap pheromone;
+        private readonly DecoyField lure;
         private readonly ThreatField threat;
 
-        /// <summary>Çekimin doygunluğa ulaştığı toplam değer. Feromon tavanı ile aynıdır.</summary>
+        /// <summary>Çekimin doygunluğa ulaştığı toplam değer. Keşif izi tavanı ile aynıdır.</summary>
         private readonly float attractionSaturation;
 
         public float ThreatWeight { get; set; } = 1f;
         public float AttractionWeight { get; set; } = 1f;
 
-        public RouteCostModel(PheromoneMap pheromone, LureField lure, ThreatField threat)
+        public RouteCostModel(ReconMap pheromone, DecoyField lure, ThreatField threat)
         {
             this.pheromone = pheromone ?? throw new ArgumentNullException(nameof(pheromone));
             this.lure = lure ?? throw new ArgumentNullException(nameof(lure));
@@ -1022,24 +1022,24 @@ namespace Colony.Core
 Unity MCP `run_tests`, filtre `Colony.Tests.RouteCostModelTests`.
 Beklenen: 6 test PASS.
 
-- [ ] **Adım 5: ColonyPathfinder testini yaz**
+- [ ] **Adım 5: RoutePathfinder testini yaz**
 
-`Assets/Colony/Tests/EditMode/ColonyPathfinderTests.cs`:
+`Assets/Frontline/Tests/EditMode/RoutePathfinderTests.cs`:
 ```csharp
 using System.Collections.Generic;
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
-    public class ColonyPathfinderTests
+    public class RoutePathfinderTests
     {
-        private ColonyGrid grid;
-        private PheromoneMap pheromone;
-        private LureField lure;
+        private BattleGrid grid;
+        private ReconMap pheromone;
+        private DecoyField lure;
         private ThreatField threat;
         private RouteCostModel model;
-        private ColonyPathfinder finder;
+        private RoutePathfinder finder;
         private List<int> path;
 
         /// <summary>
@@ -1050,7 +1050,7 @@ namespace Colony.Tests
         [SetUp]
         public void SetUp()
         {
-            grid = new ColonyGrid(5, 5);
+            grid = new BattleGrid(5, 5);
 
             for (int y = 0; y < 5; y++)
             {
@@ -1063,15 +1063,15 @@ namespace Colony.Tests
                 grid.Set(grid.Index(x, 0), CellKind.Corridor);
             }
 
-            pheromone = new PheromoneMap(grid, max: 100f, decayRate: 0.1f);
-            lure = new LureField(grid, baseStrength: 10f, diminishFactor: 0.5f);
+            pheromone = new ReconMap(grid, max: 100f, decayRate: 0.1f);
+            lure = new DecoyField(grid, baseStrength: 10f, diminishFactor: 0.5f);
             threat = new ThreatField(grid);
             model = new RouteCostModel(pheromone, lure, threat)
             {
                 ThreatWeight = 3f,
                 AttractionWeight = 4f
             };
-            finder = new ColonyPathfinder(grid, model);
+            finder = new RoutePathfinder(grid, model);
             path = new List<int>();
         }
 
@@ -1096,14 +1096,14 @@ namespace Colony.Tests
         [Test]
         public void FindPath_ReturnsFalse_WhenGoalUnreachable()
         {
-            var isolated = new ColonyGrid(5, 5);
+            var isolated = new BattleGrid(5, 5);
             isolated.Set(isolated.Index(0, 0), CellKind.Corridor);
             isolated.Set(isolated.Index(4, 4), CellKind.Corridor);
 
-            var f = new ColonyPathfinder(isolated,
+            var f = new RoutePathfinder(isolated,
                 new RouteCostModel(
-                    new PheromoneMap(isolated, 100f, 0.1f),
-                    new LureField(isolated, 10f, 0.5f),
+                    new ReconMap(isolated, 100f, 0.1f),
+                    new DecoyField(isolated, 10f, 0.5f),
                     new ThreatField(isolated)));
 
             Assert.IsFalse(f.FindPath(isolated.Index(0, 0), isolated.Index(4, 4), path));
@@ -1127,7 +1127,7 @@ namespace Colony.Tests
 
             finder.FindPath(start, goal, path);
 
-            Assert.IsTrue(path.Contains(grid.Index(4, 2)), "Feromonlu sağ koridor tercih edilmeliydi.");
+            Assert.IsTrue(path.Contains(grid.Index(4, 2)), "Keşif izilu sağ koridor tercih edilmeliydi.");
             Assert.IsFalse(path.Contains(grid.Index(0, 2)));
         }
 
@@ -1160,7 +1160,7 @@ namespace Colony.Tests
 
             finder.FindPath(start, goal, path);
 
-            Assert.IsTrue(path.Contains(grid.Index(4, 2)), "Yem, zayıf feromonu yenmeliydi.");
+            Assert.IsTrue(path.Contains(grid.Index(4, 2)), "Yem, zayıf keşif izini yenmeliydi.");
         }
 
         [Test]
@@ -1177,21 +1177,21 @@ namespace Colony.Tests
 
 - [ ] **Adım 6: Testin başarısız olduğunu doğrula**
 
-Unity MCP `run_tests`, filtre `Colony.Tests.ColonyPathfinderTests`.
-Beklenen: derleme hatası — `ColonyPathfinder` bulunamıyor.
+Unity MCP `run_tests`, filtre `Colony.Tests.RoutePathfinderTests`.
+Beklenen: derleme hatası — `RoutePathfinder` bulunamıyor.
 
 - [ ] **Adım 7: IndexedMinHeap'i yaz**
 
-`Assets/Colony/Core/Pathing/IndexedMinHeap.cs`:
+`Assets/Frontline/Core/Pathing/IndexedMinHeap.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Hücre indeksleri için float öncelikli ikili min-heap.
     /// Mevcut Utils/MinHeap'ten farkı: Node nesnesi yerine int indeks tutar,
-    /// bu sayede Colony.Core hiçbir Unity tipine bağımlı olmaz ve
+    /// bu sayede Frontline.Core hiçbir Unity tipine bağımlı olmaz ve
     /// her hücrenin heap konumu O(1) bulunabilir.
     /// </summary>
     public sealed class IndexedMinHeap
@@ -1299,24 +1299,24 @@ namespace Colony.Core
 }
 ```
 
-- [ ] **Adım 8: ColonyPathfinder'ı yaz**
+- [ ] **Adım 8: RoutePathfinder'ı yaz**
 
-`Assets/Colony/Core/Pathing/ColonyPathfinder.cs`:
+`Assets/Frontline/Core/Pathing/RoutePathfinder.cs`:
 ```csharp
 using System;
 using System.Collections.Generic;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Koridor ağı üzerinde A*. Adım maliyetini RouteCostModel belirler,
-    /// böylece feromon, yem ve tehdit tek bir rota kararında birleşir.
+    /// böylece keşif izi, yem ve tehdit tek bir rota kararında birleşir.
     /// Sezgisel Manhattan mesafesidir; minimum adım maliyeti 1 olduğu için
     /// kabul edilebilirdir ve en kısa yol garantisi korunur.
     /// </summary>
-    public sealed class ColonyPathfinder
+    public sealed class RoutePathfinder
     {
-        private readonly ColonyGrid grid;
+        private readonly BattleGrid grid;
         private readonly RouteCostModel costModel;
 
         private readonly float[] gCost;
@@ -1325,7 +1325,7 @@ namespace Colony.Core
         private readonly IndexedMinHeap open;
         private readonly int[] neighborBuffer = new int[4];
 
-        public ColonyPathfinder(ColonyGrid grid, RouteCostModel costModel)
+        public RoutePathfinder(BattleGrid grid, RouteCostModel costModel)
         {
             this.grid = grid ?? throw new ArgumentNullException(nameof(grid));
             this.costModel = costModel ?? throw new ArgumentNullException(nameof(costModel));
@@ -1430,7 +1430,7 @@ Beklenen: Görev 1-5 arası tüm testler PASS (42 test).
 
 ```bash
 git add Assets/Colony
-git commit -m "feat: ColonyPathfinder ve birleşik rota maliyet modeli"
+git commit -m "feat: RoutePathfinder ve birleşik rota maliyet modeli"
 ```
 
 ---
@@ -1438,15 +1438,15 @@ git commit -m "feat: ColonyPathfinder ve birleşik rota maliyet modeli"
 ### Görev 6: Harita üretimi ve doğrulama
 
 **Dosyalar:**
-- Oluştur: `Assets/Colony/Core/MapGen/MapTemplate.cs`
-- Oluştur: `Assets/Colony/Core/MapGen/MapGenerator.cs`
-- Oluştur: `Assets/Colony/Core/MapGen/MapValidator.cs`
-- Oluştur: `Assets/Colony/Tests/EditMode/MapGeneratorTests.cs`
+- Oluştur: `Assets/Frontline/Core/MapGen/MapTemplate.cs`
+- Oluştur: `Assets/Frontline/Core/MapGen/MapGenerator.cs`
+- Oluştur: `Assets/Frontline/Core/MapGen/MapValidator.cs`
+- Oluştur: `Assets/Frontline/Tests/EditMode/MapGeneratorTests.cs`
 
 **Arayüzler:**
-- Kullanır: `ColonyGrid`, `CellKind`, `RouteCostModel`, `PheromoneMap`, `LureField`, `ThreatField`
+- Kullanır: `BattleGrid`, `CellKind`, `RouteCostModel`, `ReconMap`, `DecoyField`, `ThreatField`
 - Üretir: `MapTemplate` struct — `Width`, `Height`, `CorridorCount`, `CorridorWidth`
-- Üretir: `MapGenerator` — `Generate(MapTemplate, int seed)` → `ColonyGrid`
+- Üretir: `MapGenerator` — `Generate(MapTemplate, int seed)` → `BattleGrid`
 - Üretir: `MapValidationResult` struct — `IsValid`, `CorridorCount`, `CostGap`, `FailureReason`
 - Üretir: `CorridorSpan` struct — `StartX`, `EndX`
 
@@ -1455,16 +1455,16 @@ git commit -m "feat: ColonyPathfinder ve birleşik rota maliyet modeli"
 > kurulum seridi cogu zaman yalnizca kenardaki sutunun komsusudur, ilk sutunun degil.
 > Bu haliyle her gecerli harita reddedilirdi. Koridorlar `CorridorSpan` ile sutun araligi
 > olarak temsil edilir ve dogrulama tum aralig tarar.
-- Üretir: `MapValidator` — `Validate(ColonyGrid, float maxCostGap)` → `MapValidationResult`
+- Üretir: `MapValidator` — `Validate(BattleGrid, float maxCostGap)` → `MapValidationResult`
 
 Tasarım kaynağı: spec bölüm 9.4. **Rastgelelik topolojiyi değil dokuyu üretir.**
 
 - [ ] **Adım 1: Başarısız testi yaz**
 
-`Assets/Colony/Tests/EditMode/MapGeneratorTests.cs`:
+`Assets/Frontline/Tests/EditMode/MapGeneratorTests.cs`:
 ```csharp
 using NUnit.Framework;
-using Colony.Core;
+using Frontline.Core;
 
 namespace Colony.Tests
 {
@@ -1570,9 +1570,9 @@ Beklenen: derleme hatası — `MapTemplate` bulunamıyor.
 
 - [ ] **Adım 3: MapTemplate'i yaz**
 
-`Assets/Colony/Core/MapGen/MapTemplate.cs`:
+`Assets/Frontline/Core/MapGen/MapTemplate.cs`:
 ```csharp
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Elle tasarlanmış bir harita topolojisi. Prosedürel üretim yalnızca
@@ -1598,16 +1598,16 @@ namespace Colony.Core
 
 - [ ] **Adım 4: MapGenerator'ı yaz**
 
-`Assets/Colony/Core/MapGen/MapGenerator.cs`:
+`Assets/Frontline/Core/MapGen/MapGenerator.cs`:
 ```csharp
 using System;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     /// <summary>
     /// Şablondan harita üretir. Dikey tutuş düzeni: koridorlar yukarıdan
     /// aşağı uzanır, aralarında kurulum şeritleri kalır. Üst satır giriş
-    /// bandı, alt satır yuva bandıdır; ikisi koridorları birbirine bağlar.
+    /// bandı, alt satır üs bandıdır; ikisi koridorları birbirine bağlar.
     /// </summary>
     public sealed class MapGenerator
     {
@@ -1615,7 +1615,7 @@ namespace Colony.Core
         private const int BlockedChancePercent = 15;
 
         /// <summary>Aynı seed her zaman aynı haritayı üretir.</summary>
-        public ColonyGrid Generate(MapTemplate template, int seed)
+        public BattleGrid Generate(MapTemplate template, int seed)
         {
             if (template.Width <= 0 || template.Height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(template), "Şablon boyutları pozitif olmalı.");
@@ -1624,7 +1624,7 @@ namespace Colony.Core
             if (template.CorridorWidth <= 0)
                 throw new ArgumentOutOfRangeException(nameof(template), "CorridorWidth pozitif olmalı.");
 
-            var grid = new ColonyGrid(template.Width, template.Height);
+            var grid = new BattleGrid(template.Width, template.Height);
             var random = new Random(seed);
 
             // Koridorları dar eksende eşit aralıklarla yerleştir.
@@ -1669,11 +1669,11 @@ namespace Colony.Core
 
 - [ ] **Adım 5: MapValidator'ı yaz**
 
-`Assets/Colony/Core/MapGen/MapValidator.cs`:
+`Assets/Frontline/Core/MapGen/MapValidator.cs`:
 ```csharp
 using System.Collections.Generic;
 
-namespace Colony.Core
+namespace Frontline.Core
 {
     public struct MapValidationResult
     {
@@ -1697,7 +1697,7 @@ namespace Colony.Core
     {
         public const int MinimumCorridors = 3;
 
-        public MapValidationResult Validate(ColonyGrid grid, float maxCostGap)
+        public MapValidationResult Validate(BattleGrid grid, float maxCostGap)
         {
             var result = new MapValidationResult { FailureReason = string.Empty };
 
@@ -1736,7 +1736,7 @@ namespace Colony.Core
         /// Baştan sona kesintisiz koridor olan sütunlar; bitişik olanlar tek
         /// koridor sayılarak gruplanır. Üst ve alt bağlantı bantları hariç tutulur.
         /// </summary>
-        private static List<int> FindCorridorColumns(ColonyGrid grid)
+        private static List<int> FindCorridorColumns(BattleGrid grid)
         {
             var groups = new List<int>();
             bool previousWasCorridor = false;
@@ -1762,7 +1762,7 @@ namespace Colony.Core
             return groups;
         }
 
-        private static bool EveryCorridorHasBuildStrip(ColonyGrid grid, List<int> columns, out int badColumn)
+        private static bool EveryCorridorHasBuildStrip(BattleGrid grid, List<int> columns, out int badColumn)
         {
             var buffer = new int[4];
 
@@ -1796,13 +1796,13 @@ namespace Colony.Core
         }
 
         /// <summary>
-        /// Boş harita üzerinde (feromon, yem, tehdit sıfır) her koridorun baştan
+        /// Boş harita üzerinde (keşif izi, yem, tehdit sıfır) her koridorun baştan
         /// sona maliyetini ölçer ve en ucuz iki koridor arasındaki farkı döner.
         /// </summary>
-        private static float ComputeCostGap(ColonyGrid grid, List<int> columns)
+        private static float ComputeCostGap(BattleGrid grid, List<int> columns)
         {
-            var pheromone = new PheromoneMap(grid, 100f, 0.1f);
-            var lure = new LureField(grid, 10f, 0.5f);
+            var pheromone = new ReconMap(grid, 100f, 0.1f);
+            var lure = new DecoyField(grid, 10f, 0.5f);
             var threat = new ThreatField(grid);
             var model = new RouteCostModel(pheromone, lure, threat)
             {
@@ -1850,7 +1850,7 @@ git commit -m "feat: şablon tabanlı harita üretimi ve doğrulama"
 
 Bilerek dışarıda bırakıldı, sonraki planlara aittir:
 
-- **Plan 2 — Unity entegrasyonu ve görselleştirme:** MonoBehaviour köprüleri, feromon izlerinin ekranda çizimi, gürültücü kule titreşim halkası, yerleştirme ön izlemesi, dokunmatik giriş.
+- **Plan 2 — Unity entegrasyonu ve görselleştirme:** MonoBehaviour köprüleri, keşif izi izlerinin ekranda çizimi, batarya kule titreşim halkası, yerleştirme ön izlemesi, dokunmatik giriş.
 - **Plan 3 — Oynanış katmanı:** kuleler, düşmanlar, dalga akışı, draft sistemi, ekonomi.
 - **Plan 4 — Meta ilerleme ve kayıt:** biyokütle, yetenek ağacı, kalıcı kayıt.
 - **Plan 5 — Blender asset pipeline ve ses.**
@@ -1859,6 +1859,6 @@ Eski `Assets/Scripts/` bu planda **silinmez**. Yeni çekirdek çalışır hale g
 
 ## Spec Kapsam Kontrolü
 
-Bu plan spec'in şu bölümlerini karşılar: 3.1 (gürültücü/sessiz ayrımı → ThreatField), 3.3 (yem dengesi → LureField), 3.4 (feromon verisi → PheromoneMap), 3.6 (dikey düzen → MapGenerator), 4 (Q-Learning katmanı → PheromoneMap + RouteCostModel), 9.2 (yem kuralları), 9.4 (harita doğrulama).
+Bu plan spec'in şu bölümlerini karşılar: 3.1 (batarya/pusu ayrımı → ThreatField), 3.3 (yem dengesi → DecoyField), 3.4 (keşif izi verisi → ReconMap), 3.6 (dikey düzen → MapGenerator), 4 (Q-Learning katmanı → ReconMap + RouteCostModel), 9.2 (yem kuralları), 9.4 (harita doğrulama).
 
 Spec'in şu bölümleri sonraki planlara bırakıldı: 2 (draft, run akışı), 3.2 ve 3.5 (görsel sunum), 5 (kule ve düşman içeriği), 6 (meta), 8 (oynanabilir run), 9.1 (görsel okunabilirlik), 9.3 (nemesis evrimi).

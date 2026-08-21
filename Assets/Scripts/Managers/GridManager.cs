@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 // Grid sistemini yöneten sınıf
@@ -68,7 +68,7 @@ public class GridManager : MonoBehaviour
     }
 
     // Komşu node’ları döndür (4 yön)
-    public List<Node> GetNeighbors(Node n)
+    public List<Node> GetNeighbors(Node n, bool ignoreWalkability = false)
     {
         var list = new List<Node>();
         Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
@@ -76,8 +76,11 @@ public class GridManager : MonoBehaviour
         foreach (var d in dirs)
         {
             var m = GetNode(n.coordinates + d);
-            if (m != null && m.isWalkable)
-                list.Add(m);
+            if (m != null)
+            {
+                if (ignoreWalkability || m.isWalkable)
+                    list.Add(m);
+            }
         }
 
         return list;

@@ -1,0 +1,183 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+namespace Frontline.Runtime
+{
+    public enum RunState
+    {
+        Running = 0,
+        Won = 1,
+        Lost = 2
+    }
+
+    /// <summary>
+    /// Bir run'i yonetir: dalgalari sirayla baslatir, kazanma ve kaybetme
+    /// kosullarini takip eder.
+    ///
+    /// Dalgalar artik sonsuz degil. Run 12-15 dalgadir (spec 2.1) ve birlik
+    /// cani her dalga artar - sabit bir tuzagin zamanla yetersiz kalmasi
+    /// icin gereken baski budur.
+    /// </summary>
+    public sealed class RunController : MonoBehaviour
+    {
+        public Battlefield world;
+        public UnitSpawner spawner;
+        public HomeBaseHealth homeBase;
+        public DraftView draft;
+
+        [Header("Run")]
+        [Tooltip("Run kac dalga surer.")]
+        public int totalWaves = 15;
+
+        [Tooltip("Dalga arasi bekleme (saniye).")]
+        public float delayBetweenWaves = 2f;
+
+        [Tooltip("Ilk dalga baslamadan once verilen hazirlik suresi. Oyuncu " +
+                 "haritayi okuyup ilk kulelerini kurabilmeli; run bir kosuya " +
+                 "degil bir kurulusa baslamali.")]
+        public float openingDelay = 8f;
+
+        [Tooltip("Ilk kac dalga genis araliklarla gelsin. Erken oyunda oyuncunun " +
+                 "kurdugu her kule sistemin donmesi icin kritik; bu donemde " +
+                 "dusunme suresi zorluktan daha degerli.")]
+        public int slowStartWaves = 4;
+
+        [Tooltip("Yavas baslangic doneminde dalga arasi bekleme.")]
+        public float earlyWaveDelay = 6f;
+
+        [Header("Zorluk")]
+        [Tooltip("Ilk dalgadaki birlik cani.")]
+        public float baseUnitHp = 10f;
+
+        [Tooltip("Her dalga canin artis orani. 0,10 olcumle secildi: 0,15'te " +
+                 "ekonominin HICBIR dugmesi calismiyordu. Yetersiz kule sayisi " +
+                 "hizla oldurme kaybina, o da gelir kaybina donusup kendini " +
+                 "besleyen bir cokuse yol aciyordu. 0,10'da esik yumusuyor ve " +
+                 "fiyatlar gercek bir ayar dugmesi haline geliyor.")]
+        public float hpGrowthPerWave = 0.10f;
+
+        [Tooltip("Ilk dalgadaki birlik sayisi. 8 olcumle secildi: 10 iken oyuncu " +
+                 "yeterli kuleyi kuramadan 4. dalgada kaybediyordu.")]
+        public int baseUnitsPerWave = 8;
+
+        [Tooltip("Her dalga eklenen birlik sayisi.")]
+        public float unitsAddedPerWave = 1f;
+
+        public int CurrentWave { get; private set; }
+        public RunState State { get; private set; } = RunState.Running;
+
+        /// <summary>Run bitti. Argument sonuctur.</summary>
+        public event Action<RunState> RunEnded;
+
+        /// <summary>Dalga degisti. Argumentler (guncel, toplam).</summary>
+        public event Action<int, int> WaveChanged;
+
+        private void Awake()
+        {
+            if (world == null) world = FindFirstObjectByType<Battlefield>();
+            if (spawner == null) spawner = FindFirstObjectByType<UnitSpawner>();
+            if (homeBase == null) homeBase = FindFirstObjectByType<HomeBaseHealth>();
+            if (draft == null) draft = FindFirstObjectByType<DraftView>();
+        }
+
+        private void OnEnable()
+        {
+            if (homeBase != null) homeBase.Emptied += OnBaseEmptied;
+        }
+
+        private void OnDisable()
+        {
+            if (homeBase != null) homeBase.Emptied -= OnBaseEmptied;
+        }
+
+        private void Start()
+        {
+            StartCoroutine(RunWaves());
+        }
+
+        /// <summary>Bu dalgadaki birligin cani.</summary>
+        public float HpForWave(int wave)
+        {
+            int index = wave < 1 ? 0 : wave - 1;
+            return baseUnitHp * (1f + hpGrowthPerWave * index);
+        }
+
+        /// <summary>Bu dalgadaki birlik sayisi.</summary>
+        public int CountForWave(int wave)
+        {
+            int index = wave < 1 ? 0 : wave - 1;
+            return Mathf.RoundToInt(baseUnitsPerWave + unitsAddedPerWave * index);
+        }
+
+        private IEnumerator RunWaves()
+        {
+            while (world == null || world.Grid == null)
+                yield return null;
+
+            // Ilk dalgadan once hazirlik suresi.
+            if (openingDelay > 0f)
+                yield return new WaitForSeconds(openingDelay);
+
+            while (State == RunState.Running && CurrentWave < totalWaves)
+            {
+                CurrentWave++;
+                if (WaveChanged != null) WaveChanged(CurrentWave, totalWaves);
+
+                // Yem kalici degildir; her dalga tazelenir (spec 3.3).
+                world.ApplyDecoys();
+
+                yield return spawner.SpawnWave(
+                    CountForWave(CurrentWave),
+                    HpForWave(CurrentWave));
+
+                while (spawner.AliveCount > 0 && State == RunState.Running)
+                    yield return null;
+
+                if (State != RunState.Running) break;
+
+                // Draft, iz sonmeden ONCE acilir: sunulan secenekler ordunin
+                // o dalgada ogrendigi seye gore tartilir (spec 2.2).
+                if (draft != null && CurrentWave < totalWaves)
+                {
+                    draft.Open(CurrentWave + 1);
+                    while (draft.IsOpen && State == RunState.Running)
+                        yield return null;
+                }
+
+                if (State != RunState.Running) break;
+
+                // Dalga sonunda kullanilmayan izler unutulur.
+                world.Recon.Decay();
+
+                yield return new WaitForSeconds(DelayAfterWave(CurrentWave));
+            }
+
+            if (State == RunState.Running)
+                Finish(RunState.Won);
+        }
+
+        /// <summary>
+        /// Bu dalgadan sonraki bekleme. Erken dalgalar daha genis aralikli
+        /// gelir; oyuncu ekonomisini kuramadan bogulmamali.
+        /// </summary>
+        public float DelayAfterWave(int wave)
+        {
+            return wave <= slowStartWaves ? earlyWaveDelay : delayBetweenWaves;
+        }
+
+        private void OnBaseEmptied()
+        {
+            if (State == RunState.Running) Finish(RunState.Lost);
+        }
+
+        private void Finish(RunState result)
+        {
+            State = result;
+            Debug.Log("[RunController] Run bitti: " + result +
+                      " (dalga " + CurrentWave + "/" + totalWaves + ")");
+
+            if (RunEnded != null) RunEnded(result);
+        }
+    }
+}

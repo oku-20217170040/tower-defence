@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,25 +14,25 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
     private int baseDamageToBase;
     private bool baseStatsCached;
 
-    private GridManager grid;
-    private Pathfinder pathfinder;
-    private BaseHealth baseHealth;
+    protected GridManager grid;
+    protected Pathfinder pathfinder;
+    protected BaseHealth baseHealth;
 
-    private List<Node> path;
-    private int pathIndex;
+    protected List<Node> path;
+    protected int pathIndex;
 
     [HideInInspector] public Vector2Int startCoords;
     [HideInInspector] public Vector2Int baseCoords;
 
-    public Vector2 CurrentMoveDirection { get; private set; } = Vector2.zero;
+    public Vector2 CurrentMoveDirection { get; protected set; } = Vector2.zero;
 
     private Rigidbody2D rb;
 
-    private bool isFrozen;
-    private float freezeTimer;
+    protected bool isFrozen;
+    protected float freezeTimer;
     public bool IsFrozen => isFrozen;
 
-    private bool inClockAura;
+    protected bool inClockAura;
     [Tooltip("Clock tower alanındayken animasyon çarpanı (0.1 - 1).")]
     public float clockAnimMultiplier = 0.5f;
 
@@ -108,7 +108,7 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         UpdateAnimatorSpeed();
     }
 
-    public void Initialize(
+    public virtual void Initialize(
         GridManager grid,
         Pathfinder pathfinder,
         BaseHealth baseHealth,
@@ -131,7 +131,12 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         RecalculatePathFromCurrentTile();
     }
 
-    public void RecalculatePathFromCurrentTile()
+    protected virtual List<Node> GetPathForEnemy(Vector2Int start, Vector2Int basePos)
+    {
+        return pathfinder.FindPath(start, basePos);
+    }
+
+    public virtual void RecalculatePathFromCurrentTile()
     {
         if (grid == null || pathfinder == null)
             return;
@@ -145,7 +150,7 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
 
         episodeSteps = new List<QLearningManager.EpisodeStep>();
 
-        path = pathfinder.FindPath(currentCoords, baseCoords);
+        path = GetPathForEnemy(currentCoords, baseCoords);
         pathIndex = 0;
 
         StopAllCoroutines();
@@ -155,12 +160,12 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         }
     }
 
-    public void RecalculatePath()
+    public virtual void RecalculatePath()
     {
         if (pathfinder == null)
             return;
 
-        path = pathfinder.FindPath(startCoords, baseCoords);
+        path = GetPathForEnemy(startCoords, baseCoords);
         pathIndex = 0;
 
         StopAllCoroutines();
@@ -170,7 +175,7 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         }
     }
 
-    public void ApplyFreeze(float duration)
+    public virtual void ApplyFreeze(float duration)
     {
         if (duration > freezeTimer)
             freezeTimer = duration;
@@ -181,7 +186,7 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         UpdateAnimatorSpeed();
     }
 
-    public void SetClockAura(bool active, float animMultiplier = 0.5f)
+    public virtual void SetClockAura(bool active, float animMultiplier = 0.5f)
     {
         inClockAura = active;
         if (active)
@@ -190,7 +195,7 @@ public class EnemyMover : MonoBehaviour, IWaveAffectable
         UpdateAnimatorSpeed();
     }
 
-    private void UpdateAnimatorSpeed()
+    protected void UpdateAnimatorSpeed()
     {
         if (animator == null) return;
 

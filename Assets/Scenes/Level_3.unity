@@ -3549,6 +3549,7 @@ MonoBehaviour:
     spawnDelay: 3
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: eb965c71d7aa6894083bedae0c0b4f1d, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1
     hpMultiplier: 1
     damageMultiplier: 1
@@ -3561,6 +3562,7 @@ MonoBehaviour:
     spawnDelay: 2
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: eb965c71d7aa6894083bedae0c0b4f1d, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1.2
     hpMultiplier: 1.1
     damageMultiplier: 1
@@ -3573,6 +3575,7 @@ MonoBehaviour:
     spawnDelay: 2
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: eb965c71d7aa6894083bedae0c0b4f1d, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1.2
     hpMultiplier: 1.1
     damageMultiplier: 1
@@ -3585,6 +3588,7 @@ MonoBehaviour:
     spawnDelay: 3
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: 8406dbf7036c287439c1a56ed86e1abf, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1
     hpMultiplier: 1
     damageMultiplier: 1
@@ -3597,6 +3601,7 @@ MonoBehaviour:
     spawnDelay: 3
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: 8406dbf7036c287439c1a56ed86e1abf, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1.1
     hpMultiplier: 1.2
     damageMultiplier: 1
@@ -3609,6 +3614,7 @@ MonoBehaviour:
     spawnDelay: 3
     allowedEnemies:
     - {fileID: 7075414241751179836, guid: 8406dbf7036c287439c1a56ed86e1abf, type: 3}
+    - {fileID: 9083107304823616420, guid: 4270c7ec7376740429df971c8f627ec0, type: 3}
     speedMultiplier: 1.1
     hpMultiplier: 1.2
     damageMultiplier: 1

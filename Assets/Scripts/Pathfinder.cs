@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class Pathfinder : MonoBehaviour
@@ -69,6 +69,71 @@ public class Pathfinder : MonoBehaviour
 
                 int threatPenalty   = threatWeight  > 0f && neighbor.threatCost  > 0f
                     ? Mathf.RoundToInt(neighbor.threatCost  * threatWeight)  : 0;
+                int learnedPenalty  = learnedWeight > 0f && neighbor.learnedCost > 0f
+                    ? Mathf.RoundToInt(neighbor.learnedCost * learnedWeight) : 0;
+                int geneticPenalty  = geneticWeight > 0f && neighbor.geneticCost > 0f
+                    ? Mathf.RoundToInt(neighbor.geneticCost * geneticWeight) : 0;
+
+                int newCost = current.gCost + 1 + threatPenalty + learnedPenalty + geneticPenalty;
+
+                if (newCost < neighbor.gCost)
+                {
+                    neighbor.gCost = newCost;
+                    neighbor.hCost = Heuristic(neighbor.coordinates, target);
+                    neighbor.parent = current;
+
+                    if (open.Contains(neighbor))
+                        open.UpdateItem(neighbor);
+                    else
+                        open.Push(neighbor);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // Uçan düşmanlar için: terrain (isWalkable) kontrolü yok, sadece threatCost geçerli
+    public List<Node> FindPathIgnoreTerrain(Vector2Int start, Vector2Int target)
+    {
+        if (grid == null || grid.grid == null) return null;
+
+        Node startNode = grid.GetNode(start);
+        Node targetNode = grid.GetNode(target);
+        if (startNode == null || targetNode == null) return null;
+
+        int gridSize = grid.grid.GetLength(0) * grid.grid.GetLength(1);
+        var open   = new MinHeap<Node>(gridSize);
+        var closed = new HashSet<Node>();
+
+        foreach (Node n in grid.grid)
+        {
+            if (n == null) continue;
+            n.gCost = int.MaxValue;
+            n.hCost = 0;
+            n.parent = null;
+            n.HeapIndex = -1;
+        }
+
+        startNode.gCost = 0;
+        startNode.hCost = Heuristic(start, target);
+        open.Push(startNode);
+
+        while (open.Count > 0)
+        {
+            Node current = open.Pop();
+            closed.Add(current);
+
+            if (current == targetNode)
+                return Retrace(startNode, targetNode);
+
+            foreach (Node neighbor in grid.GetNeighbors(current, true))
+            {
+                // Artık isWalkable kontrolü yok, tüm komşular uçuş için geçerli
+                if (closed.Contains(neighbor)) continue;
+
+                int threatPenalty = threatWeight > 0f && neighbor.threatCost > 0f
+                    ? Mathf.RoundToInt(neighbor.threatCost * threatWeight) : 0;
                 int learnedPenalty  = learnedWeight > 0f && neighbor.learnedCost > 0f
                     ? Mathf.RoundToInt(neighbor.learnedCost * learnedWeight) : 0;
                 int geneticPenalty  = geneticWeight > 0f && neighbor.geneticCost > 0f
