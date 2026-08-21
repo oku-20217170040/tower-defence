@@ -51,8 +51,12 @@ namespace Frontline.Runtime
                  "yaramiyor (30) ama karisimda deger uretiyor (20,7 -> 15,7).")]
         public float beamShotInterval = 2f;
 
-        [Tooltip("Isinin menzili (hucre).")]
-        public float beamRange = 8f;
+        [Tooltip("Isinin menzili (hucre). 40 = haritayi bastan basa gecer. " +
+                 "Gorsel olarak isin ekran disinda bittigi icin menzil de " +
+                 "sinirsiz olmali; 8'de birakmak gorseli YALANCI yapardi. " +
+                 "Olculdu: karisimda sizinti 15,7 -> 11,9, tek basina hala " +
+                 "ise yaramiyor (30,0).")]
+        public float beamRange = 40f;
 
         [Tooltip("Isin hattinin yarim KALINLIGI (hucre). Hat incedir; " +
                  "kalinlasirsa bir koridoru bastan sona kaplar ve spec 3.5'i " +

@@ -66,7 +66,17 @@ namespace Frontline.Core
             /// <summary>Isin hattinin yarim kalinligi (hucre). Hat incedir.</summary>
             public float BeamWidth;
 
-            /// <summary>Isinin menzili (hucre). Namlu bu menzil icinde hedef arar.</summary>
+            /// <summary>
+            /// Isinin menzili (hucre). 40 = haritayi bastan basa gecer.
+            ///
+            /// Neden sinirsiz: gorsel olarak isin sahneyi delip ekran
+            /// disinda bitiyor. Menzili 8'de birakmak GORSELI YALANCI
+            /// yapardi - oyuncu haritanin obur ucunu vurdugunu sanirdi.
+            /// Olculdu ve bedeli kabul edilebilir: karisimda sizinti
+            /// 15,7 -> 11,9, ama tek basina dikildiginde HALA ise
+            /// yaramiyor (30,0 · kazanma %0). Yani isin uzman kalmaya
+            /// devam ediyor.
+            /// </summary>
             public float BeamRange;
 
             /// <summary>Isinin tehdit gucu. 0 ise ordu isini algilayamaz.</summary>
@@ -114,7 +124,7 @@ namespace Frontline.Core
                     BeamShotDamage = 3f,
                     BeamShotInterval = 2f,
                     BeamWidth = 0.6f,
-                    BeamRange = 8f,
+                    BeamRange = 40f,
                     BatteryThreatStrength = 4f,
                     BatteryTargeting = RunSimulator.Targeting.Splash,
                     DraftGivesFreeTower = true,

@@ -44,6 +44,12 @@ namespace Frontline.Runtime
         [Tooltip("Bir atisin gorsel olarak ne kadar sure gorunecegi.")]
         public float beamFlashSeconds = 0.12f;
 
+        [Tooltip("Isin cizgisinin GORSEL kalinligi (hucre orani). Hasar " +
+                 "kalinligindan (beamHalfWidth) AYRIDIR: biri denge sayisi, " +
+                 "digeri sanat karari. Once ikisi ayni sayidan turetiliyordu " +
+                 "ve isin ekrani kaplayan bir bant gibi duruyordu.")]
+        public float beamVisualThickness = 0.05f;
+
         [Header("Atis izi (KOZMETIK)")]
         [Tooltip("Iki gorsel iz arasindaki sure. Hasar SUREKLI uygulanir; " +
                  "iz yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
@@ -219,8 +225,8 @@ namespace Frontline.Runtime
                 hits++;
             }
 
-            BeamFlash.Spawn(origin, direction, worldRange,
-                            world.Space.CellSize * beamHalfWidth * 2f,
+            BeamFlash.Spawn(origin, direction,
+                            world.Space.CellSize * beamVisualThickness,
                             beamFlashSeconds, hits);
         }
 

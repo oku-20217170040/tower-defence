@@ -100,23 +100,61 @@ namespace Frontline.Runtime
     }
 
     /// <summary>
-    /// Isinin delici carpmasi. Ayri bir tip degil, ShotFlash uzerine
-    /// kurulu bir tarif: uzun, kalin ve kisa omurlu tek cizgi.
+    /// Isinin delici carpmasi: INCE ve UCU GORUNMEYEN tek cizgi.
+    ///
+    /// Iki karar (22 Agu, kullanici):
+    ///
+    /// 1. INCE. Ilk surum kalinligi hasar yariciapindan turetiyordu
+    ///    (1,2 hucre) ve ekrani kaplayan bir bant gibi duruyordu.
+    ///    Gorsel kalinlik artik hasar kalinligindan AYRI: hasar hattinin
+    ///    ne kadar genis oldugu bir denge sayisi, cizginin ne kadar
+    ///    kalin gorundugu bir sanat karari.
+    ///
+    /// 2. UCU GORUNMEZ. Cizgi kameranin disinda biter, boylece oyuncu
+    ///    isinin nerede durdugunu gormez. Bunun icin MENZIL DE
+    ///    haritayi asacak sekilde acildi (40 hucre) - yoksa gorsel
+    ///    menzil hakkinda yalan soylerdi. Bedeli olculdu: karisimda
+    ///    sizinti 15,7 -> 11,9, tek basina hala ise yaramiyor (30,0).
     /// </summary>
     public static class BeamFlash
     {
         /// <summary>Isin rengi. Kule sprite'indaki mercekle ayni aile.</summary>
-        public static Color color = new Color(0.45f, 0.82f, 1f, 0.9f);
+        public static Color color = new Color(0.55f, 0.88f, 1f, 0.95f);
 
-        public static void Spawn(Vector2 origin, Vector2 direction, float range,
+        public static void Spawn(Vector2 origin, Vector2 direction,
                                  float thickness, float seconds, int hits)
         {
-            // Vurdugu birlik sayisi arttikca isin kalinlasir: delip gectigi
-            // kalabaligi oyuncu bir bakista gorsun.
-            float boost = 1f + Mathf.Min(hits, 6) * 0.12f;
+            // Vurdugu birlik sayisi arttikca isin PARLAR - kalinlasmaz.
+            // Kalinlasma inceligi bozuyordu; parlaklik ayni bilgiyi
+            // cizgiyi kalinlastirmadan verir.
+            Color c = color;
+            c.a = Mathf.Min(1f, color.a * (0.75f + Mathf.Min(hits, 6) * 0.08f));
 
-            ShotFlash.Line(origin, direction, range, thickness * boost,
-                           color, seconds, sortingOrder: 32);
+            ShotFlash.Line(origin, direction, OffscreenLength(origin, direction),
+                           thickness, c, seconds, sortingOrder: 32);
+        }
+
+        /// <summary>
+        /// Kameranin disina cikmayi GARANTI eden uzunluk. Sabit buyuk bir
+        /// sayi yerine kameradan hesaplanir; yoksa yakinlastirma degisince
+        /// isinin ucu ekranda gorunur hale gelir.
+        /// </summary>
+        private static float OffscreenLength(Vector2 origin, Vector2 direction)
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return 100f;
+
+            float halfHeight = cam.orthographic
+                ? cam.orthographicSize
+                : Mathf.Abs(cam.transform.position.z) * Mathf.Tan(
+                      cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+
+            float halfWidth = halfHeight * cam.aspect;
+            float halfDiagonal = Mathf.Sqrt(halfWidth * halfWidth + halfHeight * halfHeight);
+
+            // Kule ekranin neresinde olursa olsun karsi kenari asar.
+            float fromCenter = Vector2.Distance(origin, (Vector2)cam.transform.position);
+            return (halfDiagonal + fromCenter) * 1.2f;
         }
     }
 }

@@ -37,6 +37,13 @@ namespace Frontline.Tests
     /// Nisan aldigi icin ISKALAMIYOR - bu yuzden ayni sayilarla cok guclu
     /// cikti (spam sizinti 0,0) ve hasar 20 -> 3, aralik 1 -> 2 sn yapildi.
     ///
+    /// MENZIL (22 Agu): isin gorsel olarak sahneyi delip EKRAN DISINDA
+    /// bitiyor. Menzili 8 hucrede birakmak gorseli YALANCI yapardi -
+    /// oyuncu haritanin obur ucunu vurdugunu sanirdi. Menzil haritayi
+    /// asacak sekilde acildi (40) ve bedeli olculdu: karisimda sizinti
+    /// 15,7 -> 11,9, ama tek basina dikildiginde HALA ise yaramiyor
+    /// (30,0 · kazanma %0). Isin uzman kalmaya devam ediyor.
+    ///
     /// Asil denge dugmesi hasar degil, ATIS ARALIGIDIR.
     ///
     /// ACIK IS - ISININ ATIS ARALIGI PLAN 8 BITINCE YENIDEN OLCULMELI.
@@ -174,7 +181,7 @@ namespace Frontline.Tests
         public void Beam_IsTheCounterToAConcentratedArmy()
         {
             // Asker orduyu bir koridora civiler; isin de tam olarak orayi
-            // cezalandirir. Olculen: isinsiz 20,7 sizinti, isinli 15,7.
+            // cezalandirir. Olculen: isinsiz 20,7 sizinti, isinli 11,9.
             //
             // Ozellik nisan alan surumde de duruyor: DAGINIK orduda isinin
             // kazanci 1,2 sizinti (3,3 -> 2,1), TOPLANMIS orduda 5,0
@@ -198,7 +205,7 @@ namespace Frontline.Tests
             // Isin bir UZMANDIR: dengeli bir karisimin icinde deger uretir,
             // tek basina cozum degildir. Mayin tarlasi da boyle secilmisti.
             // Olculen: yalnizca isin 30,0 sizinti (kazanma %0) · dengeli
-            // karisim 15,7.
+            // karisim 11,9.
             //
             // Bu testin dustugu gun isin baskin strateji olmus demektir -
             // isinin ilk tasariminda (surekli hat) tam olarak bu olmustu.
@@ -231,7 +238,7 @@ namespace Frontline.Tests
         {
             // Isinin kimligi bu: hat ince oldugu icin degeri "atis aninda
             // kac birlik hatta diziliyor" sorusuna bagli. Yavaslatilan
-            // birlik hatta daha uzun kalir. Olculen: 23,0 -> 15,7.
+            // birlik hatta daha uzun kalir. Olculen: 18,0 -> 11,9.
             // Karsilastirma DENGELI bir karisim uzerinden yapilir: tek
             // bataryali kurulumlar artik ikisi de kaybediyor (30/30) ve
             // fark olculemiyordu.
