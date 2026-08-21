@@ -2,23 +2,37 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 139 EditMode testi, 139 geçiyor (20 Ağu 2026)
-**Sıradaki iş:** (1) yeni dengenin gerçek run'da doğrulanması — aşağıya bak, (2) Plan 8 — birlik türleri (tank, asker, keşif). Plan 7'den yalnızca Işın kulesi kaldı. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Test durumu:** 142 EditMode testi (21 Ağu 2026; +3 `CurrentRunCalibrationTests`)
+**Sıradaki iş:** (1) Plan 8 — birlik türleri (tank, asker, keşif). Plan 7'den yalnızca Işın kulesi kaldı. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 
-## ⚠ Yeni oturum için ilk iş: denge ölçümü gerçekle uyuşmuyor
+## ✔ Çözüldü: 21 Ağustos'un "kalibrasyon bozuldu" alarmı (21 Ağustos 2026)
 
-**21 Ağustos, kullanıcı run'ı (ekran görüntüsüyle):** 15/15 dalga KAZANDI, **üs canı 26/30 — yani yalnızca 4 sızıntı**, 221 öldürme, 70 besin artmış.
+**Alarm:** kullanıcı run'ı 15/15 kazandı, üs 26/30 (yalnızca **4 sızıntı**), 221 öldürme, 70 besin artmış. Simülatör aynı ayarlarla **21,8 sızıntı** öngörüyordu.
 
-Simülasyon aynı ayarlarla **21,8 sızıntı** öngörüyordu. Gerçek 4. Bu, kalibrasyonun bozulduğu anlamına gelir; sebebi araştırılmadan yeni denge sayısı seçilmemeli.
+**Sonuç: simülatör doğru, kırık olan modellenen OYUNCU idi.** `EconomyPlanner.Policy.Default()` pahalı pusudan (40) başlıyor ve ilk dalgalara iki kuleyle giriyor; kullanıcı ise ucuz bataryayla pusuyu dönüşümlü alıp mayın tarlasını geciktiriyor. Yalnızca alım sırası değiştirildi, tek bir denge sayısına dokunulmadı:
 
-Muhtemel sebepler (ölçülmedi):
-1. Yeni tempo (8 sn hazırlık + ilk 4 dalga 6 sn ara) oyuncuya simülasyonun modellemediği bir avantaj veriyor olabilir — sim dalga arası beklemeyi hiç modellemiyor.
-2. Batarya kulesinin alan hasarı gerçek oyunda simülasyondakinden etkili olabilir (gerçek oyunda kuleler sürekli ateş ediyor, sim tick tabanlı).
-3. Oyuncu kule yerleşimini simülasyondaki sabit şablondan iyi yapıyor olabilir.
+| Alım sırası (bugünkü ayarlar, 20-40 seed) | Kazanma | Öldürme | Sızıntı | Üs |
+|---|---|---|---|---|
+| `Default()` — pusu ağırlıklı A,A,B,A,M,A,B | %100 | 203,6 | 21,4 | 8,6 |
+| **`Skilled()` — B,A,B,A,M** | %100 | **219,5** | **5,6** | **24,5** |
+| yalnızca batarya | %100 | 211 | 13,9 | 16 |
+| yalnızca pusu | **%0** | 18 | 30 | 0 |
+| ucuz önce B,B,A,M,A,B,A | %30-40 | 89 | 28,7 | 1,3 |
+| **Gerçek run (21 Ağu)** | kazandı | **221** | **4** | **26** |
 
-`RunCalibrationTests` hâlâ **eski** referans run'a (20 Ağustos, 16 sızıntı) bağlı ve geçiyor — yani araç eski koşullarda doğru. Yeni denge için **yeni bir referans run** alınmalı: kullanıcıdan bir run'ın kule dağılımı + sonucu istenip `RunCalibrationTests`'e ikinci bir referans olarak eklenmeli.
+`Skilled()` gerçek run'ı %1 hatayla yeniden üretiyor. Ölçüm `Assets/Frontline/Core/Sim/*` kaynakları başsız bir .NET 8 konsol projesine derlenerek yapıldı — Unity açmadan tarama yapmanın en hızlı yolu, tekrar gerekirse aynı yöntem kullanılabilir.
+
+**Koda geçen:**
+- `EconomyPlanner.Policy.Skilled()` — usta oyuncu bandı. `Default()` dokunulmadan bırakıldı, çünkü 20 Ağustos kalibrasyonu ona bağlı. İkisi birlikte bir **bant** tanımlıyor: alt = ortalama oyuncu, üst = usta oyuncu.
+- `Tests/EditMode/CurrentRunCalibrationTests.cs` — 21 Ağustos run'ı ikinci referans olarak sabitlendi (3 test). `RunCalibrationTests` eski ayarlara bağlı kalmaya devam ediyor.
+
+**Ders (spec'e taşınmalı):** simülatör ile gerçek arasındaki sapmanın ilk şüphelisi **oyuncu modelidir**, savaş modeli değil.
+
+**Açık kalan denge sorusu:** usta oyun artık üssün 30 canının yalnızca 4'ünü veriyor. Erken oyun kullanıcı geri bildirimiyle açıldı (başlangıç besini 50 → 90) ve zorluk bu kadar düştü. Bir düğme sıkılaştırılacaksa ölçüm hazır; ama bu bir karardır, hata değil.
+
+---
 
 ## Oyun nedir
 

@@ -102,6 +102,35 @@ namespace Frontline.Core
                     DraftFoodReward = 0
                 };
             }
+
+            /// <summary>
+            /// USTA oyuncu politikasi (21 Agustos 2026 run'i ile kalibre).
+            ///
+            /// Default() bir ORTALAMA oyuncuyu modeller: pahali pusudan
+            /// baslar, ilk dalgalara iki kuleyle girer. 21 Agustos run'inda
+            /// kullanici oyle oynamadi - ucuz batarya ile pahali pusuyu
+            /// DONUSUMLU aliyor, mayin tarlasini geciktiriyor. Ayni haritada
+            /// ayni ayarlarla olculdu (40 seed):
+            ///
+            ///   Default()          -> sizinti 22,1 · us 7,9/30
+            ///   Skilled()          -> sizinti  5,7 · us 24,3/30
+            ///   sadece batarya     -> sizinti 13,9
+            ///   sadece pusu        -> sizinti 30   (kazanma %0)
+            ///
+            /// Yani simulator ile gercek run arasindaki 22 / 4 sizinti farki
+            /// simulatorun HATASI degil, modellenen oyuncunun zayifligiydi.
+            /// Ikisi birlikte tutulur: Default() alt band, Skilled() ust band.
+            /// </summary>
+            public static Policy Skilled()
+            {
+                Policy policy = Default();
+                policy.BuyOrder = new[]
+                {
+                    TowerKind.Battery, TowerKind.Ambush, TowerKind.Battery,
+                    TowerKind.Ambush, TowerKind.Minefield
+                };
+                return policy;
+            }
         }
 
         private readonly Costs costs;
