@@ -206,6 +206,9 @@ MonoBehaviour:
   corridorColor: {r: 0.16, g: 0.15, b: 0.13, a: 1}
   buildStripColor: {r: 0.28, g: 0.26, b: 0.22, a: 1}
   blockedColor: {r: 0.09, g: 0.1, b: 0.09, a: 1}
+  corridorTile: {fileID: 2800000, guid: d064d7692b654a048ae2f002b38ff72b, type: 3}
+  buildStripTile: {fileID: 2800000, guid: e57754f81bc95424993728bd4d16df17, type: 3}
+  blockedTile: {fileID: 2800000, guid: 82765c29a4a87394cb50798c0fa5d093, type: 3}
   sortingOrder: 0
 --- !u!212 &559926335
 SpriteRenderer:
@@ -678,7 +681,10 @@ MonoBehaviour:
   ambushDps: 4
   beamShotDamage: 20
   beamShotInterval: 1
-  beamHalfLength: 20
+  beamRange: 8
+  beamHalfWidth: 0.6
+  ambushTracer: {r: 0.72, g: 0.8, b: 0.86, a: 0.4}
+  batteryTracer: {r: 1, g: 0.62, b: 0.25, a: 0.85}
   damageMultiplier: 1
   rangeMultiplier: 1
   sortingOrder: 15
