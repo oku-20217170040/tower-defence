@@ -312,6 +312,10 @@ namespace Frontline.Core
                 slow.Clear();
                 BuildFields(towers, threat, slow);
 
+                // Yem her dalga TAZELENIR; etkisi kalici degildir (spec 3.3).
+                // Runtime'daki Battlefield.ApplyDecoys ile ayni kural.
+                ApplyDecoys(towers, decoy);
+
                 float unitHp = settings.BaseUnitHp * (1f + settings.HpGrowthPerWave * (wave - 1));
                 int toSpawn = (int)Math.Round(
                     settings.BaseUnitsPerWave + settings.UnitsAddedPerWave * (wave - 1));
@@ -348,7 +352,7 @@ namespace Frontline.Core
 
                     // Hareket
                     for (int i = 0; i < active.Count; i++)
-                        Advance(active[i], slow, recon, settings, dt);
+                        Advance(active[i], slow, recon, decoy, settings, dt);
 
                     // Ates. Kuleler hedeflerini AYNI anlik durumdan secer;
                     // sirali modelde bu adim yoktu ve her birlik her kulenin
@@ -422,6 +426,45 @@ namespace Frontline.Core
             return result;
         }
 
+        /// <summary>
+        /// Yem kulelerini tazeler.
+        ///
+        /// UYARI (21 Agu 2026'da fark edildi): bu adim simulatore BUGUN
+        /// eklendi. Oncesinde DecoyField olusturuluyor ama HIC
+        /// doldurulmuyordu - yani bu tarihe kadarki butun denge
+        /// olcumlerinde yem kulesi etkisizdi. Yem alan bir politika
+        /// olculmedigi icin sonuclar bundan etkilenmedi, ama kor birlik
+        /// (yemi yok sayar) ancak bu adim olmadan olculemezdi.
+        /// </summary>
+        private void ApplyDecoys(List<TowerSpec> towers, DecoyField decoy)
+        {
+            for (int i = 0; i < towers.Count; i++)
+            {
+                TowerSpec tower = towers[i];
+                if (tower.Kind != TowerKind.Decoy) continue;
+
+                int reach = (int)tower.Radius;
+                float radiusSq = tower.Radius * tower.Radius;
+
+                for (int y = tower.Y - reach; y <= tower.Y + reach; y++)
+                {
+                    for (int x = tower.X - reach; x <= tower.X + reach; x++)
+                    {
+                        if (!grid.InBounds(x, y)) continue;
+
+                        int cell = grid.Index(x, y);
+                        if (!grid.IsWalkable(cell)) continue;
+
+                        float dx = x - tower.X;
+                        float dy = y - tower.Y;
+                        if (dx * dx + dy * dy > radiusSq) continue;
+
+                        decoy.Apply(cell);
+                    }
+                }
+            }
+        }
+
         private void BuildFields(List<TowerSpec> towers, ThreatField threat, SlowField slow)
         {
             for (int i = 0; i < towers.Count; i++)
@@ -477,7 +520,8 @@ namespace Frontline.Core
             return unit;
         }
 
-        private void Advance(Unit unit, SlowField slow, ReconMap recon, Settings settings, float dt)
+        private void Advance(Unit unit, SlowField slow, ReconMap recon, DecoyField decoy,
+                             Settings settings, float dt)
         {
             if (!unit.Alive || unit.PathIndex >= unit.Path.Count - 1) return;
 
@@ -495,6 +539,9 @@ namespace Frontline.Core
                 int cell = unit.Path[unit.PathIndex];
                 unit.Visited.Add(cell);
                 recon.Deposit(cell, settings.DepositPerCell * unit.Profile.DepositMultiplier);
+
+                // Kor birlik yalani ortaya cikarir: gectigi hucrede yem kalmaz.
+                if (unit.Profile.ErasesDecoy) decoy.Erase(cell);
             }
         }
 

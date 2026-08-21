@@ -48,6 +48,17 @@ namespace Frontline.Core
             applyCounts[index]++;
         }
 
+        /// <summary>
+        /// Tek bir hucredeki yemi siler. Kor birlik icindir: yalani
+        /// ortaya cikarmak, o hucrenin sayacini da sifirlar ki oyuncu
+        /// tazeledigende yem yeniden TAM guc uygulansin.
+        /// </summary>
+        public void Erase(int index)
+        {
+            values[index] = 0f;
+            applyCounts[index] = 0;
+        }
+
         public void Clear()
         {
             Array.Clear(values, 0, values.Length);

@@ -95,6 +95,13 @@ namespace Frontline.Core
         /// <summary>Tehdit alanini siler (kralice).</summary>
         public bool ClearsThreat;
 
+        /// <summary>
+        /// Gectigi hucrelerdeki yemi siler (kor birlik). Yalan onun
+        /// uzerinde islemez ve YALANI ORTAYA CIKARIR: arkadan gelen
+        /// birlikler de o hucrede yeme kanmaz.
+        /// </summary>
+        public bool ErasesDecoy;
+
         /// <summary>Taban birlik: butun carpanlar 1, hicbir ozel davranis yok.</summary>
         public static UnitProfile Infantry()
         {
