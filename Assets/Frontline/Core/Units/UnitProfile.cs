@@ -78,8 +78,11 @@ namespace Frontline.Core
 
         /// <summary>
         /// Bu turun kesif sapmasi. 0 ise taban sapma kullanilir.
-        /// Taban sapma 0,35 olculmus bir sabittir; izci onu birlik basina
-        /// YUKSELTIR, tabani dusurmez.
+        ///
+        /// Taban 0,12'dir ve kesfi TASIYAN birlik izcidir (21 Agu olcumu).
+        /// Onceki taban 0,35'ti; o deger butun birlikler ayni sapmayi
+        /// tasirken olculmustu ve o kurulumda izci gereksiz kaliyordu
+        /// (entropi 0,750 -> 0,789).
         /// </summary>
         public float ExplorationNoiseOverride;
 
@@ -108,9 +111,11 @@ namespace Frontline.Core
         }
 
         /// <summary>
-        /// Verilen tur icin taban profil. SAYILAR HENUZ OLCULMEDI - Plan 8
-        /// Gorev 2-6 her turu tek tek tarayacak. Buradaki degerler yalnizca
-        /// baslangic noktasidir; olcum yapilmadan koda gecmis sayilmazlar.
+        /// Verilen tur icin taban profil.
+        ///
+        /// IZCI OLCULDU (21 Agu 2026). Digerlerinin sayilari HENUZ
+        /// OLCULMEDI - Plan 8 Gorev 3-6 her turu tek tek tarayacak;
+        /// buradaki degerler yalnizca baslangic noktasidir.
         /// </summary>
         public static UnitProfile For(UnitType type)
         {
@@ -119,9 +124,15 @@ namespace Frontline.Core
 
             if (type == UnitType.Scout)
             {
+                // Olculen (taban sapma 0,12, dalga basina koridor entropisi):
+                //   izci yok  -> 0,428
+                //   izci %25  -> 0,575   (secilen)
+                //   izci %50  -> 0,694   (oyun kolaylasiyor: sizinti 4,1 -> 2,3)
+                // Sapma zayif bir dugme: 0,5 ile 0,85 arasi entropiyi yalnizca
+                // 0,552'den 0,584'e tasiyor. 0,7 ortadan secildi.
                 profile.HpMultiplier = 0.5f;
                 profile.SpeedMultiplier = 1.6f;
-                profile.ExplorationNoiseOverride = 0.5f;
+                profile.ExplorationNoiseOverride = 0.7f;
             }
             else if (type == UnitType.Soldier)
             {

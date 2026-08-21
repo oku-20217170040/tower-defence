@@ -94,6 +94,14 @@ namespace Frontline.Tests
         private Averages Measure(EconomyPlanner.Policy policy, int seedCount)
         {
             var settings = RunSimulator.Settings.Default();
+
+            // 21 Agustos run'i TABAN SAPMA 0,35 ile ve izcisiz oynandi.
+            // Taban ayni gun ilerleyen saatlerde 0,12'ye dusuruldu (kesif
+            // izciye yuklendi, Plan 8 Gorev 2); referans o degisiklikten
+            // ONCEKI kosullari olcmeli.
+            settings.ExplorationNoise = 0.35f;
+            settings.Composition = null;
+
             int wins = 0;
             float killed = 0f, leaked = 0f, towers = 0f, food = 0f, hp = 0f;
 

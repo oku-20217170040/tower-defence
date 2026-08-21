@@ -40,13 +40,32 @@ Sıra rastgele değil: **ölçüm aracı olmadan tür seçilemez**, o yüzden G�
 
 **Bitti sayılır:** mevcut 147 test yeşil kalır ve yeni bir profille koşulan run ölçülebilir.
 
-### Görev 2 — İzci
+### Görev 2 — İzci — **TAMAMLANDI (21 Ağustos)**
 
-Ölçülecek: hız çarpanı, can çarpanı, sapma (`ExplorationNoise`) ve dalgadaki oranı.
+**Seçilen:** izci payı **%25**, sapma **0,7**, can **x0,5**, hız **x1,6**. Ve birlikte alınan karar: **taban keşif sapması 0,35 → 0,12.**
 
-Aranan eşik — ölçümle doğrulanacak hipotez: **izci yokken ordu bir koridora saplanıp kalmalı, varken alternatif denemeli.** İzcinin değeri "kaç kişi öldü" değil, *ordunun kaç farklı koridor denediği*dir; ölçüm metriği bu olmalı (koridor dağılımının entropisi).
+Ölçüm metriği sızıntı değil, **dalga başına koridor entropisi** (`RunResult.RouteEntropy`). Sızıntı izciyi hiç görmüyor.
 
-Risk: sapma zaten 0,35'te ölçülü bir sabit. İzci onu birlik başına değiştirir; **taban sapma düşürülüp fark izciye yüklenirse** mevcut denge kırılır. Önce izci *ek* olarak ölçülür, taban sabit tutulur.
+Planın öngördüğü risk gerçekleşti: taban 0,35'te bırakılınca izci işe yaramıyor.
+
+| Taban sapma | İzci yok | İzci %25 | İzci %50 |
+|---|---|---|---|
+| 0,35 (eski) | 0,750 | ~0,77 | 0,789 |
+| **0,12 (seçilen)** | **0,428** | **0,575** | 0,694 |
+
+0,35'te izcinin katkısı 0,04 — Plan 8'in pazarlıksız kuralına göre "yalnızca bir can rakamı", yani eklenmemesi gerekirdi. 0,12'de ordu izcisiz saplanıp kalıyor, izciyle keşfe dönüyor: **izci keşfi taşıyan birlik oldu** ve "izciyi öldürerek orduyu kör bırakma" kararı gerçek oldu.
+
+0,35 ölçülmüş bir sabitti, ama o ölçüm **bütün birlikler aynı sapmayı taşırken** yapılmıştı; tür sistemi o varsayımı kaldırdı. İki kalibrasyon dosyası (20 ve 21 Ağustos run'ları) taban sapmayı kendi içinde 0,35'e **sabitler** — o run'lar öyle oynandı.
+
+**Sapma zayıf düğme:** izci sapması 0,5 ile 0,85 arası entropiyi yalnızca 0,552'den 0,584'e taşıyor. Pay ise güçlü: %50'de oyun kolaylaşıyor (sızıntı 4,1 → 2,3), çünkü izci kırılgan.
+
+**Yan bulgu — ordu YERLEŞMİYOR, dağılıyor.** Eski tooltip "ordu dağılarak başlar ve 6-8 dalgada tek koridora yerleşir" diyordu. Ekonomiyle ölçülünce tersi çıktı: erken dalgalar 0,329 → geç dalgalar 0,619. Sebep spec 3.5: kuleler dikildikçe ordu korunmayan koridoru aramaya devam ediyor. `ScoutTests` bunu kayda geçirdi.
+
+**Yan etki — ışın yeniden ölçüldü.** Taban sapma düşünce ışının dengesi kaydı: izcisiz orduda ışın spam'i 12,9 sızıntı veriyor (batarya spam'i 20,9) — yani **baskın** çıkıyor. İzciler orduyu dağıttığı için canlı koşulda 18,7'ye dönüyor (batarya 17,3) ve denge korunuyor. Işın dar bir hatta vurduğu için değeri ordunun ne kadar toplandığına bağlı: **keşif ile ışın doğrudan bağlı.** `BeamTowerTests` artık canlı bileşimi ölçüyor.
+
+**Uygulandı:** `UnitProfile.For(Scout)`, `UnitRoster.Default()` (simülatör ve runtime aynı listeyi kullanır), `UnitAgent.profile`, `UnitSpawner` bileşim seçimi + izcinin görsel ayrımı (küçük, açık mavi). `ScoutTests` (5 test).
+
+> **Doğrulanmamış kalan:** izcinin runtime'da gerçekten hızlı/kırılgan göründüğü ve ordunun izcisiz saplanması — **oynayarak doğrulanmalı.**
 
 ### Görev 3 — Asker
 

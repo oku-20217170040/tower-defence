@@ -27,6 +27,12 @@ namespace Frontline.Runtime
         [Tooltip("Olurse o ana kadarki rotadan silinen miktar. Olumle biten rota sonumlenir.")]
         public float weakenOnDeath = 2.5f;
 
+        /// <summary>
+        /// Bu birligin turu ve carpanlari. Varsayilan piyadedir; spawner
+        /// dalga bilesimine gore degistirir.
+        /// </summary>
+        public UnitProfile profile = UnitProfile.Infantry();
+
         private Battlefield world;
         private HomeBaseHealth homeBase;
         private readonly List<int> path = new List<int>();
@@ -57,6 +63,15 @@ namespace Frontline.Runtime
             visited.Clear();
             pathIndex = 0;
             ReachedBase = false;
+
+            // Rota algisi TURE ozeldir: kor birlik ize ve yeme bakmaz, izci
+            // daha yuksek sapmayla yola cikar. Bunlar sorgu basina verilir,
+            // cunku maliyet modeli butun ordunun ortak nesnesidir.
+            world.CostModel.IgnoresRecon = profile.IgnoresRecon;
+            world.CostModel.IgnoresDecoy = profile.IgnoresDecoy;
+            world.CostModel.ExplorationNoise = profile.ExplorationNoiseOverride > 0f
+                ? profile.ExplorationNoiseOverride
+                : world.explorationNoise;
 
             // Her birlik kendi yon tercihiyle yola cikar. Bu olmadan tum birlikler
             // ayni koridoru secer ve ordu hicbir zaman alternatif denemez.
@@ -95,7 +110,8 @@ namespace Frontline.Runtime
             // Mayin tarlasi alanindaki hucrede gecis suresi uzar. Birlik bunu
             // ALGILAMAZ - rota degismez, yalnizca yavaslar.
             float slow = world.Slow != null ? world.Slow.Get(path[pathIndex]) : SlowField.None;
-            float step = cellsPerSecond / slow * world.Space.CellSize * Time.deltaTime;
+            float step = cellsPerSecond * profile.SpeedMultiplier / slow
+                         * world.Space.CellSize * Time.deltaTime;
 
             transform.position = Vector2.MoveTowards(transform.position, target, step);
 
@@ -109,7 +125,7 @@ namespace Frontline.Runtime
         private void EnterCell(int cell)
         {
             visited.Add(cell);
-            world.Recon.Deposit(cell, depositPerCell);
+            world.Recon.Deposit(cell, depositPerCell * profile.DepositMultiplier);
         }
 
         private void Arrive()
@@ -118,7 +134,7 @@ namespace Frontline.Runtime
             ReachedBase = true;
 
             // Basarili rota guclenir - ordun ogrenmesi budur.
-            world.Recon.DepositTrail(visited, reinforceOnSuccess);
+            world.Recon.DepositTrail(visited, reinforceOnSuccess * profile.ReinforceMultiplier);
 
             // Varan birlik de listeden cikmali. Cikmazsa kuleler yok edilmis
             // hedeflere ates etmeye devam eder.
@@ -137,7 +153,7 @@ namespace Frontline.Runtime
             if (!active) return;
             active = false;
 
-            world.Recon.WeakenTrail(visited, weakenOnDeath);
+            world.Recon.WeakenTrail(visited, weakenOnDeath * profile.WeakenMultiplier);
             world.UnregisterUnit(this);
 
             // Olum ACIK renkte soner.

@@ -58,12 +58,18 @@ namespace Frontline.Runtime
                  "eder. 3 olcumle secildi: suru direnir ama 5-6 dalgada teslim olur.")]
         public float attractionWeight = 3f;
 
-        [Tooltip("Kesif orani. Her birlige yon tercihi katar. 0 = tum birlikler ayni " +
-                 "koridoru secer ve ordu hicbir zaman alternatif denemez, yani " +
-                 "ogrenme olmaz. 0.35 olcumle secildi: ordu dagilarak baslar ve " +
-                 "6-8 dalgada tek koridora yerlesir.")]
+        [Tooltip("TABAN kesif orani. Profili kendi sapmasini vermeyen her birlik " +
+                 "bunu kullanir. 0 = tum birlikler ayni koridoru secer ve ordu " +
+                 "hicbir zaman alternatif denemez. " +
+                 "0,12 olcumle secildi (21 Agu 2026). Onceki deger 0,35'ti ve o " +
+                 "olcum BUTUN BIRLIKLER AYNI SAPMAYI TASIRKEN yapilmisti; tur " +
+                 "sistemi gelince kesif izciye yuklendi. Dalga basina koridor " +
+                 "entropisi: taban 0,35'te izcisiz 0,750 / izcili 0,789 (izci " +
+                 "gereksiz), taban 0,12'de izcisiz 0,428 / izcili 0,630 (izci " +
+                 "TASIYICI). Yani ordu izcisiz saplanip kalir; izciyi oldurmek " +
+                 "orduyu kor birakir. Karar ancak boyle gercek olur.")]
         [Range(0f, 0.9f)]
-        public float explorationNoise = 0.35f;
+        public float explorationNoise = 0.12f;
 
         [Header("Gorunum")]
         [Tooltip("Bir hucrenin dunya birimi cinsinden kenar uzunlugu.")]

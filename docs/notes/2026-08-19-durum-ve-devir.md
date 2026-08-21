@@ -2,8 +2,8 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 21 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 147 EditMode testi, 147 geçiyor (21 Ağu 2026)
-**Sıradaki iş:** Plan 8 — birlik türleri (izci, asker, kör, kuluçka, kraliçe). **Plan 7 bitti** (Işın 21 Ağu'da ölçülüp eklendi). Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
+**Test durumu:** 157 EditMode testi, 157 geçiyor (21 Ağu 2026)
+**Sıradaki iş:** Plan 8 Görev 3 — Asker. Görev 1 (ölçüm altyapısı) ve Görev 2 (İzci) bitti; **Plan 7 de bitti**. Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
 
@@ -96,7 +96,7 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 
 | Sabit | Değer | Neden bu değer |
 |---|---|---|
-| Keşif oranı | 0,35 | 0 iken öğrenme hiç olmuyor; 0,5 iken ordu asla karar veremiyor |
+| Keşif oranı (taban) | **0,12** | 21 Ağu'da 0,35'ten düşürüldü: keşif izciye yüklendi. 0,35'te izci gereksiz kalıyordu (entropi 0,750→0,789), 0,12'de taşıyıcı oluyor (0,428→0,575). Eski 0,35 ölçümü bütün birlikler aynı sapmayı taşırken yapılmıştı |
 | Çekim ağırlığı | 3 | 6 iken doymuş iz bir duvar; 2 iken sürü ilk dalgada pes ediyor |
 | Tehdit ağırlığı | 3 | — |
 | Birlik başına iz | 2 (0,5 yürürken + 1,5 varışta) | — |

@@ -197,6 +197,12 @@ namespace Frontline.Tests
         {
             var settings = RunSimulator.Settings.Default();
             settings.HpGrowthPerWave = 0.15f;
+
+            // Referans run TABAN SAPMA 0,35 ile ve izcisiz oynandi. Taban
+            // 21 Agustos'ta 0,12'ye dusuruldu (kesif izciye yuklendi); burada
+            // sabitlenmezse kalibrasyon oynanmamis bir kosulu olcer.
+            settings.ExplorationNoise = 0.35f;
+            settings.Composition = null;
             return settings;
         }
 

@@ -98,6 +98,19 @@ namespace Frontline.Core
             public float WaveTimeout;
 
             /// <summary>
+            /// Taban kesif sapmasi. Profili kendi sapmasini vermeyen her
+            /// birlik bunu kullanir.
+            ///
+            /// 0,12 olcumle secildi (21 Agu 2026). Onceki deger 0,35'ti ve o
+            /// olcum BUTUN BIRLIKLER AYNI SAPMAYI TASIRKEN yapilmisti; tur
+            /// sistemi gelince kesif izciye yuklendi. Dalga basina koridor
+            /// entropisi: taban 0,35'te izcisiz 0,750 / izcili 0,789 (izci
+            /// gereksiz), taban 0,12'de izcisiz 0,428 / izcili 0,630 (izci
+            /// tasiyici).
+            /// </summary>
+            public float ExplorationNoise;
+
+            /// <summary>
             /// Dalga bilesimi. null ya da bos ise HEPSI PIYADEDIR.
             ///
             /// Varsayilanin piyade kalmasi sarttir: RunCalibrationTests ve
@@ -122,7 +135,8 @@ namespace Frontline.Core
                     DepositPerCell = 0.5f,
                     ReinforceOnSuccess = 1.5f,
                     WeakenOnDeath = 2.5f,
-                    WaveTimeout = 600f
+                    WaveTimeout = 600f,
+                    ExplorationNoise = 0.12f
                 };
             }
         }
@@ -150,6 +164,36 @@ namespace Frontline.Core
             public int TotalKilled;
             public int TotalLeaked;
             public int HomeBaseHpLeft;
+
+            /// <summary>
+            /// Haritanin ORTA SATIRINDA her sutundan kac birlik gecti.
+            /// Sutun indeksiyle hizali.
+            ///
+            /// Neden bu metrik: izcinin degeri "kac kisi oldu" degil,
+            /// ORDUNUN KAC FARKLI KORIDOR DENEDIGIDIR. Sizinti sayisi
+            /// izciyi hic gormuyor (olcum: %30 izci -> 5,4 sizinti,
+            /// piyade 5,3). Kesif ancak dagilima bakarak olculur.
+            /// </summary>
+            public int[] ColumnUsage;
+
+            /// <summary>
+            /// DALGA BASINA koridor dagilimi entropisinin ortalamasi [0, 1].
+            /// 0 = ordu o dalgada tek koridora saplandi, 1 = koridorlari esit
+            /// deniyor. Izcinin olcum metrigi budur.
+            ///
+            /// Neden dalga basina: butun run'a yayilan entropi doyuyor
+            /// (olcumde 0,954) cunku yogunlasma dalga ICINDE olur ve dalgalar
+            /// arasinda koridor degistikce ortalama duzlesir. Toplam dagilim
+            /// ordunun bir dalgada karar verip vermedigini GORMEZ.
+            /// </summary>
+            public float RouteEntropy;
+
+            /// <summary>
+            /// Dalga dalga koridor entropisi (1 tabanli; 0. eleman
+            /// kullanilmaz). Ordunun "dagilarak baslayip yerlesmesi"
+            /// ancak buna bakarak gorulur - ortalama onu duzler.
+            /// </summary>
+            public float[] WaveEntropy;
         }
 
         private sealed class Unit
@@ -203,7 +247,9 @@ namespace Frontline.Core
             var threat = new ThreatField(grid);
             var slow = new SlowField(grid);
 
-            const float BaseExplorationNoise = 0.35f;
+            float BaseExplorationNoise = settings.ExplorationNoise > 0f
+                ? settings.ExplorationNoise
+                : 0.35f;
 
             var model = new RouteCostModel(recon, decoy, threat)
             {
@@ -214,7 +260,17 @@ namespace Frontline.Core
             var finder = new RoutePathfinder(grid, model);
             var random = new Random(seed);
 
-            var result = new RunResult { LostAtWave = -1 };
+            var result = new RunResult
+            {
+                LostAtWave = -1,
+                ColumnUsage = new int[grid.Width],
+                WaveEntropy = new float[settings.TotalWaves + 1]
+            };
+            int midRow = grid.Height / 2;
+
+            var waveColumns = new int[grid.Width];
+            double entropySum = 0d;
+            int entropyWaves = 0;
             int baseHp = settings.HomeBaseHp;
 
             var active = new List<Unit>();
@@ -226,6 +282,8 @@ namespace Frontline.Core
             for (int wave = 1; wave <= settings.TotalWaves && baseHp > 0; wave++)
             {
                 if (planner != null) planner.OnWaveStart(wave, towers);
+
+                Array.Clear(waveColumns, 0, waveColumns.Length);
 
                 // Kule listesi degismis olabilir; alanlar her dalga yeniden kurulur.
                 threat.Clear();
@@ -253,7 +311,12 @@ namespace Frontline.Core
 
                         var unit = Spawn(finder, model, random, recon, unitHp, pool,
                                          settings, profile, BaseExplorationNoise);
-                        if (unit != null) active.Add(unit);
+                        if (unit != null)
+                        {
+                            active.Add(unit);
+                            RecordCorridorChoice(unit, midRow, result.ColumnUsage);
+                            RecordCorridorChoice(unit, midRow, waveColumns);
+                        }
 
                         toSpawn--;
                         spawnTimer = settings.SpawnInterval;
@@ -310,6 +373,12 @@ namespace Frontline.Core
                     }
                 }
 
+                float waveEntropy = NormalizedEntropy(waveColumns, midRow);
+                if (wave < result.WaveEntropy.Length) result.WaveEntropy[wave] = waveEntropy;
+
+                entropySum += waveEntropy;
+                entropyWaves++;
+
                 recon.Decay();
 
                 if (baseHp > 0 && planner != null) planner.OnWaveEnd(wave);
@@ -319,6 +388,7 @@ namespace Frontline.Core
 
             result.Survived = baseHp > 0;
             result.HomeBaseHpLeft = baseHp > 0 ? baseHp : 0;
+            result.RouteEntropy = entropyWaves > 0 ? (float)(entropySum / entropyWaves) : 0f;
             return result;
         }
 
@@ -474,6 +544,55 @@ namespace Frontline.Core
             float dx = grid.X(cell) - tower.X;
             float dy = grid.Y(cell) - tower.Y;
             return dx * dx + dy * dy;
+        }
+
+        /// <summary>
+        /// Birligin rotasinin orta satirda hangi sutundan gectigini isaretler.
+        /// Rota spawn aninda bir kez hesaplandigi icin bu, birligin KARARIDIR.
+        /// </summary>
+        private void RecordCorridorChoice(Unit unit, int midRow, int[] columnUsage)
+        {
+            for (int i = 0; i < unit.Path.Count; i++)
+            {
+                int cell = unit.Path[i];
+                if (grid.Y(cell) != midRow) continue;
+
+                columnUsage[grid.X(cell)]++;
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Shannon entropisi, MEVCUT sutun sayisina gore normalize edilir -
+        /// kullanilan sutun sayisina gore DEGIL.
+        ///
+        /// Fark onemli: kullanilana gore normalize edilseydi "iki koridoru
+        /// esit kullanan ordu" ile "alti koridoru esit kullanan ordu" ayni
+        /// puani alirdi ve metrik tam da olcmek istedigi seyi (kesif
+        /// genisligini) gormezdi.
+        /// </summary>
+        private float NormalizedEntropy(int[] counts, int midRow)
+        {
+            int available = 0;
+            for (int x = 0; x < grid.Width; x++)
+                if (grid.IsWalkable(grid.Index(x, midRow))) available++;
+
+            if (available <= 1) return 0f;
+
+            int total = 0;
+            for (int i = 0; i < counts.Length; i++) total += counts[i];
+            if (total == 0) return 0f;
+
+            double entropy = 0d;
+            for (int i = 0; i < counts.Length; i++)
+            {
+                if (counts[i] == 0) continue;
+
+                double p = (double)counts[i] / total;
+                entropy -= p * Math.Log(p);
+            }
+
+            return (float)(entropy / Math.Log(available));
         }
 
         /// <summary>

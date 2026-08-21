@@ -93,6 +93,19 @@ namespace Frontline.Tests
         private Averages Measure(TowerKind[] buyOrder, float shotDamage, float shotInterval, int seedCount)
         {
             var settings = RunSimulator.Settings.Default();
+
+            // Isin OYNANAN kurulumda olculur: taban sapma 0,12 ve %25 izci.
+            // Bu satir olmadan test saf piyade ordusunu olcerdi - oyunun
+            // artik sahip olmadigi bir kosulu. Ayni tuzak kalibrasyon
+            // testlerinde bir kez yasandi.
+            //
+            // Fark buyuk: izcisiz orduda isin spam'i 12,9 sizinti veriyor
+            // (batarya spam'i 20,9) yani BASKIN cikiyor; izciler orduyu
+            // dagittigi icin canli kosulda 18,7'ye donuyor (batarya 17,3).
+            // Isin dar bir hatta vurdugu icin degeri ordunun ne kadar
+            // toplandigina baglidir - kesif ile isin dogrudan bagli.
+            settings.Composition = UnitRoster.Default();
+
             int wins = 0;
             float leaked = 0f, hp = 0f;
 
@@ -140,9 +153,9 @@ namespace Frontline.Tests
         [Test]
         public void Beam_InAMix_IsAnEvenTradeWithAnAmbush()
         {
-            // Olculen: pusu yerine isin -> sizinti 5,6 -> 5,3. Yani gercek bir
-            // secim; ne bedava guc ne olu secenek. Mayin tarlasi da tam boyle
-            // secilmisti (x2 yavaslatma, saf pusuyle basa bas).
+            // Olculen (canli kosul): pusu yerine isin -> sizinti 3,3 -> 3,6.
+            // Yani gercek bir secim; ne bedava guc ne olu secenek. Mayin
+            // tarlasi da tam boyle secilmisti (x2, saf pusuyle basa bas).
             var baseline = Measure(Baseline, ShotDamage, ShotInterval, seedCount: 20);
             var withBeam = Measure(WithBeam, ShotDamage, ShotInterval, seedCount: 20);
 
@@ -157,6 +170,7 @@ namespace Frontline.Tests
             // Isinin dusme noktasi burasi. Tek turden kule diken oyuncu
             // isinla, bataryayla oldugundan iyi olmamali - olursa isin
             // baskin strateji olur ve oyun karar barindirmayi birakir.
+            // Olculen (canli kosul): isin 18,7 · batarya 17,3.
             var beamSpam = Measure(new[] { TowerKind.Beam }, ShotDamage, ShotInterval, seedCount: 20);
             var batterySpam = Measure(new[] { TowerKind.Battery }, ShotDamage, ShotInterval, seedCount: 20);
 
@@ -168,9 +182,9 @@ namespace Frontline.Tests
         [Test]
         public void ShotInterval_IsTheBalanceKnob_NotDamage()
         {
-            // Olculen: karisimda hasar 10 ile 45 arasi AYNI sonucu veriyor
-            // (sizinti 5,3), ama aralik 1 sn -> 0,5 sn yapilinca isin spam'i
-            // sizintiyi 15,4'ten 5,5'e dusuruyor. Denge dugmesi aralik.
+            // Olculen: karisimda hasar 10 ile 45 arasi AYNI sonucu veriyor,
+            // ama aralik 1 sn -> 0,5 sn yapilinca isin spam'i sizintiyi
+            // 18,7'den 4,5'e dusuruyor. Denge dugmesi aralik.
             var fast = Measure(new[] { TowerKind.Beam }, ShotDamage, 0.5f, seedCount: 20);
             var chosen = Measure(new[] { TowerKind.Beam }, ShotDamage, ShotInterval, seedCount: 20);
 
@@ -185,7 +199,7 @@ namespace Frontline.Tests
         {
             // Isinin kimligi bu: hat 1 hucre kalinliginda oldugu icin degeri
             // "atis aninda kac birlik hatta" sorusuna bagli. Yavaslatilan
-            // birlik hatta daha uzun kalir. Olculen: 21,8 -> 17,1.
+            // birlik hatta daha uzun kalir. Olculen: 22,3 -> 17,9.
             var withMinefield = Measure(
                 new[] { TowerKind.Battery, TowerKind.Ambush, TowerKind.Beam,
                         TowerKind.Minefield, TowerKind.Ambush },
