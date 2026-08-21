@@ -126,13 +126,28 @@ namespace Frontline.Runtime
             var go = new GameObject("Tower_" + kind);
             go.transform.SetParent(transform, false);
 
-            float diameter = world.Space.CellSize * towerScale;
+            // Blender asset'i varsa o kullanilir; yoksa daire cizilir.
+            float scale = towerScale;
+            Sprite sprite = PrimitiveSprites.Circle();
+            Color color = ColorFor(kind);
+
+            ArtLibrary art = ArtLibrary.Instance;
+            ArtLibrary.TowerArt entry;
+
+            if (art != null && art.TryGetTower(kind, out entry))
+            {
+                sprite = entry.sprite;
+                if (entry.scale > 0f) scale = entry.scale;
+                color = entry.tint.a > 0f ? entry.tint : Color.white;
+            }
+
+            float diameter = world.Space.CellSize * scale;
             go.transform.localScale = new Vector3(diameter, diameter, 1f);
 
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = PrimitiveSprites.Circle();
+            renderer.sprite = sprite;
             renderer.sortingOrder = sortingOrder;
-            renderer.color = ColorFor(kind);
+            renderer.color = color;
 
             var tower = go.AddComponent<Emplacement>();
             tower.kind = kind;

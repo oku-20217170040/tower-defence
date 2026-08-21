@@ -129,12 +129,28 @@ namespace Frontline.Runtime
                 label = "Unit_Queen";
             }
 
+            // Blender asset'i varsa o kullanilir; yoksa daire cizilir.
+            // Boylece asset'ler PARCA PARCA gelebilir ve oyun hicbir anda
+            // bozulmaz (bkz. ArtLibrary).
+            Sprite sprite = PrimitiveSprites.Circle();
+            ArtLibrary art = ArtLibrary.Instance;
+            ArtLibrary.UnitArt entry;
+
+            if (art != null && art.TryGetUnit(profile.Type, out entry))
+            {
+                sprite = entry.sprite;
+                if (entry.scale > 0f) scale = entry.scale;
+
+                // Alpha 0 = "sprite kendi renkleriyle cizilsin".
+                color = entry.tint.a > 0f ? entry.tint : Color.white;
+            }
+
             float diameter = world.Space.CellSize * scale;
             go.transform.localScale = new Vector3(diameter, diameter, 1f);
             go.name = label;
 
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = PrimitiveSprites.Circle();
+            renderer.sprite = sprite;
             renderer.color = color;
             renderer.sortingOrder = sortingOrder;
 
