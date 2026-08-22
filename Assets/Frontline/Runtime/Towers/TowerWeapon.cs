@@ -189,7 +189,10 @@ namespace Frontline.Runtime
             FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
                            fx.muzzleScale * cell, tracerColor, tracerSeconds);
 
-            Projectile.Fire(bulletSprite, muzzle, target.transform.position,
+            // Hedefin KENDISI verilir, konumu degil: mermi ucus boyunca
+            // ona kilitlenir ve patlama birligin uzerinde olur. Sabit
+            // noktaya ucarken hizli birlikte patlama arkada kaliyordu.
+            Projectile.Fire(bulletSprite, muzzle, target,
                             fx.bulletScale * cell, fx.bulletSpeed * cell,
                             tracerColor,
                             impactSprite, fx.impactScale * cell, tracerColor);
@@ -269,9 +272,9 @@ namespace Frontline.Runtime
                 // Isinin carpmasi VURULAN HER BIRLIGIN uzerinde gorunur:
                 // delici silahin degeri "kac kisiyi bicti" bilgisidir ve
                 // tek bir cizgi bunu anlatmiyordu.
-                FxBurst.Impact(impactSprite, unit.transform.position,
-                               fx.impactScale * world.Space.CellSize,
-                               BeamFlash.color);
+                FxBurst.ImpactOn(impactSprite, unit.transform,
+                                 fx.impactScale * world.Space.CellSize,
+                                 BeamFlash.color);
             }
 
             FxBurst.Muzzle(muzzleSprite, origin, direction,

@@ -12,9 +12,17 @@ namespace Frontline.Runtime
     /// sizinti) kayardi. Bu yuzden mermi yalnizca "kule ates etti"
     /// bilgisini gozle tasir; vardigi yerde carpma efektini dogurur.
     ///
-    /// Hedefin O ANKI konumu dogumda yakalanir, mermi hedefi takip
-    /// ETMEZ: takip eden mermi olen birlikte kaybolur ve atisin bittigi
-    /// gorunmez. Kacirilan atis da bilgidir.
+    /// Mermi hedefe KILITLENIR: ucus boyunca hedefin o anki konumuna
+    /// yonelir, boylece patlama her zaman birligin UZERINDE olur.
+    ///
+    /// Once dogumda yakalanan SABIT bir noktaya uculuyordu; hizli birlikte
+    /// patlama gorunur sekilde ARKADA kaliyordu (22 Agu kullanici geri
+    /// bildirimi). Hasar zaten TowerWeapon icinde surekli uygulaniyor -
+    /// yani gorselin hedefi kacirmasinin bilgi degeri yoktu, yalnizca
+    /// oyuncuya yanlis sey soyluyordu.
+    ///
+    /// Hedef ucus sirasinda olur ya da havuza donerse mermi son bilinen
+    /// konumuna gidip orada patlar: atisin bittigi yine gorunur.
     ///
     /// Havuzlanir; kalabalik dalgada ekranda onlarca mermi olur.
     /// </summary>
@@ -24,10 +32,9 @@ namespace Frontline.Runtime
         private static Transform root;
 
         private SpriteRenderer spriteRenderer;
-        private Vector2 from;
         private Vector2 to;
-        private float travel;      // toplam ucus suresi
-        private float age;
+        private float speed;       // dunya birimi / saniye
+        private UnitHealth target;
 
         private Sprite impactSprite;
         private float impactSize;
@@ -56,18 +63,19 @@ namespace Frontline.Runtime
         /// Namlu ucundan hedefe bir mermi yollar. Hiz hucre/saniye
         /// cinsindendir; dunya birimine cell boyutuyla cevrilir.
         /// </summary>
-        public static void Fire(Sprite sprite, Vector2 origin, Vector2 target,
+        public static void Fire(Sprite sprite, Vector2 origin, UnitHealth target,
                                 float size, float speed, Color color,
                                 Sprite impact, float impactScale, Color impactTint,
                                 int sortingOrder = 31)
         {
-            float distance = Vector2.Distance(origin, target);
-            if (speed <= 0f) return;
+            if (speed <= 0f || target == null) return;
+
+            Vector2 destination = target.transform.position;
 
             // Cok kisa mesafede ucus animasyonu okunmaz; dogrudan carpma.
-            if (distance < 0.01f)
+            if (Vector2.Distance(origin, destination) < 0.01f)
             {
-                FxBurst.Impact(impact, target, impactScale, impactTint);
+                FxBurst.Impact(impact, destination, impactScale, impactTint);
                 return;
             }
 
@@ -76,45 +84,69 @@ namespace Frontline.Runtime
             shot.spriteRenderer.color = color;
             shot.spriteRenderer.sortingOrder = sortingOrder;
 
-            shot.from = origin;
-            shot.to = target;
-            shot.travel = distance / speed;
-            shot.age = 0f;
+            shot.to = destination;
+            shot.speed = speed;
+            shot.target = target;
 
             shot.impactSprite = impact;
             shot.impactSize = impactScale;
             shot.impactColor = impactTint;
 
-            Vector2 direction = (target - origin).normalized;
-
             Transform t = shot.transform;
             t.position = origin;
             t.localScale = new Vector3(size, size, 1f);
+            shot.FaceDestination();
+        }
 
-            // Sprite'in burnu yerel -Y'de uretiliyor (bkz. tools/blender/fx.py),
-            // yani kule ve birliklerle AYNI kural: aci + 90 derece.
-            t.rotation = Quaternion.Euler(
+        /// <summary>
+        /// Burnu gidilen yone cevirir. Hedef kacarken mermi de donmeli;
+        /// yalnizca dogumda dondurulseydi kilitlenen mermi yan yan
+        /// ucuyormus gibi gorunurdu. Sprite'in burnu yerel -Y'de
+        /// uretiliyor (bkz. tools/blender/fx.py), yani kule ve
+        /// birliklerle AYNI kural: aci + 90 derece.
+        /// </summary>
+        private void FaceDestination()
+        {
+            Vector2 direction = to - (Vector2)transform.position;
+            if (direction.sqrMagnitude < 0.000001f) return;
+
+            transform.rotation = Quaternion.Euler(
                 0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + 90f);
         }
 
         private void Update()
         {
-            age += Time.deltaTime;
-            float t = travel > 0f ? age / travel : 1f;
+            // KILITLENME: hedef hala ayakta ve sahnedeyse varis noktasi
+            // her karede guncellenir. Havuza donmus bir birligin
+            // transform'u baska bir birlige ait olabilecegi icin
+            // aktiflik de kontrol edilir - yoksa mermi yanlis birligi
+            // kovalar.
+            if (target != null && target.IsAlive && target.gameObject.activeInHierarchy)
+                to = target.transform.position;
+            else
+                target = null;
 
-            if (t >= 1f)
+            Vector2 position = transform.position;
+            Vector2 delta = to - position;
+            float step = speed * Time.deltaTime;
+
+            if (delta.magnitude <= step)
             {
-                // Vardi: carpma patlamasi burada dogar. Efektin yeri
-                // birligin uzerindir, kulenin degil - oyuncu vurusun
-                // NEREDE oldugunu gormeli.
-                FxBurst.Impact(impactSprite, to, impactSize, impactColor);
+                // Vardi: carpma patlamasi HEDEFIN uzerinde dogar ve
+                // sonene kadar onunla birlikte yol alir.
+                if (target != null)
+                    FxBurst.ImpactOn(impactSprite, target.transform, impactSize, impactColor);
+                else
+                    FxBurst.Impact(impactSprite, to, impactSize, impactColor);
 
+                target = null;
                 gameObject.SetActive(false);
                 pool.Push(this);
                 return;
             }
 
-            transform.position = Vector2.Lerp(from, to, t);
+            transform.position = position + delta.normalized * step;
+            FaceDestination();
         }
     }
 }

@@ -33,6 +33,7 @@ namespace Frontline.Runtime
         private float startAngle;
         private float life;
         private float age;
+        private Transform follow;
 
         private static FxBurst Rent()
         {
@@ -63,7 +64,7 @@ namespace Frontline.Runtime
                                   int sortingOrder = 33)
         {
             Spawn(sprite, position, AngleFor(direction), size, size * 0.65f,
-                  color, seconds, 0f, sortingOrder);
+                  color, seconds, 0f, sortingOrder, null);
         }
 
         /// <summary>
@@ -77,12 +78,36 @@ namespace Frontline.Runtime
                                   int sortingOrder = 34)
         {
             Spawn(sprite, position, Random.Range(0f, 360f), size * 0.45f, size,
-                  color, seconds, Random.Range(-70f, 70f), sortingOrder);
+                  color, seconds, Random.Range(-70f, 70f), sortingOrder, null);
+        }
+
+        /// <summary>
+        /// Bir birlige KILITLENMIS carpma: patlama sonene kadar hedefin
+        /// uzerinde kalir.
+        ///
+        /// Neden gerekli (22 Agu kullanici geri bildirimi): patlama 0,22
+        /// sn goruniyor ve birlik o sirada yol almaya devam ediyor. Sabit
+        /// noktada duran patlama hizli birligin ARKASINDA kaliyordu -
+        /// vurulan sey ile patlayan yer ayrisinca oyuncu "vurdu mu"
+        /// sorusunu okuyamiyor.
+        ///
+        /// Hedef sonme bitmeden olur ya da havuza donerse patlama son
+        /// konumunda kalip normal sekilde soner.
+        /// </summary>
+        public static void ImpactOn(Sprite sprite, Transform target, float size,
+                                    Color color, float seconds = 0.22f,
+                                    int sortingOrder = 34)
+        {
+            if (target == null) return;
+
+            Spawn(sprite, target.position, Random.Range(0f, 360f), size * 0.45f,
+                  size, color, seconds, Random.Range(-70f, 70f), sortingOrder,
+                  target);
         }
 
         private static void Spawn(Sprite sprite, Vector2 position, float angle,
                                   float from, float to, Color color, float seconds,
-                                  float spin, int sortingOrder)
+                                  float spin, int sortingOrder, Transform follow)
         {
             if (seconds <= 0f || to <= 0f) return;
 
@@ -105,6 +130,7 @@ namespace Frontline.Runtime
             burst.spinDegrees = spin;
             burst.life = seconds;
             burst.age = 0f;
+            burst.follow = follow;
         }
 
         private static float AngleFor(Vector2 direction)
@@ -117,6 +143,15 @@ namespace Frontline.Runtime
         {
             age += Time.deltaTime;
             float t = Mathf.Clamp01(age / life);
+
+            // Kilitli patlama hedefiyle birlikte yol alir. Havuza donmus
+            // bir birligin transform'u baska birine ait olabilecegi icin
+            // aktiflik kontrol edilir; kopan patlama son yerinde soner.
+            if (follow != null)
+            {
+                if (follow.gameObject.activeInHierarchy) transform.position = follow.position;
+                else follow = null;
+            }
 
             float size = Mathf.Lerp(startSize, endSize, t);
             transform.localScale = new Vector3(size, size, 1f);
@@ -133,6 +168,7 @@ namespace Frontline.Runtime
 
             if (t >= 1f)
             {
+                follow = null;
                 gameObject.SetActive(false);
                 pool.Push(this);
             }
