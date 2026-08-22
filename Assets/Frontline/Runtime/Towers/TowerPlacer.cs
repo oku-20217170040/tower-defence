@@ -102,8 +102,14 @@ namespace Frontline.Runtime
             if (Input.GetKeyDown(KeyCode.Alpha4)) Select(TowerKind.Minefield);
             if (Input.GetKeyDown(KeyCode.Alpha5)) Select(TowerKind.Beam);
 
-            if (Input.GetMouseButtonDown(0))
-                TryPlaceAt(Input.mousePosition);
+            // Yerlestirme parmak KALKINCA olur, basinca degil: basma ani
+            // ayni zamanda haritayi kaydirmanin baslangicidir. Kaydirma
+            // esigini asmis bir dokunus kule kurmaz (bkz. MapCamera).
+            if (Input.GetMouseButtonUp(0))
+            {
+                bool panned = MapCamera.Instance != null && MapCamera.Instance.DraggedSincePress;
+                if (!panned) TryPlaceAt(Input.mousePosition);
+            }
         }
 
         private void Select(TowerKind kind)

@@ -56,6 +56,15 @@ namespace Frontline.Runtime
         {
             if (targetCamera == null) return;
 
+            // Sahnede gezinme kamerasi varsa kadraj ONUNDUR. Ikisi ayni
+            // kareyi ayarlarsa oyuncunun kaydirdigi kamera her harita
+            // uretiminde geri firlar.
+            if (MapCamera.Instance != null)
+            {
+                MapCamera.Instance.ResetView();
+                return;
+            }
+
             targetCamera.orthographic = true;
             targetCamera.transform.position = new Vector3(0f, 0f, -10f);
 

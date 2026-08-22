@@ -18,8 +18,15 @@ namespace Frontline.Runtime
         [Tooltip("Dar eksen. Dikey tutusta ekranin genisligi.")]
         public int width = 11;
 
-        [Tooltip("Uzun eksen. Dikey tutusta ekranin yuksekligi.")]
-        public int height = 20;
+        [Tooltip("Uzun eksen. 20'den 30'a cikarildi (23 Agu): harita artik " +
+                 "ekrana sigmiyor, icinde geziliyor (MapCamera). " +
+                 "OLCULDU - yukseklik dengeye neredeyse dokunmuyor: " +
+                 "11x20'de oldurme 221 / sizinti 4,0 / us 26,0, " +
+                 "11x30'da 219,8 / 5,3 / 24,8 (12 seed, usta oyuncu). " +
+                 "GENISLIK ise pahali: 15x26'da run tamamen cokuyor " +
+                 "(oldurme 5,7, sizinti 30). Sebebi arastirilmadi; " +
+                 "genisletmek isteyen ONCE olcsun.")]
+        public int height = 30;
 
         [Tooltip("Kac dikey koridor uretilecek. Spec 9.4: en az 3.")]
         public int corridorCount = 3;

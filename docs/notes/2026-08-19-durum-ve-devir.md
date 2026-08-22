@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 22 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 172 EditMode testi, 172 geçiyor (22 Ağu 2026)
+**Test durumu:** 180 EditMode testi, 180 geçiyor (23 Ağu 2026)
 **Sıradaki iş:** görsel tarafta **kraliçenin hafıza silme efekti** (oyunun en dramatik anı, şu an hiç görünmüyor) ve **üs görseli**. Denge tarafında üç açık iş: uyarlamalı yerleştirme (Plan 8 Görev 4'ü açar), ekonomi sıkılaştırması, kör birlik. **Plan 6 (görsel) neredeyse bitti, Plan 7 bitti, Plan 8'in ölçülebilir kısmı bitti.** Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -90,6 +90,24 @@ Eski `Assets/Scripts/` hâlâ duruyor, silinmedi.
 
 Aşağıdaki tablodaki savaş sayıları hâlâ sıralı modelle seçilmiştir; eski üç denge test dosyasının başına da uyarı konuldu. Testler geçiyor ama ölçtükleri şey gerçek oyun değil.
 
+## Harita büyüdü: 11x20 → 11x30 (23 Ağustos 2026)
+
+Harita artık ekrana sığmıyor, **içinde geziliyor** (`Runtime/View/MapCamera.cs`): tek parmakla sürükle-kaydır, iki parmakla / tekerlekle yakınlaştır, kamera harita sınırlarının dışına çıkmaz.
+
+**Boyut tahminle seçilmedi.** Simülatörle 12 seed, usta oyuncu politikasıyla ölçüldü:
+
+| Harita | Kazanma | Öldürme | Sızıntı | Üs |
+|---|---|---|---|---|
+| 11x20 (eski) | %100 | 221,0 | 4,0 | 26,0 |
+| **11x30 (yeni)** | %100 | 219,8 | 5,3 | 24,8 |
+| 13x26 | %100 | 218,3 | 6,8 | 23,3 |
+| **15x26** | **%0** | **5,7** | **30,0** | **0,0** |
+| 15x20 | %25 | 72,3 | 29,5 | 0,5 |
+
+**Ölçümün asıl bulgusu: yükseklik bedava, genişlik pahalı.** Haritayı uzatmak dengeye neredeyse dokunmuyor (üs 26 → 24,8), ama 13'ten geniş yapmak run'ı tamamen çökertiyor — 15 genişlikte öldürme 221'den 5,7'ye düşüyor. Sebebi araştırılmadı; **haritayı genişletmek isteyen önce ölçsün.** Dikey tutuşlu bir oyunda zaten doğru eksen yükseklik: genişlik ekranı belirler, yükseklik gezilir.
+
+**Kaydırma ile kule kurma ayrımı:** ikisi de tek parmak. Basıldığı yerden 12 pikselden fazla uzaklaşan hareket kaydırmadır ve `TowerPlacer` o dokunuşu yok sayar; yerleştirme artık parmak **kalkınca** oluyor. Eşik olmadan haritayı her kaydırdığında istemediğin yere kule kuruluyor.
+
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME
 
 Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiştirmek isteyen önce ölçmeli.
@@ -107,6 +125,7 @@ Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiş
 | Birlik canı | 10 × (1 + **0,10** × (dalga−1)) | 0,15'te ekonominin hiçbir düğmesi çalışmıyordu: yetersiz kule → az öldürme → az gelir → çöküş sarmalı. 0,10'da eşik yumuşadı |
 | İlk dalga birlik | 8 | 10 iken oyuncu toparlanamadan 4. dalgada kaybediyordu |
 | Dalga temposu | ilk dalga öncesi 8 sn, ilk 4 dalga arası 6 sn, sonra 2 sn | Erken oyunda düşünme süresi zorluktan değerli; oyuncu ilk kulelerini kurmadan boğulmamalı |
+| Harita | **11 x 30**, 3 koridor | Yükseklik dengeye dokunmuyor (üs 26,0 → 24,8), genişlik çökertiyor: 15x26'da öldürme 5,7 / sızıntı 30. 23 Ağu ölçümü |
 | Üs canı | 30 | Zayıf düğme: 50 yapmak kayıp dalgasını 10'dan 11'e taşıdı |
 | Başlangıç besini | **90** | 50'de ilk dalgada YALNIZCA 1 kule kurulabiliyordu (3 koridor varken) — oyuncu geri bildirimi doğrulandı. Dalga geliri 6, öldürme geliri 1 ile birlikte: erken oyun açılıyor, toplam zorluk aynı kalıyor |
 | Işın | **3 hasar / 2 sn, nişan alan delici hat, menzil 40** | Nişan aldığı için ıskalamıyor. hasar 20/aralık 1 → tek başına oyunu çözüyor; 3/2 sn'de karışımda değerli (20,7 → 11,9) ama tek başına işe yaramıyor (30,0) |

@@ -33,9 +33,15 @@ namespace Frontline.EditorTools
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.05f, 0.06f, 0.05f);
 
+            // Harita icinde gezinme: surukle-kaydir + yakinlastir.
+            var mapCamera = camera.gameObject.AddComponent<MapCamera>();
+
             // ── Dunya ───────────────────────────────────────────────
             var worldGo = new GameObject("Battlefield");
             var world = worldGo.AddComponent<Battlefield>();
+
+            mapCamera.world = world;
+            mapCamera.targetCamera = camera;
 
             // ── Gorunum ─────────────────────────────────────────────
             var tilesGo = new GameObject("GridTiles");

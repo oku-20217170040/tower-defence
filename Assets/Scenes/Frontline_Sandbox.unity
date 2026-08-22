@@ -880,6 +880,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1638095032}
   - component: {fileID: 1638095031}
+  - component: {fileID: 1638095033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -953,6 +954,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1638095033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1638095030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77f4519f2ca231e4096aa1cfe6266d30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Frontline.Runtime::Frontline.Runtime.MapCamera
+  world: {fileID: 1896088516}
+  targetCamera: {fileID: 1638095031}
+  minVisibleCells: 10
+  startVisibleWidthCells: 0
+  dragThreshold: 12
+  wheelZoomSpeed: 3
+  padding: 0.25
 --- !u!1 &1639044361
 GameObject:
   m_ObjectHideFlags: 0
@@ -1081,7 +1101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Frontline.Runtime::Frontline.Runtime.Battlefield
   width: 11
-  height: 20
+  height: 30
   corridorCount: 3
   corridorWidth: 2
   seed: 0
