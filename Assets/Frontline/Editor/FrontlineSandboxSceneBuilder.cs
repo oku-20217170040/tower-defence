@@ -50,6 +50,15 @@ namespace Frontline.EditorTools
             var homeBaseGo = new GameObject("HomeBaseHealth");
             var homeBase = homeBaseGo.AddComponent<HomeBaseHealth>();
 
+            // Usun gorseli ve vurulma animasyonu. Sprite ArtLibrary'den
+            // gelir; atanmamissa hicbir sey cizilmez ve oyun calismaya
+            // devam eder.
+            var homeBaseViewGo = new GameObject("HomeBaseView");
+            homeBaseViewGo.AddComponent<SpriteRenderer>();
+            var homeBaseView = homeBaseViewGo.AddComponent<HomeBaseView>();
+            homeBaseView.world = world;
+            homeBaseView.homeBase = homeBase;
+
             // ── Birlikler ────────────────────────────────────────────
             var spawnerGo = new GameObject("UnitSpawner");
             var spawner = spawnerGo.AddComponent<UnitSpawner>();

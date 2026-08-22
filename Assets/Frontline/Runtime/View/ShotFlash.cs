@@ -130,8 +130,13 @@ namespace Frontline.Runtime
             Color c = color;
             c.a = Mathf.Min(1f, color.a * (0.75f + Mathf.Min(hits, 6) * 0.08f));
 
-            ShotFlash.Line(origin, direction, OffscreenLength(origin, direction),
-                           thickness, c, seconds, sortingOrder: 32);
+            // Duz cizgi ELEKTRIK YAYINA cevrildi (22 Agu, kullanici):
+            // ayni kalinlik, ayni "boydan boya kesme", ama yol kirikli ve
+            // her karede yeniden kiriliyor. Kalinlik ve uzunluk kurallari
+            // degismedi - degisen yalnizca cizginin nasil cizildigi.
+            ElectricBeam.Spawn(origin, direction,
+                               OffscreenLength(origin, direction),
+                               thickness, c, seconds);
         }
 
         /// <summary>

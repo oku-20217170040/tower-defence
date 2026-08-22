@@ -50,22 +50,57 @@ namespace Frontline.Runtime
                  "ve isin ekrani kaplayan bir bant gibi duruyordu.")]
         public float beamVisualThickness = 0.05f;
 
-        [Header("Atis izi (KOZMETIK)")]
-        [Tooltip("Iki gorsel iz arasindaki sure. Hasar SUREKLI uygulanir; " +
-                 "iz yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
+        [Header("Atis gorseli (KOZMETIK)")]
+        [Tooltip("Iki gorsel atis arasindaki sure. Hasar SUREKLI uygulanir; " +
+                 "mermi yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
         public float tracerInterval = 0.18f;
 
-        [Tooltip("Iz rengi. Pusu SOLUK ve ince, batarya PARLAK ve kalin - " +
-                 "gorsel hiyerarsi mekanikle ayni kalmali (spec 9.1).")]
+        [Tooltip("Mermi ve patlama rengi. Sprite atanmissa yalnizca ona " +
+                 "uygulanan tint; sprite yoksa daire bu renkte cizilir. " +
+                 "Pusu SOLUK, batarya PARLAK - gorsel hiyerarsi mekanikle " +
+                 "ayni kalmali (spec 9.1).")]
         public Color tracerColor = new Color(0.75f, 0.82f, 0.88f, 0.45f);
 
-        [Tooltip("Iz kalinligi (hucre orani).")]
+        [Tooltip("KULLANILMIYOR - eski cizgi izinden kalan alan. Mermi " +
+                 "boyutu artik TowerFx'ten gelir.")]
         public float tracerThickness = 0.05f;
 
-        [Tooltip("Izin ne kadar sure gorunecegi.")]
+        [Tooltip("Namlu cakmasinin ne kadar sure gorunecegi.")]
         public float tracerSeconds = 0.07f;
 
         private float tracerTimer;
+
+        [Header("Mermi / patlama gorselleri")]
+        [Tooltip("Tur basina olculmus gorsel ayarlar: namlu ucu uzakligi, " +
+                 "mermi boyu ve hizi, patlama boyu.")]
+        public TowerFx fx = TowerFx.For(Frontline.Core.TowerKind.Ambush);
+
+        [Tooltip("Ucan mermi sprite'i. Bos ise daire cizilir.")]
+        public Sprite bulletSprite;
+
+        [Tooltip("Namlu ucundaki cakma sprite'i. Bos ise daire cizilir.")]
+        public Sprite muzzleSprite;
+
+        [Tooltip("Hedefte patlayan carpma sprite'i. Bos ise daire cizilir.")]
+        public Sprite impactSprite;
+
+        [Tooltip("Kule sprite'inin dunya olcegi. Namlu ucu bununla carpilir; " +
+                 "yoksa buyuk kulede mermi namlunun gerisinden cikar.")]
+        public float visualScale = 1f;
+
+        /// <summary>
+        /// Namlunun hedefe donuk ucu. Mermi de cakma da BURADAN dogar -
+        /// kule merkezinden dogan mermi govdenin icinden cikip namluyu
+        /// yalanci yapar (22 Agu kullanici geri bildirimi).
+        /// </summary>
+        public Vector2 MuzzlePoint
+        {
+            get
+            {
+                return TowerFx.MuzzlePoint(transform.position, AimDirection,
+                                           visualScale, fx.muzzleOffset);
+            }
+        }
 
         private float beamTimer;
 
@@ -134,9 +169,10 @@ namespace Frontline.Runtime
         }
 
         /// <summary>
-        /// Gorsel iz. Hasarla ILGISI YOKTUR: hasar surekli uygulanir, iz
-        /// yalnizca sabit araliklarla cizilir. Ayrilmasinin sebebi, izin
-        /// sikligini dengeye dokunmadan ayarlayabilmek.
+        /// Gorsel atis: namlu ucunda cakma + hedefe ucan mermi + varista
+        /// patlama. Hasarla ILGISI YOKTUR - hasar surekli uygulanir, atis
+        /// yalnizca sabit araliklarla gorunur. Ayrilmasinin sebebi,
+        /// gorselin sikligini dengeye dokunmadan ayarlayabilmek.
         /// </summary>
         private void EmitTracer(UnitHealth target)
         {
@@ -147,12 +183,16 @@ namespace Frontline.Runtime
 
             tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
 
-            Vector2 origin = transform.position;
-            float length = Vector2.Distance(origin, target.transform.position);
+            float cell = world.Space.CellSize;
+            Vector2 muzzle = MuzzlePoint;
 
-            ShotFlash.Line(origin, AimDirection, length,
-                           tracerThickness * world.Space.CellSize,
-                           tracerColor, tracerSeconds);
+            FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
+                           fx.muzzleScale * cell, tracerColor, tracerSeconds);
+
+            Projectile.Fire(bulletSprite, muzzle, target.transform.position,
+                            fx.bulletScale * cell, fx.bulletSpeed * cell,
+                            tracerColor,
+                            impactSprite, fx.impactScale * cell, tracerColor);
         }
 
         /// <summary>
@@ -199,7 +239,9 @@ namespace Frontline.Runtime
             var units = world.ActiveUnits;
             if (units == null || units.Count == 0) return;
 
-            Vector2 origin = transform.position;
+            // Isin da namlu UCUNDAN cikar: merkezden ciksaydi hat kulenin
+            // govdesini yarip gecerdi.
+            Vector2 origin = MuzzlePoint;
             float halfWidth = beamHalfWidth * world.Space.CellSize;
             int hits = 0;
 
@@ -223,7 +265,18 @@ namespace Frontline.Runtime
 
                 health.TakeDamage(beamShotDamage);
                 hits++;
+
+                // Isinin carpmasi VURULAN HER BIRLIGIN uzerinde gorunur:
+                // delici silahin degeri "kac kisiyi bicti" bilgisidir ve
+                // tek bir cizgi bunu anlatmiyordu.
+                FxBurst.Impact(impactSprite, unit.transform.position,
+                               fx.impactScale * world.Space.CellSize,
+                               BeamFlash.color);
             }
+
+            FxBurst.Muzzle(muzzleSprite, origin, direction,
+                           fx.muzzleScale * world.Space.CellSize,
+                           BeamFlash.color, beamFlashSeconds);
 
             BeamFlash.Spawn(origin, direction,
                             world.Space.CellSize * beamVisualThickness,

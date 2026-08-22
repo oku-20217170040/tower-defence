@@ -48,11 +48,46 @@ namespace Frontline.Runtime
             public Color tint;
         }
 
+        /// <summary>
+        /// Kule turune gore ATIS gorselleri: ucan mermi, namlu cakmasi ve
+        /// carpma patlamasi. Kule sprite'lariyla ayni kural gecerli -
+        /// atanmayan her sprite daireye duser, yani fx asset'leri de
+        /// parca parca gelebilir.
+        /// </summary>
+        [System.Serializable]
+        public struct FxArt
+        {
+            public TowerKind kind;
+
+            [Tooltip("Ucan mermi. Isinda bos birakilir - isinin mermisi yok.")]
+            public Sprite bullet;
+
+            [Tooltip("Namlu ucundaki cakma.")]
+            public Sprite muzzle;
+
+            [Tooltip("Hedefte patlayan carpma efekti.")]
+            public Sprite impact;
+        }
+
         [Tooltip("Tur basina birlik gorseli. Listede olmayan tur daireye duser.")]
         public UnitArt[] units;
 
         [Tooltip("Tur basina kule gorseli. Listede olmayan tur daireye duser.")]
         public TowerArt[] towers;
+
+        [Tooltip("Tur basina atis gorselleri (mermi / namlu cakmasi / carpma).")]
+        public FxArt[] fx;
+
+        [Header("Us")]
+        [Tooltip("Us sprite'i. Bos ise us cizilmez - oyun yine calisir.")]
+        public Sprite baseSprite;
+
+        [Tooltip("Usun hucre cinsinden genisligi. Us bir KULE degil bir " +
+                 "YERDIR; 1 hucrede kule gibi durur.")]
+        public float baseScale = 2.2f;
+
+        [Tooltip("Alpha 0 ise sprite kendi renkleriyle cizilir.")]
+        public Color baseTint;
 
         private static ArtLibrary instance;
 
@@ -89,6 +124,24 @@ namespace Frontline.Runtime
                     if (units[i].type != type || units[i].sprite == null) continue;
 
                     art = units[i];
+                    return true;
+                }
+            }
+
+            art = default;
+            return false;
+        }
+
+        /// <summary>Bu kule turunun atis gorselleri. Yoksa false.</summary>
+        public bool TryGetFx(TowerKind kind, out FxArt art)
+        {
+            if (fx != null)
+            {
+                for (int i = 0; i < fx.Length; i++)
+                {
+                    if (fx[i].kind != kind) continue;
+
+                    art = fx[i];
                     return true;
                 }
             }

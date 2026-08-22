@@ -2,7 +2,7 @@
 
 **Tarih:** 19 Ağustos 2026 · **son güncelleme 22 Ağustos 2026**
 **Branch:** `tasarim/koloni-reboot` (master'a henüz merge edilmedi)
-**Test durumu:** 166 EditMode testi, 166 geçiyor (22 Ağu 2026)
+**Test durumu:** 172 EditMode testi, 172 geçiyor (22 Ağu 2026)
 **Sıradaki iş:** görsel tarafta **kraliçenin hafıza silme efekti** (oyunun en dramatik anı, şu an hiç görünmüyor) ve **üs görseli**. Denge tarafında üç açık iş: uyarlamalı yerleştirme (Plan 8 Görev 4'ü açar), ekonomi sıkılaştırması, kör birlik. **Plan 6 (görsel) neredeyse bitti, Plan 7 bitti, Plan 8'in ölçülebilir kısmı bitti.** Bkz. `docs/plans/2026-08-20-kule-ve-birim-cesitliligi.md`. Plan 4 tamamen bitti; tek açık kalan Görev 5 Adım 2 (ekonomi arayüzünü kullanıcıya oynatma).
 
 ---
@@ -168,7 +168,7 @@ Ayrıntı: `docs/plans/2026-08-21-gorsel-uretim.md`
 | Plan 7 — Kule sınıfları (Mayın tarlası, Batarya alan hasarı, Işın) | **Bitti** (21 Ağu). Saat kulesi ölçümle elendi |
 | Plan 8 — Birlik türleri (izci, asker, kör, kuluçka, kraliçe) | Karar alındı, plan yazılmadı |
 | Plan 5 — Meta ilerleme, nemesis | Yazılmadı |
-| Plan 6 — Blender görselleri | **Neredeyse bitti** (22 Ağu). 4 birlik + 5 kule + 3 döşeme üretildi ve bağlandı; dönme ve atış animasyonları çalışıyor. Kalan: üs görseli, kraliçe efekti, ses |
+| Plan 6 — Blender görselleri | **Neredeyse bitti** (22 Ağu). 4 birlik + 5 kule + 3 döşeme + 8 atış efekti + üs üretildi ve bağlandı; dönme, mermi, namlu çakması, çarpma patlaması, elektrik ışını ve üs vurulması çalışıyor. Kalan: kraliçe efekti, ses |
 
 ---
 

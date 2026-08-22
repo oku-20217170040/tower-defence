@@ -193,12 +193,28 @@ namespace Frontline.Runtime
                 weapon.Bind(world, tower.radius * rangeMultiplier,
                             dps * damageMultiplier, kind == TowerKind.Battery);
 
-                // Iz gorseli mekanigi yansitir: batarya parlak, pusu soluk.
+                // Atis gorseli mekanigi yansitir: batarya parlak ve
+                // seyrek (agir top), pusu soluk ve sik (surekli is gorur).
                 bool loud = kind == TowerKind.Battery;
                 weapon.tracerColor = loud ? batteryTracer : ambushTracer;
-                weapon.tracerThickness = loud ? 0.10f : 0.045f;
-                weapon.tracerInterval = loud ? 0.22f : 0.14f;
+                weapon.tracerInterval = loud ? 0.55f : 0.30f;
                 weapon.tracerSeconds = loud ? 0.09f : 0.06f;
+            }
+
+            // Atis gorselleri: namlu ucu, mermi, cakma, carpma. Ayni
+            // yerden baglanir ki namlu ucu sayisi tek olsun (TowerFx).
+            if (weapon != null)
+            {
+                weapon.fx = TowerFx.For(kind);
+                weapon.visualScale = diameter;
+
+                ArtLibrary.FxArt fxArt;
+                if (art != null && art.TryGetFx(kind, out fxArt))
+                {
+                    weapon.bulletSprite = fxArt.bullet;
+                    weapon.muzzleSprite = fxArt.muzzle;
+                    weapon.impactSprite = fxArt.impact;
+                }
             }
 
             // Namlu YALNIZCA hasar veren kulelerde doner. Donen bir sey

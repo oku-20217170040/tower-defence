@@ -1,7 +1,7 @@
 # Görsel Üretim — Plan 6
 
 **Tarih:** 21 Ağustos 2026
-**Durum:** Birlikler (4/4), kuleler (5/5), harita döşemeleri (3/3) üretildi ve oyuna bağlandı. Dönme + atış animasyonları çalışıyor. Sırada üs görseli.
+**Durum:** Birlikler (4/4), kuleler (5/5), döşemeler (3/3), atış efektleri (8/8) ve üs (1/1) üretildi ve oyuna bağlandı. Dönme, mermi, namlu çakması, çarpma patlaması, elektrik ışını ve üs vurulma animasyonları çalışıyor. Kalan: kraliçe hafıza silme efekti, ses.
 **Sanat yönü:** **Sade askeri silüet, düşük poli** (21 Ağustos kullanıcı kararı).
 
 ## Neden bu yön
@@ -67,9 +67,29 @@ Unity import: Sprite, PPU 256 (sprite tam 1 dünya birimi — kod ile üretilen 
 
 Unity import: Sprite, PPU 512 (sprite tam 1 dünya birimi), ölçek `ArtLibrary`'de 0 bırakıldı — yani `TowerPlacer.towerScale` (0,8) geçerli.
 
+### Atış efektleri (8) — **BİTTİ (22 Ağustos)**
+
+Üreteç: `tools/blender/fx.py`. Tür başına mermi + namlu çakması + çarpma patlaması.
+
+| Tür | Mermi | Namlu çakması | Çarpma |
+|---|---|---|---|
+| **Batarya** | Kalın obüs, turuncu itki | Büyük turuncu koni + yanal kulaklar | Geniş ateş topu (duman + alev + çekirdek) |
+| **Pusu** | İnce dart, soluk çelik | Küçük, dar, soluk | Ufak kıvılcım yıldızı |
+| **Işın** | **yok** (hat çizilir) | Mavi boşalma halkası | Mavi elektrik yıldızı — **vurulan her birliğin üzerinde** |
+
+**Tekrarlanan ders — emisyon.** İlk tur render'ları renksiz çıktı: emisyon 1,6-3,4 bandındaydı ve her şey beyaza patlamıştı. Kulelerde 21 Ağustos'ta öğrenilen kural burada tekrar öğrenildi ve dosyanın başına yazıldı: **emisyon 0,3-0,8, renk base color'dan gelir.**
+
+**Patlamalar tek kare.** Animasyon Unity'de: ölçek + dönme + karesel sönme (`FxBurst`). Kare kare sprite sheet mobilde bellek ve import maliyeti; patlama 0,25 sn görünüyor, tek kare yetiyor. Çakma ile çarpma **ters egride**: çakma büyük başlayıp küçülür (namludan dışarı itilir), çarpma küçük başlayıp büyür (enerji yayılır).
+
+### Üs (1) — **BİTTİ (22 Ağustos)**
+
+Üreteç: `tools/blender/base.py`. Alçak, geniş, katmanlı karargâh; cephe **+Y'ye** (ekranda yukarı) bakar — kulelerin −Y kuralının tersi, çünkü üs dönmez, savunma hattı hep orduya bakar.
+
+Merkezde **tek ve büyük yeşil komuta çekirdeği**: `HomeBaseView` kalan cana göre onu kırmızıya çekiyor, parçalı olsaydı renk geçişi kirli okunurdu. Gövde/beton 0,30→0,36 ve 0,38→0,50'ye açıldı; ilk render koyu haritada siyah bir blob'du.
+
 ### Sonraki tur
 
-Üs, harita zemini (koridor / kurulum şeridi / duvar), keşif izi katmanı dokusu.
+Harita zemini iyileştirmesi, keşif izi katmanı dokusu, kraliçe hafıza silme efekti.
 
 ## Render boru hattı
 
@@ -109,9 +129,17 @@ Hepsi **kozmetiktir**: hasar `TowerWeapon` içinde uygulanır, görsel katman de
 
 **Kule ölçeği** 0,8 → 1,0 (hücreyi tam doldurur).
 
+**Namlu ucu (`TowerFx`).** Mermi ve namlu çakması kule **merkezinden** doğuyordu; merkezden doğan mermi gövdenin içinden çıkıp namluyu yalancı yapıyor. Namlu ucu artık sprite'tan gelen tek bir sayı: batarya 0,42 (Muzzle kutusu), pusu 0,28, ışın 0,30 (Rail ucu). Işın hattı da oradan başlar. Bu sayının tek yerde olması şart — TowerPlacer, TowerWeapon ve çakma farklı sayı kullanırsa mermi ile çakma ayrışır. Testle korunuyor (`TowerFxTests`, 6 test).
+
+**Mermi (`Projectile`).** Havuzlanmış, namlu ucundan hedefin **o anki** konumuna uçar, vardığı yerde çarpma efektini doğurur. **Hasar taşımaz** — hasar `TowerWeapon` içinde sürekli uygulanır; mermi uçuş süresi kadar geç vursaydı bütün kalibrasyon (206,7 öldürme / 18,3 sızıntı) kayardı. Hedefi **takip etmez**: takip eden mermi ölen birlikle kaybolur, kaçırılan atış da bilgidir.
+
+**Işın artık elektrik yayı (`ElectricBeam`).** Üç kural korundu (ince / ucu ekran dışında / vurdukça parlar, kalınlaşmaz); değişen yalnızca çizginin nasıl çizildiği. Yol 26 parçaya bölünüp saniyede 60 kez yeniden kırılıyor, sapma genliği **kalınlığın 1,2 katı** — sabit sapma verilseydi yakınlaştırmaya göre kâh tel kâh sel görünürdü. Uçlarda sapma sıfıra iner (yay namlunun tam ucundan çıkmalı). Alev hissi iki katmandan: dışta mavi gövde, içte daha ince beyaz-sıcak çekirdek; tek renkli yay "neon boru" gibi duruyordu.
+
+**Üs vurulması (`HomeBaseView`).** 20 Ağustos dersinin görsel karşılığı: "üsse varan birlik can eksiltir" zinciri 104 test yeşilken sessizce kopuktu, çünkü ekranda üssün vurulduğuna dair hiçbir şey yoktu. Üç kanal: kısa sert sarsıntı + 0,25 sn kırmızı çakma + kalan cana göre kalıcı renk kayması. Üs düştüğünde büyük ve yavaş tek patlama.
+
 ### Sıradaki animasyonlar
 
-Öncelik sırası: (1) **kraliçe üsse varınca keşif izinin silinmesi** — oyunun en dramatik anı olmalı ve şu an hiç görünmüyor, (2) üs görseli, (3) birlik ölüm efektinin iyileştirilmesi (bugün `DeathPuff` var).
+Öncelik sırası: (1) **kraliçe üsse varınca keşif izinin silinmesi** — oyunun en dramatik anı olmalı ve şu an hiç görünmüyor, (2) birlik ölüm efektinin iyileştirilmesi (bugün `DeathPuff` var), (3) ses.
 
 ## Blender bağlantısı
 
