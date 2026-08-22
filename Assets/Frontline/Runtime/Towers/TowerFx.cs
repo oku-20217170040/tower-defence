@@ -26,6 +26,17 @@ namespace Frontline.Runtime
         /// <summary>Namlu ucunun kule merkezine uzakligi (sprite birimi).</summary>
         public float muzzleOffset;
 
+        /// <summary>
+        /// Kule sprite'inin TowerPlacer.towerScale uzerine carpani.
+        ///
+        /// Neden tur basina (23 Agu kullanici karari): sessiz kule alcak
+        /// ve yassi bir siluet, yani ayni hucre boyutunda bataryadan daha
+        /// AZ piksel kapliyor. Hepsine ayni olcegi vermek "esit" degil,
+        /// yalnizca esit sayi demek. Sessiz kule buyutulunce hucre
+        /// doluluklari birbirine yaklasiyor.
+        /// </summary>
+        public float silhouetteScale;
+
         /// <summary>Merminin hucre boyutuna orani.</summary>
         public float bulletScale;
 
@@ -45,6 +56,11 @@ namespace Frontline.Runtime
         /// Tur basina olculmus varsayilanlar. Gorsel hiyerarsi mekanikle
         /// AYNI kalir (spec 9.1): batarya buyuk ve yavas mermi + genis
         /// patlama, pusu kucuk hizli dart + ufak kivilcim.
+        ///
+        /// 23 Agustos: butun atis gorselleri yaklasik 1,4 kat buyutuldu.
+        /// Telefonda mermi ve patlama hucrenin yaninda kucuk kaliyordu -
+        /// sayilar birbirine gore dogruydu ama TOPLU olarak dusuktu.
+        /// Oranlar korundu, yalnizca bant yukari tasindi.
         /// </summary>
         public static TowerFx For(TowerKind kind)
         {
@@ -53,10 +69,11 @@ namespace Frontline.Runtime
                 return new TowerFx
                 {
                     muzzleOffset = 0.42f,
-                    bulletScale = 0.34f,
+                    silhouetteScale = 1.0f,
+                    bulletScale = 0.46f,
                     bulletSpeed = 11f,
-                    muzzleScale = 0.55f,
-                    impactScale = 0.75f,
+                    muzzleScale = 0.72f,
+                    impactScale = 1.0f,
                     fallbackColor = new Color(1f, 0.62f, 0.25f, 0.9f)
                 };
             }
@@ -66,22 +83,31 @@ namespace Frontline.Runtime
                 return new TowerFx
                 {
                     muzzleOffset = 0.50f,
+                    silhouetteScale = 1.05f,
                     bulletScale = 0f,      // isinin mermisi YOK, hat cizilir
                     bulletSpeed = 0f,
-                    muzzleScale = 0.45f,
-                    impactScale = 0.5f,
+                    muzzleScale = 0.60f,
+                    impactScale = 0.68f,
                     fallbackColor = new Color(0.55f, 0.88f, 1f, 0.9f)
                 };
             }
 
-            // Pusu ve hasarsiz kuleler ayni sessiz bantta.
+            // Pusu ve hasarsiz kuleler ayni sessiz bantta. Siluet
+            // carpanlari yalnizca YUKSEKLIGE gore ayrilir: yassi kule
+            // ayni sayida daha az piksel kaplar, dikey yapisi olan kule
+            // zaten dolu goruniyor.
+            float silhouette = 1.25f;                       // pusu: alcak
+            if (kind == TowerKind.Minefield) silhouette = 1.3f;   // tamamen yassi
+            else if (kind == TowerKind.Decoy) silhouette = 1.1f;  // direkli, dik
+
             return new TowerFx
             {
                 muzzleOffset = 0.48f,
-                bulletScale = 0.22f,
+                silhouetteScale = silhouette,
+                bulletScale = 0.34f,
                 bulletSpeed = 20f,
-                muzzleScale = 0.30f,
-                impactScale = 0.36f,
+                muzzleScale = 0.44f,
+                impactScale = 0.55f,
                 fallbackColor = new Color(0.80f, 0.88f, 0.94f, 0.75f)
             };
         }

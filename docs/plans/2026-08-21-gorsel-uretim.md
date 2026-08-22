@@ -102,6 +102,16 @@ Merkezde **tek ve büyük yeşil komuta çekirdeği**: `HomeBaseView` kalan cana
 
 `TowerFx` namlu ucu sayıları sprite'la birlikte güncellendi (pusu 0,28 → 0,48, ışın 0,30 → 0,50). Mermi, namlu çakması ve ışın hattı bu tek sayıdan besleniyor.
 
+### Ölçek turu — **23 Ağustos**
+
+Kuleler ve atış görselleri telefonda küçük okunuyordu (kullanıcı geri bildirimi).
+
+**Sahnede sinsi bir sayı vardı:** `TowerPlacer.towerScale` alan varsayılanı 1,0 idi ama sahnede serileşmiş değer hâlâ **0,8**'di — yani 22 Ağustos'ta "0,8 → 1,0 yapıldı" diye yazılan değişiklik oyuna hiç girmemişti. Kod varsayılanını değiştirmek yetmiyor, sahnedeki değeri de güncellemek gerekiyor. Şimdi ikisi de **1,15**.
+
+**Silüet çarpanı tür başına (`TowerFx.silhouetteScale`).** Hepsine aynı ölçeği vermek eşit *sayı* demek, eşit *görünürlük* değil: alçak ve yassı kule aynı hücrede daha az piksel kaplıyor. Çarpanlar yalnızca yüksekliğe göre ayrıldı — mayın tarlası 1,3 (tamamen yassı), pusu 1,25 (alçak), yem 1,1 (direkli), ışın 1,05, batarya 1,0 (zaten yüksek taret).
+
+**Atış görselleri ~1,4 kat büyütüldü.** Oranlar korundu (batarya hâlâ pusudan iri), yalnızca bant yukarı taşındı: batarya mermi 0,34→0,46 / çakma 0,55→0,72 / çarpma 0,75→1,0; pusu 0,22→0,34 / 0,30→0,44 / 0,36→0,55; ışın çakma 0,45→0,60 / çarpma 0,5→0,68. Namlu ucu sprite biriminde olduğu için kule büyüdükçe kendiliğinden dışarı kayıyor.
+
 ### Sonraki tur
 
 Harita zemini iyileştirmesi, keşif izi katmanı dokusu, kraliçe hafıza silme efekti.

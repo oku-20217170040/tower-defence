@@ -25,10 +25,13 @@ namespace Frontline.Runtime
         public Color minefieldColor = new Color(0.95f, 0.8f, 0.3f);
         public Color beamColor = new Color(0.6f, 0.75f, 1f);
 
-        [Tooltip("Kule capinin hucre boyutuna orani. 1,0 = hucreyi tam " +
-                 "doldurur. 0,8 denendi ve kuleler kucuk duruyordu.")]
-        [Range(0.2f, 1.5f)]
-        public float towerScale = 1.0f;
+        [Tooltip("Kule capinin hucre boyutuna orani. 0,8 denendi ve kuleler " +
+                 "kucuk duruyordu; 1,0 hucreyi tam dolduruyor ama telefonda " +
+                 "hala kucuk okunuyordu (23 Agu). Tur basina carpan TowerFx." +
+                 "silhouetteScale ile gelir - alcak siluetli sessiz kule " +
+                 "ayni sayida daha az piksel kapliyor.")]
+        [Range(0.2f, 2f)]
+        public float towerScale = 1.15f;
 
         [Header("Silah")]
         [Tooltip("Batarya kulenin saniyelik hasari. ALAN hasari verdigi icin " +
@@ -146,7 +149,8 @@ namespace Frontline.Runtime
             go.transform.SetParent(transform, false);
 
             // Blender asset'i varsa o kullanilir; yoksa daire cizilir.
-            float scale = towerScale;
+            // Tur carpani siluetin YOGUNLUGUNU esitler, sayisini degil.
+            float scale = towerScale * TowerFx.For(kind).silhouetteScale;
             Sprite sprite = PrimitiveSprites.Circle();
             Color color = ColorFor(kind);
 

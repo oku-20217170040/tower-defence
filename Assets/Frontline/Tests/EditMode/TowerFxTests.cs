@@ -56,6 +56,24 @@ namespace Frontline.Tests
         }
 
         [Test]
+        public void SessizKule_DahaBuyukCizilir()
+        {
+            // Alcak ve yassi siluet ayni olcekte daha az piksel kaplar;
+            // esit sayi vermek esit gorunurluk demek degil (23 Agu).
+            Assert.Greater(TowerFx.For(TowerKind.Ambush).silhouetteScale,
+                           TowerFx.For(TowerKind.Battery).silhouetteScale);
+        }
+
+        [Test]
+        public void HerTurunSiluetOlcegi_Tanimlidir()
+        {
+            // 0 birakilan bir carpan kuleyi yok eder; varsayilan 1 olmali.
+            foreach (TowerKind kind in System.Enum.GetValues(typeof(TowerKind)))
+                Assert.GreaterOrEqual(TowerFx.For(kind).silhouetteScale, 1f,
+                                      kind + " siluet olcegi eksik");
+        }
+
+        [Test]
         public void Isinin_Mermisi_Yoktur()
         {
             // Isin bir hat cizer; mermi ucursa iki gorsel ayni anda
