@@ -56,10 +56,10 @@ Unity import: Sprite, PPU 256 (sprite tam 1 dünya birimi — kod ile üretilen 
 | Tür | Model | Neden |
 |---|---|---|
 | **Batarya** | Yüksek taret, öne bakan tek namlu, omuz plakaları, turuncu | Tehdit **yazar**. Tek "gürültülü" kule; ordu onu görür ve kaçar |
-| **Pusu mevzisi** | Alçak sekizgen pad, ortada dar mazgal, kamuflaj kanatları | Tehdit **yazmaz**. Asıl katil ama görünmemeli (spec 3.2) |
+| **Pusu mevzisi** | Alçak dar pad + **öne bakan gerçek namlu**, kamuflaj kanatları | Tehdit **yazmaz**. Asıl katil ama görünmemeli (spec 3.2) |
 | **Mayın tarlası** | Yassı plaka + dağılmış sarı tümsekler, **dikey yapı yok** | Tehdit **yazmaz**; ordu algılayamaz |
 | **Yem** | İnce direk + tepede parlak yeşil başlık, yayın kolları | Çekim yaydığını anlatır |
-| **Işın** | X ekseninde uzun ray, iki uçta mercek, açık mavi | Yatay hat mekaniğini silüet anlatır |
+| **Işın** | **Nişan yönünde yayıcı**: şarj bobini + ray + ağız, açık mavi | Hat mekaniğini silüet anlatır, artık yönüyle birlikte |
 
 **Elenen üç deneme (yorumlara yazıldı):** bataryada dikey namlu tepeden "delik" gibi okunuyordu; karşılıklı iki namlu gövdeyi delip geçen bir çubuğa dönüşüyordu; emisyon 1,4-1,6'da renk beyaza patlıyordu (0,35'e indirildi, renk base'ten gelir).
 
@@ -86,6 +86,21 @@ Unity import: Sprite, PPU 512 (sprite tam 1 dünya birimi), ölçek `ArtLibrary`
 Üreteç: `tools/blender/base.py`. Alçak, geniş, katmanlı karargâh; cephe **+Y'ye** (ekranda yukarı) bakar — kulelerin −Y kuralının tersi, çünkü üs dönmez, savunma hattı hep orduya bakar.
 
 Merkezde **tek ve büyük yeşil komuta çekirdeği**: `HomeBaseView` kalan cana göre onu kırmızıya çekiyor, parçalı olsaydı renk geçişi kirli okunurdu. Gövde/beton 0,30→0,36 ve 0,38→0,50'ye açıldı; ilk render koyu haritada siyah bir blob'du.
+
+### Pusu ve ışın namluları yeniden yapıldı — **23 Ağustos**
+
+**Neden.** İkisi de dönen kuleydi ama namluları yoktu: pusu ortadaki bir **mazgaldı**, ışın **X ekseninde yatay bir raydı**. Dönen bir kulenin neye nişan aldığı ancak namludan okunur — mazgal her açıdan aynı görünüyordu, yatay ray ise döndüğünde nereye ateş ettiğini söylemiyordu. Üstelik ışın hattı rayın **ortasından** çıkıp kendi gövdesini yarıyordu.
+
+| Tür | Yeni model | Namlu ucu |
+|---|---|---|
+| **Pusu** | Dar alçak pad + kama (breech) + −Y'ye taşan namlu + ağız freni | y = −0,48 |
+| **Işın** | Şarj bobini (ince mavi şeritler) + −Y'de uzun ray + iki mercek şeridi + ağız | y = −0,49 |
+
+**Gizlilik kuralı (spec 9.1) bozulmadı, taşındı.** Pusunun görünmezliği artık namlusunun yokluğundan değil **siluetinin alçaklığından** geliyor: gövde küçük ve yerde, namlu ince. Bataryanın yüksek taretiyle yan yana konunca fark bakışta okunuyor.
+
+**Elenen iki deneme:** (1) namlu 0,042 yarıçaplı bir silindirdi ve 30 pikselde kayboluyordu — kutuya çevrilip kalınlaştırıldı, pad 0,42'den 0,32'ye küçültüldü, yoksa namlu plakanın içinde kalıyordu; (2) ışının şarj halkaları silindirdi ve tepeden bakınca kulenin yarısını kaplayan mavi bir leke oluyordu — vurgu rengi ince şeritlere dağıtıldı.
+
+`TowerFx` namlu ucu sayıları sprite'la birlikte güncellendi (pusu 0,28 → 0,48, ışın 0,30 → 0,50). Mermi, namlu çakması ve ışın hattı bu tek sayıdan besleniyor.
 
 ### Sonraki tur
 
