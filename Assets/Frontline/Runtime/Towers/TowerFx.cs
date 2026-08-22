@@ -16,8 +16,10 @@ namespace Frontline.Runtime
     /// Namlu uzakligi olculdu: sprite'lar 1 dunya birimi genisliginde
     /// uretiliyor, yani asagidaki degerler dogrudan sprite koordinatidir.
     ///   batarya -> Muzzle kutusu y = -0,42
-    ///   pusu    -> Slit mazgali y = -0,15, kamuflaj kanadi -0,30
-    ///   isin    -> Rail ucu x = +-0,30 (ates ekseni boyunca)
+    ///   pusu    -> Muzzle kutusu y = -0,46 (23 Agu: mazgal gercek
+    ///              namluya cevrildi, ofis 0,28'den buyudu)
+    ///   isin    -> Muzzle agzi y = -0,48 (23 Agu: yatay ray one
+    ///              bakan yayiciya cevrildi)
     /// </summary>
     public struct TowerFx
     {
@@ -63,7 +65,7 @@ namespace Frontline.Runtime
             {
                 return new TowerFx
                 {
-                    muzzleOffset = 0.30f,
+                    muzzleOffset = 0.50f,
                     bulletScale = 0f,      // isinin mermisi YOK, hat cizilir
                     bulletSpeed = 0f,
                     muzzleScale = 0.45f,
@@ -75,7 +77,7 @@ namespace Frontline.Runtime
             // Pusu ve hasarsiz kuleler ayni sessiz bantta.
             return new TowerFx
             {
-                muzzleOffset = 0.28f,
+                muzzleOffset = 0.48f,
                 bulletScale = 0.22f,
                 bulletSpeed = 20f,
                 muzzleScale = 0.30f,
