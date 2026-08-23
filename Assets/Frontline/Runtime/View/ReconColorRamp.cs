@@ -17,8 +17,17 @@ namespace Frontline.Runtime
     /// </summary>
     public static class ReconColorRamp
     {
-        /// <summary>En yogun izin bile tam opak olmamasi icin tavan.</summary>
-        public const float MaxAlpha = 0.7f;
+        /// <summary>
+        /// En yogun izin bile tam opak olmamasi icin tavan.
+        ///
+        /// 0,7'den 0,42'ye indirildi (23 Agu 2026). Sebep OLCUM DEGIL, gorsel
+        /// bir karar: harita Blender dosemeleri ve ortu gorselleriyle
+        /// giydirilince 0,7'lik tavan butun zemini beyaza boyayip altindaki
+        /// sanati siliyordu. Iz artik zeminin UZERINE surulen bir renk, onun
+        /// yerine gecen bir boya degil. Izin okunabilirligi bozulursa geri
+        /// alinacak dugme budur.
+        /// </summary>
+        public const float MaxAlpha = 0.42f;
 
         /// <summary>
         /// Gorunurluk egrisi. 1'den buyuk deger zayif izleri bastirir ve

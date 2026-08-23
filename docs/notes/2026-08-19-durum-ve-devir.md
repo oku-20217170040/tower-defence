@@ -135,6 +135,33 @@ Sahne üreticisi sprite'ları `AssetDatabase` ile yüklüyor, bulunamazsa uyarı
 
 **Doğrulandı (play modda, 23 Ağu):** 59 örtünün 30'u vuruldu → 30'u yıkıldı → 30'u `BuildStrip` oldu → 30 çukur nesnesi çizildi. Zincirin tamamı çalışıyor.
 
+### Görsel giydirme tamamlandı (23 Ağustos 2026)
+
+Blender'dan 15 asset üretildi, hepsi `Assets/Sprites/Frontline/`:
+
+| Ne | Dosya | Not |
+|---|---|---|
+| Zemin döşemeleri | `tile_corridor`, `tile_buildstrip`, `tile_blocked` | 64x64, ışıksız (Emission), hücre kenarı hafif koyu |
+| Örtü | `scenery_tree`, `scenery_rock`, `scenery_crater` | 512x512 |
+| Birlikler | `unit_infantry/scout/soldier/blind/brood/queen` | 512x512 |
+| Kuleler | `tower_battery/ambush/decoy/minefield/beam` | 512x512, **namlu +Y'ye bakar** |
+| Üs | `home_base` | Beton siper, iki lamba kulesi, sarı tehlike şeridi |
+
+Öğrenilen dört şey — tekrar asset üretecek olan okusun:
+
+1. **Blender 4'ün AgX renk dönüşümü** sprite'ları soldurur. `view_transform = 'Standard'` şart.
+2. **`default_value` LINEAR alır.** Renk seçicideki sRGB sayıyı doğrudan yazarsan render solar; döşemelerde bu yüzden iki tur döndük.
+3. **Kontur kalınlığı oyundaki piksel boyutuyla ölçeklenir**, çözünürlükle değil. 512'de 5 piksellik Freestyle konturu, ~40 piksel görünen sprite'ta kaybolur. 14 kullanıldı.
+4. **Namlu yönü `TowerTurret`'e bağlı:** açı `Atan2(y,x) + 90` ile hesaplanıyor, yani sprite'ın "ileri"si +Y. Yanlış eksene modellenirse bütün kuleler hedefe yan bakar.
+
+**Döşeme boyutu 64 seçildi, tercih değil kısıt:** `GridTileRenderer` hücre başına döşemeyi kopyalayıp TEK atlas üretiyor. 13x30 ızgarada 128'lik döşeme 1664x3840 = ~25 MB RGBA verir; Android hedefinde kabul edilemez. 64'te 832x1920 = 6,1 MB (oyunda ölçüldü).
+
+**`ReconColorRamp.MaxAlpha` 0,7 → 0,42.** Bu bir ölçüm değil, görsel karar: harita giydirilince 0,7'lik tavan bütün zemini beyaza boyayıp altındaki sanatı siliyordu. İz artık zeminin üzerine sürülen bir renk, onun yerine geçen bir boya değil. İzin okunabilirliği bozulursa geri alınacak düğme budur.
+
+**Sahnede `ArtLibrary` hiç yoktu** — bu yüzden her birlik ve kule beyaz daireye düşüyordu. Sahne üretici artık kuruyor; tint'lerin alpha'sı 0, yani sprite kendi renkleriyle çiziliyor.
+
+**Hâlâ açık:** atış görselleri (`FxArt` — mermi, namlu çakması, çarpma) atanmadı; hepsi daireye düşüyor.
+
 **Açık kalan:** yeni harita ve örtü mekaniği **simülatörle ölçülmedi.** Çatallanma sürünün koridor entropisini artırır, örtü açmak ateş gücü harcatır; ikisi de dengeye dokunur. Bir sonraki iş `RunSimulator`'a bunları eklemek olmalı — o yapılmadan denge sayıları tahmine düşer.
 
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Frontline.Core;
 using Frontline.Runtime;
 
 namespace Frontline.EditorTools
@@ -47,6 +48,9 @@ namespace Frontline.EditorTools
             var tilesGo = new GameObject("GridTiles");
             tilesGo.AddComponent<SpriteRenderer>();
             var tiles = tilesGo.AddComponent<GridTileRenderer>();
+            tiles.corridorTile = LoadTexture("tile_corridor");
+            tiles.buildStripTile = LoadTexture("tile_buildstrip");
+            tiles.blockedTile = LoadTexture("tile_blocked");
 
             var overlayGo = new GameObject("ReconOverlay");
             overlayGo.AddComponent<SpriteRenderer>();
@@ -66,6 +70,11 @@ namespace Frontline.EditorTools
             scenery.treeTint = Color.white;
             scenery.rockTint = Color.white;
             scenery.craterTint = Color.white;
+
+            // ── Gorsel kutuphanesi ──────────────────────────────────
+            // Sahnede ArtLibrary YOKKEN her birlik ve kule beyaz daireye
+            // dusuyordu. Blender'dan gelen sprite'lar buradan dagitiliyor.
+            BuildArtLibrary();
 
             // ── Us ────────────────────────────────────────────────
             var homeBaseGo = new GameObject("HomeBaseHealth");
@@ -133,6 +142,78 @@ namespace Frontline.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Debug.Log("[FrontlineSandbox] Sahne uretildi: " + ScenePath);
+        }
+
+        /// <summary>
+        /// Birlik, kule ve us gorsellerini tasiyan tek kaynak. Tint'lerin
+        /// ALPHA'SI 0: ArtLibrary bunu "sprite kendi renkleriyle cizilsin"
+        /// diye okuyor. Alpha 1 verilirse Blender render'inin uzerine ikinci
+        /// bir renk biner ve butun paleti bozar.
+        /// </summary>
+        private static void BuildArtLibrary()
+        {
+            var go = new GameObject("ArtLibrary");
+            var art = go.AddComponent<ArtLibrary>();
+            Color own = new Color(1f, 1f, 1f, 0f);
+
+            art.units = new[]
+            {
+                MakeUnit(UnitType.Infantry, "unit_infantry", own),
+                MakeUnit(UnitType.Scout,    "unit_scout",    own),
+                MakeUnit(UnitType.Soldier,  "unit_soldier",  own),
+                MakeUnit(UnitType.Blind,    "unit_blind",    own),
+                MakeUnit(UnitType.Brood,    "unit_brood",    own),
+                MakeUnit(UnitType.Queen,    "unit_queen",    own),
+            };
+
+            art.towers = new[]
+            {
+                MakeTower(TowerKind.Battery,   "tower_battery",   own),
+                MakeTower(TowerKind.Ambush,    "tower_ambush",    own),
+                MakeTower(TowerKind.Decoy,     "tower_decoy",     own),
+                MakeTower(TowerKind.Minefield, "tower_minefield", own),
+                MakeTower(TowerKind.Beam,      "tower_beam",      own),
+            };
+
+            art.baseSprite = LoadSprite("home_base");
+            art.baseTint = own;
+        }
+
+        private static ArtLibrary.UnitArt MakeUnit(UnitType type, string file, Color tint)
+        {
+            return new ArtLibrary.UnitArt
+            {
+                type = type,
+                sprite = LoadSprite(file),
+                scale = 0f,      // 0 = spawner'in varsayilani
+                tint = tint
+            };
+        }
+
+        private static ArtLibrary.TowerArt MakeTower(TowerKind kind, string file, Color tint)
+        {
+            return new ArtLibrary.TowerArt
+            {
+                kind = kind,
+                sprite = LoadSprite(file),
+                scale = 0f,      // 0 = placer'in varsayilani
+                tint = tint
+            };
+        }
+
+        /// <summary>
+        /// Zemin dosemesini yukler. Read/Write acik olmali; kapaliysa
+        /// GridTileRenderer sessizce duz renkli zemine duser.
+        /// </summary>
+        private static Texture2D LoadTexture(string fileName)
+        {
+            string path = "Assets/Sprites/Frontline/" + fileName + ".png";
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null)
+                Debug.LogWarning("[FrontlineSandbox] Doseme bulunamadi: " + path);
+
+            return texture;
         }
 
         /// <summary>
