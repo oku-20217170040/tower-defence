@@ -133,7 +133,11 @@ namespace Frontline.Runtime
                     switch (grid.Get(grid.Index(x, y)))
                     {
                         case CellKind.Corridor: src = corridorPixels; break;
-                        case CellKind.BuildStrip: src = buildPixels; break;
+                        // Ortunun (kaya/agac) ALTINDAKI zemin de kurulum
+                        // seridi dokusuyla cizilir: ortu yikilinca hucre zaten
+                        // serit olacak ve atlas yeniden uretilmeyecek.
+                        case CellKind.BuildStrip:
+                        case CellKind.Scenery: src = buildPixels; break;
                         default: src = blockedPixels; break;
                     }
 
@@ -147,7 +151,7 @@ namespace Frontline.Runtime
         private Color ColorFor(CellKind kind)
         {
             if (kind == CellKind.Corridor) return corridorColor;
-            if (kind == CellKind.BuildStrip) return buildStripColor;
+            if (kind == CellKind.BuildStrip || kind == CellKind.Scenery) return buildStripColor;
             return blockedColor;
         }
 

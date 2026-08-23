@@ -42,10 +42,12 @@ namespace Frontline.Tests
         {
             var template = new MapTemplate
             {
-                Width = 11,
+                Width = 13,
                 Height = 20,
                 CorridorCount = 3,
-                CorridorWidth = 2
+                CorridorWidth = 2,
+                RungCount = 4,
+                SceneryPercent = 30
             };
 
             grid = new MapGenerator().Generate(template, seed: 3);

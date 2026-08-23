@@ -50,6 +50,14 @@ namespace Frontline.Runtime
                  "ve isin ekrani kaplayan bir bant gibi duruyordu.")]
         public float beamVisualThickness = 0.05f;
 
+        [Header("Ortu Yikma")]
+        [Tooltip("Atis hattinin uzerine denk gelen kaya/agaca verilen hasarin " +
+                 "DPS'e orani. Kule hedefine nisan alir; arada duran ortu " +
+                 "atisi yer ve zamanla yikilir, yerine mevzi kurulabilen cukur " +
+                 "kalir. 0 yapilirsa kuleler ortuyu hic acmaz.")]
+        [Range(0f, 2f)]
+        public float sceneryDamageShare = 1f;
+
         [Header("Atis gorseli (KOZMETIK)")]
         [Tooltip("Iki gorsel atis arasindaki sure. Hasar SUREKLI uygulanir; " +
                  "mermi yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
@@ -165,7 +173,46 @@ namespace Frontline.Runtime
             if (splash) DamageEveryoneInRange(damage);
             else if (HasTarget) target.TakeDamage(damage);
 
+            if (HasTarget) ChipSceneryOnLine(target.transform.position, damage * sceneryDamageShare);
+
             EmitTracer(target);
+        }
+
+        /// <summary>
+        /// Namlu ile hedef arasindaki hatta ilk denk gelen AYAKTA ortuye hasar
+        /// verir. Kule ortuye nisan almaz; ortu yalnizca yolun uzerinde
+        /// oldugu icin atisi yer. Bir tanesiyle yetinilir: bir atis bir
+        /// engeli deler, hattaki her seyi ayni anda yikmaz.
+        /// </summary>
+        private void ChipSceneryOnLine(Vector2 targetPosition, float damage)
+        {
+            if (damage <= 0f || world == null || world.Scenery == null) return;
+
+            Vector2 from = MuzzlePoint;
+            Vector2 delta = targetPosition - from;
+            float distance = delta.magnitude;
+            if (distance < 0.0001f) return;
+
+            Vector2 step = delta / distance;
+            float cellSize = world.Space.CellSize;
+            float walked = cellSize * 0.5f;
+            int lastCell = -1;
+
+            while (walked < distance)
+            {
+                Vector2 point = from + step * walked;
+                walked += cellSize * 0.5f;
+
+                int cell;
+                if (!world.Space.WorldToCell(point, out cell)) continue;
+                if (cell == lastCell) continue;
+                lastCell = cell;
+
+                if (!world.Scenery.IsStanding(cell)) continue;
+
+                world.DamageScenery(cell, damage);
+                return;
+            }
         }
 
         /// <summary>

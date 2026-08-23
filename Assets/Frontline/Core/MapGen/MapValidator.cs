@@ -7,6 +7,14 @@ namespace Frontline.Core
         public bool IsValid;
         public int CorridorCount;
         public float CostGap;
+
+        /// <summary>
+        /// Yol ortasindaki gecis hucresi sayisi: koridorlari birbirine baglayan
+        /// yatay gecitlerin uzunlugu. Sifir ise koridor secimi girise sikismis
+        /// demektir - birlik girdigi boruda sonuna kadar kalir.
+        /// </summary>
+        public int JunctionCount;
+
         public string FaidecoyReason;
     }
 
@@ -30,10 +38,20 @@ namespace Frontline.Core
     /// 2. Her koridorun yaninda en az bir kurulum seridi bulunmali.
     /// 3. En ucuz iki koridor arasindaki maliyet farki esigin altinda olmali;
     ///    aksi halde bir koridor bastan galiptir ve secim yanilsamaya doner.
+    /// 4. Yol ortasinda en az <see cref="MinimumJunctions"/> catallanma bulunmali.
+    ///    Catalsiz haritada birlik girise adim attigi anda yolunu secmis olur
+    ///    ve oyuncunun yonlendirmesi hicbir sey degistiremez.
     /// </summary>
     public sealed class MapValidator
     {
         public const int MinimumCorridors = 3;
+
+        /// <summary>
+        /// Yol ortasinda gereken en az gecis hucresi. Ust ve alt baglanti
+        /// bantlari sayilmaz; onlar her haritada zaten vardir ve yol ortasinda
+        /// karar uretmezler.
+        /// </summary>
+        public const int MinimumJunctions = 4;
 
         public MapValidationResult Validate(BattleGrid grid, float maxCostGap)
         {
@@ -70,8 +88,54 @@ namespace Frontline.Core
                 return result;
             }
 
+            result.JunctionCount = CountJunctions(grid, corridors);
+            if (result.JunctionCount < MinimumJunctions)
+            {
+                result.IsValid = false;
+                result.FaidecoyReason =
+                    "Yol ortasinda yeterli catallanma yok: " + result.JunctionCount +
+                    " (en az " + MinimumJunctions + " gerekli). Gecit sayisini artir.";
+                return result;
+            }
+
             result.IsValid = true;
             return result;
+        }
+
+        /// <summary>
+        /// Yol ortasindaki gecis hucrelerini sayar: ust ve alt baglanti
+        /// bantlari disinda kalan, HICBIR dikey koridora ait olmayan
+        /// yurunebilir hucreler. Bunlar yatay gecitlerdir - bir birligin
+        /// koridor degistirebildigi tek yer.
+        ///
+        /// "Ucten fazla yurunebilir komsusu olan hucre" olcusu KULLANILAMAZ:
+        /// iki hucre genisligindeki bir koridorun her hucresinin zaten uc
+        /// komsusu vardir ve gecitsiz harita da gecer gorunur.
+        /// </summary>
+        private static int CountJunctions(BattleGrid grid, List<CorridorSpan> corridors)
+        {
+            int crossings = 0;
+
+            for (int y = 1; y < grid.Height - 1; y++)
+            {
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    if (!grid.IsWalkable(grid.Index(x, y))) continue;
+                    if (IsInsideCorridor(corridors, x)) continue;
+
+                    crossings++;
+                }
+            }
+
+            return crossings;
+        }
+
+        private static bool IsInsideCorridor(List<CorridorSpan> corridors, int x)
+        {
+            for (int c = 0; c < corridors.Count; c++)
+                if (x >= corridors[c].StartX && x <= corridors[c].EndX) return true;
+
+            return false;
         }
 
         /// <summary>

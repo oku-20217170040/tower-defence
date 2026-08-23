@@ -10,7 +10,9 @@ namespace Frontline.Tests
             Width = 11,
             Height = 20,
             CorridorCount = 3,
-            CorridorWidth = 2
+            CorridorWidth = 2,
+            RungCount = 4,
+            SceneryPercent = 30
         };
 
         [Test]

@@ -52,6 +52,11 @@ namespace Frontline.EditorTools
             overlayGo.AddComponent<SpriteRenderer>();
             var overlay = overlayGo.AddComponent<ReconOverlay>();
 
+            // Yikilabilir ortu: kaya ve agaclar, yikilinca cukur.
+            var sceneryGo = new GameObject("SceneryView");
+            var scenery = sceneryGo.AddComponent<SceneryView>();
+            scenery.world = world;
+
             // ── Us ────────────────────────────────────────────────
             var homeBaseGo = new GameObject("HomeBaseHealth");
             var homeBase = homeBaseGo.AddComponent<HomeBaseHealth>();

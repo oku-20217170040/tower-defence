@@ -15,8 +15,13 @@ namespace Frontline.Runtime
     public sealed class Battlefield : MonoBehaviour
     {
         [Header("Harita Sablonu")]
-        [Tooltip("Dar eksen. Dikey tutusta ekranin genisligi.")]
-        public int width = 11;
+        [Tooltip("Dar eksen. Dikey tutusta ekranin genisligi. " +
+                 "11'den 13'e cikarildi (23 Agu): OLCULEN ust sinir budur. " +
+                 "13x26'da run %100 kazaniyor (oldurme 218,3 / sizinti 6,8 / " +
+                 "us 23,3); 15 genislikte ayni run TAMAMEN cokuyor " +
+                 "(oldurme 5,7 / sizinti 30 / kazanma %0). " +
+                 "13'un uzerine cikmak isteyen ONCE olcsun.")]
+        public int width = 13;
 
         [Tooltip("Uzun eksen. 20'den 30'a cikarildi (23 Agu): harita artik " +
                  "ekrana sigmiyor, icinde geziliyor (MapCamera). " +
@@ -33,6 +38,26 @@ namespace Frontline.Runtime
 
         [Tooltip("Her koridorun hucre cinsinden genisligi.")]
         public int corridorWidth = 2;
+
+        [Tooltip("Koridorlari yol ORTASINDA baglayan yatay gecit sayisi. " +
+                 "0 iken koridorlar bagimsiz dikey borulardir: birlik girise " +
+                 "adim attigi anda yolunu secmis olur, yani hic secmez. Her " +
+                 "gecit yol ortasinda gercek bir catallanma acar. Dogrulama " +
+                 "en az 4 catallanma ister.")]
+        public int rungCount = 4;
+
+        [Header("Yikilabilir Ortu")]
+        [Tooltip("Koridor disi hucrelerin yuzde kaci kaya/agac olur. Ortu " +
+                 "bastan engeldir; vurulup yikilinca CUKUR birakir ve o hucreye " +
+                 "mevzi kurulabilir. Mevzi sayisi sabit degil, kazanilan bir seydir.")]
+        [Range(0, 60)]
+        public int sceneryPercent = 30;
+
+        [Tooltip("Agacin cani. Ucuz hedef: birkac atista devrilir.")]
+        public float treeHealth = 12f;
+
+        [Tooltip("Kayanin cani. Yatirim gerektiren hedef.")]
+        public float rockHealth = 30f;
 
         [Tooltip("0 birakilirsa her calistirmada rastgele harita uretilir.")]
         public int seed = 0;
@@ -94,6 +119,9 @@ namespace Frontline.Runtime
         public RoutePathfinder Pathfinder { get; private set; }
         public GridSpace Space { get; private set; }
 
+        /// <summary>Haritadaki yikilabilir kaya ve agaclar.</summary>
+        public SceneryMap Scenery { get; private set; }
+
         /// <summary>Birliklerin hedefi: alt bandin ortasi.</summary>
         public int BaseCell { get; private set; }
 
@@ -104,6 +132,33 @@ namespace Frontline.Runtime
 
         /// <summary>Dunya yeniden uretildiginde tetiklenir; gorunum katmanlari buna baglanir.</summary>
         public event Action WorldRebuilt;
+
+        /// <summary>
+        /// Bir kaya/agac yikildiginda hucre indeksi ile tetiklenir. Gorunum
+        /// katmani ortuyu kaldirip cukuru cizmek icin buna baglanir.
+        /// </summary>
+        public event Action<int> SceneryCleared;
+
+        /// <summary>
+        /// Bir hucredeki ortuye hasar verir. Kule mermileri, patlamalar ve
+        /// ortuye yaslanan birlikler bunu cagirir; ortu yoksa zararsizdir.
+        /// </summary>
+        /// <returns>Bu cagri ortuyu yiktiysa true.</returns>
+        public bool DamageScenery(int cell, float amount)
+        {
+            return Scenery != null && Scenery.Damage(cell, amount);
+        }
+
+        /// <summary>Dunya konumundaki hucreye hasar verir. Gorunum katmani icin kolaylik.</summary>
+        public bool DamageSceneryAt(Vector2 worldPosition, float amount)
+        {
+            if (Scenery == null || Space == null) return false;
+
+            int cell;
+            if (!Space.WorldToCell(worldPosition, out cell)) return false;
+
+            return Scenery.Damage(cell, amount);
+        }
 
         private readonly List<Emplacement> towers = new List<Emplacement>();
         private readonly List<UnitAgent> activeUnits = new List<UnitAgent>();
@@ -242,7 +297,9 @@ namespace Frontline.Runtime
                 Width = width,
                 Height = height,
                 CorridorCount = corridorCount,
-                CorridorWidth = corridorWidth
+                CorridorWidth = corridorWidth,
+                RungCount = rungCount,
+                SceneryPercent = sceneryPercent
             };
 
             var generator = new MapGenerator();
@@ -273,15 +330,33 @@ namespace Frontline.Runtime
             }
 
             Grid = candidate;
+
+            // Ortu haritadan SONRA kurulur: hangi hucrelerin ortu oldugunu
+            // uretici isaretler, canlarini bu adim dagitir.
+            Scenery = generator.BuildScenery(Grid, activeSeed + attempt, treeHealth, rockHealth);
+            Scenery.Cleared += OnSceneryCleared;
+
             BuildFields();
             BuildEndpoints();
 
             Debug.Log("[Battlefield] Harita hazir. Seed=" + (activeSeed + attempt) +
                       " deneme=" + (attempt + 1) +
                       " koridor=" + result.CorridorCount +
+                      " catal=" + result.JunctionCount +
+                      " ortu=" + Scenery.Occupied.Count +
                       " maliyetFarki=" + result.CostGap.ToString("F2"));
 
             WorldRebuilt?.Invoke();
+        }
+
+        /// <summary>
+        /// Ortu yikildi: hucre artik cukur ve mevzi kurulabilir. Tehdit alani
+        /// bundan etkilenmez, ama gorunum katmaninin haberi olmali.
+        /// </summary>
+        private void OnSceneryCleared(int cell)
+        {
+            var handler = SceneryCleared;
+            if (handler != null) handler(cell);
         }
 
         private void BuildFields()

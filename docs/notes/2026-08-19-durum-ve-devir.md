@@ -108,6 +108,26 @@ Harita artık ekrana sığmıyor, **içinde geziliyor** (`Runtime/View/MapCamera
 
 **Kaydırma ile kule kurma ayrımı:** ikisi de tek parmak. Basıldığı yerden 12 pikselden fazla uzaklaşan hareket kaydırmadır ve `TowerPlacer` o dokunuşu yok sayar; yerleştirme artık parmak **kalkınca** oluyor. Eşik olmadan haritayı her kaydırdığında istemediğin yere kule kuruluyor.
 
+## Yol çeşitliliği ve yıkılabilir örtü (23 Ağustos 2026)
+
+Kullanıcı referansı: klasik mobil TD ekran görüntüleri (kıvrımlı yollar, taş/ağaç dolu araziler, çukurlara kurulan kuleler).
+
+**1. Yol ortasında çatallanma (`MapTemplate.RungCount`, varsayılan 4).** Koridorlar artık yalnızca üst ve alt banttan değil, yol ortasındaki **yatay geçitlerle** de bağlanıyor. Geçitsiz haritada birlik girişe adım attığı anda yolunu seçmiş olur — yani hiç seçmez; oyuncunun tehdit ve yem ile yaptığı yönlendirme hiçbir şeyi değiştiremez. `MapValidator` artık en az 4 **geçiş hücresi** istiyor ve geçitsiz haritayı reddediyor.
+
+Ölçü tanımı önemli: "üçten fazla yürünebilir komşusu olan hücre" **kullanılamaz** — iki hücre genişliğindeki bir koridorun her hücresinin zaten üç komşusu vardır ve geçitsiz harita da geçer görünür. Doğru ölçü: hiçbir dikey koridora ait olmayan yürünebilir hücreler.
+
+**2. Genişlik 11 → 13.** Bu ölçülmüş üst sınırdır, tahmin değil: 13x26'da run %100 kazanıyor (öldürme 218,3 / sızıntı 6,8 / üs 23,3), **15 genişlikte aynı run tamamen çöküyor** (öldürme 5,7 / sızıntı 30 / kazanma %0). 13'ün üzerine çıkmak isteyen önce ölçsün.
+
+**3. Yıkılabilir örtü (`CellKind.Scenery` + `Core/MapGen/SceneryMap.cs`).** Kaya ve ağaçların **canı var**: kaya 30, ağaç 12. Başta geçilemez ve üzerine kule kurulamaz; kule ateşi üzerlerinden geçerken hasar yiyorlar (`TowerWeapon.ChipSceneryOnLine` — kule örtüye nişan almaz, örtü yalnızca hattın üzerinde olduğu için atışı yer). Can bitince hücre **çukura** dönüyor (`BuildStrip`) ve **oraya mevzi kurulabiliyor**.
+
+Tasarım sonucu: **mevzi sayısı sabit değil, kazanılan bir şey.** Oyuncu ateş gücünü bir dalga boyunca örtü açmaya harcayıp yeni mevzi kazanabilir ya da doğrudan sürüye harcayabilir — bu yeni bir denge kararı.
+
+`Battlefield.DamageScenery`, `SceneryCleared` olayı ve `Runtime/View/SceneryView.cs` (canı azalan örtü kararır ve küçülür, yıkılınca yerine çukur çizilir) bu zincirin geri kalanı. `TowerPlacer` hiç değişmedi: zaten `BuildStrip` sorguladığı için çukur kendiliğinden kurulabilir hücre oldu.
+
+**Durum:** 194 EditMode testi geçiyor (önceki 180 + 14 yeni). Sahne `Frontline → Sandbox Sahnesini Uret` ile yeniden üretildi, play modda doğrulandı: `koridor=3 catal=8 ortu=55`.
+
+**Açık kalan:** yeni harita ve örtü mekaniği **simülatörle ölçülmedi.** Çatallanma sürünün koridor entropisini artırır, örtü açmak ateş gücü harcatır; ikisi de dengeye dokunur. Bir sonraki iş `RunSimulator`'a bunları eklemek olmalı — o yapılmadan denge sayıları tahmine düşer.
+
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME
 
 Bu sayıların hepsi tarama ile seçildi. Her biri bir testle korunuyor. Değiştirmek isteyen önce ölçmeli.
