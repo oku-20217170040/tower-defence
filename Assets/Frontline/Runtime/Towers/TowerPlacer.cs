@@ -154,10 +154,13 @@ namespace Frontline.Runtime
             var go = new GameObject("Tower_" + kind);
             go.transform.SetParent(transform, false);
 
-            // Blender asset'i varsa o kullanilir; yoksa daire cizilir.
+            // Gorsel IKI PARCA: sabit kaide + donen ust yapi.
+            // Tek parca oldugunda TowerTurret butun kuleyi ceviriyordu ve
+            // tepeden bakista beton kaide yerinde donuyordu.
             // Tur carpani siluetin YOGUNLUGUNU esitler, sayisini degil.
             float scale = towerScale * TowerFx.For(kind).silhouetteScale;
-            Sprite sprite = PrimitiveSprites.Circle();
+            Sprite turretSprite = PrimitiveSprites.Circle();
+            Sprite platformSprite = null;
             Color color = ColorFor(kind);
 
             ArtLibrary art = ArtLibrary.Instance;
@@ -165,7 +168,8 @@ namespace Frontline.Runtime
 
             if (art != null && art.TryGetTower(kind, out entry))
             {
-                sprite = entry.sprite;
+                if (entry.sprite != null) turretSprite = entry.sprite;
+                platformSprite = entry.platform;
                 if (entry.scale > 0f) scale = entry.scale;
                 color = entry.tint.a > 0f ? entry.tint : Color.white;
             }
@@ -173,9 +177,25 @@ namespace Frontline.Runtime
             float diameter = world.Space.CellSize * scale;
             go.transform.localScale = new Vector3(diameter, diameter, 1f);
 
-            var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.sortingOrder = sortingOrder;
+            // Kaide once cizilir ve ASLA donmez.
+            if (platformSprite != null)
+            {
+                var platformGo = new GameObject("Platform");
+                platformGo.transform.SetParent(go.transform, false);
+
+                var platformRenderer = platformGo.AddComponent<SpriteRenderer>();
+                platformRenderer.sprite = platformSprite;
+                platformRenderer.sortingOrder = sortingOrder;
+                platformRenderer.color = Color.white;
+            }
+
+            // Donen ust yapi kaidenin ustunde.
+            var turretGo = new GameObject("Turret");
+            turretGo.transform.SetParent(go.transform, false);
+
+            var renderer = turretGo.AddComponent<SpriteRenderer>();
+            renderer.sprite = turretSprite;
+            renderer.sortingOrder = sortingOrder + 1;
             renderer.color = color;
 
             var tower = go.AddComponent<Emplacement>();
@@ -232,7 +252,8 @@ namespace Frontline.Runtime
             // mayin tarlasi) bunu soylememeli.
             if (weapon != null)
             {
-                var turret = go.AddComponent<TowerTurret>();
+                var turret = turretGo.AddComponent<TowerTurret>();
+                turret.weapon = weapon;
                 turret.degreesPerSecond = kind == TowerKind.Battery ? 260f : 420f;
             }
 

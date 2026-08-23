@@ -3,7 +3,12 @@ using UnityEngine;
 namespace Frontline.Runtime
 {
     /// <summary>
-    /// Kule govdesini hedefe dondurur.
+    /// Kulenin NAMLUSUNU hedefe dondurur.
+    ///
+    /// Yalnizca turret cocuguna takilir; kaide (Platform) sabit kalir.
+    /// Once kule kokune takiliyordu ve kaide de donuyordu - tepeden bakista
+    /// donen bir beton kaide, kulenin yerden sokulup cevrildigi izlenimi
+    /// veriyor. Gercek top kulelerinde donen sey yalnizca ust yapidir.
     ///
     /// Sprite'lar tepeden bakisla ve namlu YEREL -Y'de (ekranda asagi)
     /// uretiliyor (bkz. tools/blender/towers.py). Birliklerdeki kuralin
@@ -13,9 +18,12 @@ namespace Frontline.Runtime
     /// donmez - donen bir sey oyuncuya "bu beni hedefliyor" der ve
     /// hasarsiz kule bunu soylememeli.
     /// </summary>
-    [RequireComponent(typeof(TowerWeapon))]
     public sealed class TowerTurret : MonoBehaviour
     {
+        [Tooltip("Nisan yonunu okudugu silah. Bos birakilirsa ust nesnelerde " +
+                 "aranir - turret cocugunun silahi kule kokundedir.")]
+        public TowerWeapon weapon;
+
         [Tooltip("Saniyede kac derece doner. Batarya agir bir top oldugu " +
                  "icin yavas, pusu daha cevik olabilir.")]
         public float degreesPerSecond = 320f;
@@ -24,11 +32,9 @@ namespace Frontline.Runtime
                  "geldigi yon degil, GITTIGI yon: kule usu korur).")]
         public Vector2 restDirection = Vector2.down;
 
-        private TowerWeapon weapon;
-
         private void Awake()
         {
-            weapon = GetComponent<TowerWeapon>();
+            if (weapon == null) weapon = GetComponentInParent<TowerWeapon>();
 
             // Baslangicta bekleme yonune bakar; yoksa ilk karede
             // 0 dereceden savrularak doner.

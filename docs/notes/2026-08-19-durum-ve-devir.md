@@ -160,6 +160,24 @@ Blender'dan 15 asset üretildi, hepsi `Assets/Sprites/Frontline/`:
 
 **Sahnede `ArtLibrary` hiç yoktu** — bu yüzden her birlik ve kule beyaz daireye düşüyordu. Sahne üretici artık kuruyor; tint'lerin alpha'sı 0, yani sprite kendi renkleriyle çiziliyor.
 
+### Blender kuleleri atıldı, hazır asset paketine dönüldü (23 Ağustos 2026)
+
+Kullanıcı geri bildirimi: *"grafikler çok kötü, top-down olacak, kuleler komple dönüyor, eski spritlar iyiydi."* Üçü de haklıydı ve üçü ayrı sorundu:
+
+**1. Kule komple dönüyordu — gerçek hata.** `TowerTurret` kulenin KÖK nesnesindeydi, yani `SpriteRenderer` ile aynı yerde. Tepeden bakışta beton kaidenin yerinde dönmesi, kulenin yerden sökülüp çevrildiği izlenimi veriyor. Artık görsel iki parça: sabit `Platform` çocuğu + dönen `Turret` çocuğu; `TowerTurret` yalnızca turret'e takılıyor ve silahı `GetComponentInParent` ile buluyor. `ArtLibrary.TowerArt` bir `platform` alanı kazandı.
+
+**2. Namlu 180° tersti.** `TowerTurret` açıyı `Atan2(y,x) + 90` ile hesaplıyor; bu, sprite'ın namlusunun **yerel -Y**'ye (aşağı) bakmasını gerektiriyor. Ben Blender kulelerini +Y'ye modellemiştim — kod yorumunda yazıyordu, ben yanlış okumuştum. Hepsi hedefe ters bakıyordu.
+
+**3. Açı 3/4 idi, top-down değil.** 32-34° eğimli Cycles render'ları referans oyunlarındaki tepeden bakışla uyuşmuyordu.
+
+**Karar: kuleler, ağaç ve kaya için projede HAZIR duran asset paketi kullanılıyor** (`Assets/Sprites/Towers`, `Assets/Sprites/Garden`). Paket zaten doğru işi yapmış: `Platform.png` + `Turret.png` ayrımı ve gerçek top-down çizim. `Turret.png` (384x384) temiz 4x4 ızgaraya dilimlendi → 16 turret; beşi kule türlerine dağıtıldı. `garden_pieces.png`'e `garden_tree` ve `garden_stone` adlı iki temiz dilim **eklendi** (mevcut dilimler korundu — eski `Assets/Scripts` onlara adla bağlı olabilir).
+
+**Kule ölçeği 1,15 → 0,72.** Paket sprite'ları 1 dünya birimi çıkıyor; siluet çarpanıyla birlikte en büyük kule 1,5 hücreye ulaşıp komşu mevzilerin üstüne taşıyordu. Şimdi 0,72-0,94 hücre bandında (oyunda ölçüldü).
+
+**`Bases/Base.png` KULLANILMADI:** güzel bir tepeden kale görseli ama arka planı saydam değil, gri gradyan. Haritaya gri bir kutu koyardı. Arka planı temizlenirse Blender üssünün yerine geçebilir.
+
+**Hâlâ Blender'dan:** birlikler (6 tür), üs, çukur ve zemin döşemeleri. Birlikler ile üs üslup olarak paketten ayrık duruyor — sıradaki iş orası.
+
 **Hâlâ açık:** atış görselleri (`FxArt` — mermi, namlu çakması, çarpma) atanmadı; hepsi daireye düşüyor.
 
 **Açık kalan:** yeni harita ve örtü mekaniği **simülatörle ölçülmedi.** Çatallanma sürünün koridor entropisini artırır, örtü açmak ateş gücü harcatır; ikisi de dengeye dokunur. Bir sonraki iş `RunSimulator`'a bunları eklemek olmalı — o yapılmadan denge sayıları tahmine düşer.

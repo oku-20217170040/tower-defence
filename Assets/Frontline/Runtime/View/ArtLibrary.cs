@@ -38,7 +38,15 @@ namespace Frontline.Runtime
         public struct TowerArt
         {
             public TowerKind kind;
+
+            [Tooltip("DONEN ust yapi: namlu / anten / tabla. Sprite'in " +
+                     "namlusu YEREL -Y'ye (asagi) bakmali; TowerTurret aciyi " +
+                     "buna gore hesapliyor.")]
             public Sprite sprite;
+
+            [Tooltip("SABIT kaide. Donmez. Bos birakilirsa kule yalnizca " +
+                     "ust yapidan ibaret olur.")]
+            public Sprite platform;
 
             [Tooltip("Sprite'in hucre boyutuna orani. 0 ise placer'in " +
                      "varsayilani kullanilir.")]

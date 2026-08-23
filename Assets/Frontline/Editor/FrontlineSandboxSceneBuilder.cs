@@ -60,8 +60,11 @@ namespace Frontline.EditorTools
             var sceneryGo = new GameObject("SceneryView");
             var scenery = sceneryGo.AddComponent<SceneryView>();
             scenery.world = world;
-            scenery.treeSprite = LoadSprite("scenery_tree");
-            scenery.rockSprite = LoadSprite("scenery_rock");
+            // Agac ve kaya paketten geliyor (Garden/garden_pieces).
+            // Blender'da urettiklerim yaninda uslup olarak yabanci
+            // kaliyordu: biri boyali 2B, digeri render edilmis 3B.
+            scenery.treeSprite = LoadSubSprite(GardenSheet, "garden_tree");
+            scenery.rockSprite = LoadSubSprite(GardenSheet, "garden_stone");
             scenery.craterSprite = LoadSprite("scenery_crater");
 
             // Sprite'lar Blender'dan KENDI renkleriyle geliyor; tint beyaz
@@ -112,6 +115,12 @@ namespace Frontline.EditorTools
             placer.world = world;
             placer.targetCamera = camera;
             placer.economy = economy;
+
+            // Kule sprite'lari 1 dunya birimi cikiyor; varsayilan 1,15 ile
+            // carpilinca siluet carpani en buyuk kulede 1,5 HUCREYE ulasip
+            // komsu mevzilerin uzerine tasiyordu. 0,72 en buyugu ~0,95
+            // hucrede tutuyor.
+            placer.towerScale = 0.72f;
 
             // ── Arayuz ──────────────────────────────────────────────
             var hudGo = new GameObject("RunHud");
@@ -166,13 +175,20 @@ namespace Frontline.EditorTools
                 MakeUnit(UnitType.Queen,    "unit_queen",    own),
             };
 
+            // Kule gorselleri projede HAZIR duran asset paketinden geliyor
+            // (Assets/Sprites/Towers). Blender'da urettigim ilk kuleler iki
+            // sebeple atildi: acilari 3/4 idi, top-down degil; ve namluyu
+            // +Y'ye modellemistim - TowerTurret ise YEREL -Y bekliyor,
+            // yani hepsi hedefe ters bakiyordu.
+            Sprite platform = LoadSubSprite(TowerSheetPlatform, "Platform_0");
+
             art.towers = new[]
             {
-                MakeTower(TowerKind.Battery,   "tower_battery",   own),
-                MakeTower(TowerKind.Ambush,    "tower_ambush",    own),
-                MakeTower(TowerKind.Decoy,     "tower_decoy",     own),
-                MakeTower(TowerKind.Minefield, "tower_minefield", own),
-                MakeTower(TowerKind.Beam,      "tower_beam",      own),
+                MakeTower(TowerKind.Battery,   "turret_0_3", platform, own),
+                MakeTower(TowerKind.Ambush,    "turret_0_0", platform, own),
+                MakeTower(TowerKind.Decoy,     "turret_3_0", platform, own),
+                MakeTower(TowerKind.Minefield, "turret_2_1", platform, own),
+                MakeTower(TowerKind.Beam,      "turret_1_0", platform, own),
             };
 
             art.baseSprite = LoadSprite("home_base");
@@ -190,15 +206,39 @@ namespace Frontline.EditorTools
             };
         }
 
-        private static ArtLibrary.TowerArt MakeTower(TowerKind kind, string file, Color tint)
+        private const string GardenSheet = "Assets/Sprites/Garden/garden_pieces.png";
+        private const string TowerSheetTurret = "Assets/Sprites/Towers/Cannon_tower/Turret.png";
+        private const string TowerSheetPlatform = "Assets/Sprites/Towers/Cannon_tower/Platform.png";
+
+        private static ArtLibrary.TowerArt MakeTower(
+            TowerKind kind, string turretName, Sprite platform, Color tint)
         {
             return new ArtLibrary.TowerArt
             {
                 kind = kind,
-                sprite = LoadSprite(file),
+                sprite = LoadSubSprite(TowerSheetTurret, turretName),
+                platform = platform,
                 scale = 0f,      // 0 = placer'in varsayilani
                 tint = tint
             };
+        }
+
+        /// <summary>
+        /// Bir sprite sayfasindan tek bir dilimi ada gore ceker.
+        /// LoadAssetAtPath sayfanin KENDISINI dondurur, dilimleri degil;
+        /// dilimlere ancak LoadAllAssetsAtPath ile ulasilir.
+        /// </summary>
+        private static Sprite LoadSubSprite(string sheetPath, string spriteName)
+        {
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(sheetPath))
+            {
+                var sprite = asset as Sprite;
+                if (sprite != null && sprite.name == spriteName) return sprite;
+            }
+
+            Debug.LogWarning("[FrontlineSandbox] Dilim bulunamadi: " +
+                             spriteName + " (" + sheetPath + ")");
+            return null;
         }
 
         /// <summary>
