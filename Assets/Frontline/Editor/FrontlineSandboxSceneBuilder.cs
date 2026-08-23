@@ -56,6 +56,16 @@ namespace Frontline.EditorTools
             var sceneryGo = new GameObject("SceneryView");
             var scenery = sceneryGo.AddComponent<SceneryView>();
             scenery.world = world;
+            scenery.treeSprite = LoadSprite("scenery_tree");
+            scenery.rockSprite = LoadSprite("scenery_rock");
+            scenery.craterSprite = LoadSprite("scenery_crater");
+
+            // Sprite'lar Blender'dan KENDI renkleriyle geliyor; tint beyaz
+            // olmali ki uzerlerine ikinci bir renk binmesin. Hasar
+            // karartmasi yine calisir: SceneryView tinti orana gore soldurur.
+            scenery.treeTint = Color.white;
+            scenery.rockTint = Color.white;
+            scenery.craterTint = Color.white;
 
             // ── Us ────────────────────────────────────────────────
             var homeBaseGo = new GameObject("HomeBaseHealth");
@@ -123,6 +133,21 @@ namespace Frontline.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Debug.Log("[FrontlineSandbox] Sahne uretildi: " + ScenePath);
+        }
+
+        /// <summary>
+        /// Blender'dan uretilen ortu gorselini yukler. Bulunamazsa null doner
+        /// ve SceneryView daireye duser - eksik asset oyunu durdurmamali.
+        /// </summary>
+        private static Sprite LoadSprite(string fileName)
+        {
+            string path = "Assets/Sprites/Frontline/" + fileName + ".png";
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+
+            if (sprite == null)
+                Debug.LogWarning("[FrontlineSandbox] Sprite bulunamadi: " + path);
+
+            return sprite;
         }
     }
 }

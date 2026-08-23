@@ -126,6 +126,15 @@ Tasarım sonucu: **mevzi sayısı sabit değil, kazanılan bir şey.** Oyuncu at
 
 **Durum:** 194 EditMode testi geçiyor (önceki 180 + 14 yeni). Sahne `Frontline → Sandbox Sahnesini Uret` ile yeniden üretildi, play modda doğrulandı: `koridor=3 catal=8 ortu=55`.
 
+**Örtü görselleri Blender ile üretildi** (`Assets/Sprites/Frontline/scenery_tree|rock|crater.png`, 512x512 RGBA). Cycles, ortografik kamera, 32° eğim, saydam zemin. İki ders kayda değer:
+
+- Blender 4'ün varsayılan **AgX** renk dönüşümü sprite'ları soldurup griye çeviriyor. `view_transform = 'Standard'` şart.
+- **Kontur kalınlığı çözünürlükle değil, oyundaki piksel boyutuyla ölçeklenir.** 512'de 5 piksellik Freestyle konturu, ~40 piksel görünen sprite'ta yarım piksele düşüp kayboluyor. 14'e çıkarıldı; referans görsellerdeki koyu dış hat ancak öyle okunuyor.
+
+Sahne üreticisi sprite'ları `AssetDatabase` ile yüklüyor, bulunamazsa uyarı verip daireye düşüyor — eksik asset oyunu durdurmamalı. Tint'ler beyaz: sprite kendi rengini taşıyor, hasar karartması yine çalışıyor.
+
+**Doğrulandı (play modda, 23 Ağu):** 59 örtünün 30'u vuruldu → 30'u yıkıldı → 30'u `BuildStrip` oldu → 30 çukur nesnesi çizildi. Zincirin tamamı çalışıyor.
+
 **Açık kalan:** yeni harita ve örtü mekaniği **simülatörle ölçülmedi.** Çatallanma sürünün koridor entropisini artırır, örtü açmak ateş gücü harcatır; ikisi de dengeye dokunur. Bir sonraki iş `RunSimulator`'a bunları eklemek olmalı — o yapılmadan denge sayıları tahmine düşer.
 
 ## Ölçülmüş sabitler — TAHMİNLE DEĞİŞTİRME
