@@ -160,6 +160,23 @@ Blender'dan 15 asset üretildi, hepsi `Assets/Sprites/Frontline/`:
 
 **Sahnede `ArtLibrary` hiç yoktu** — bu yüzden her birlik ve kule beyaz daireye düşüyordu. Sahne üretici artık kuruyor; tint'lerin alpha'sı 0, yani sprite kendi renkleriyle çiziliyor.
 
+### Her şey Blender'da, tam tepeden — kaynak dosya kaydedildi (23 Ağustos 2026)
+
+Kullanıcı kararı: **hazır asset paketleri tamamen bırakıldı.** Bütün görseller Blender'da üretiliyor ve hepsi **tam tepeden** (kamera eğimi 0°, ortografik). Kaynak dosya: `tools/blender/frontline_sprites.blend` — 21 koleksiyon (5 turret, 5 kaide, 6 birlik, üs, ağaç, kaya, çukur, zemin döşemesi). Kamera, ışık ve kontur ayarları dosyada duruyor; sprite değiştirmek isteyen sıfırdan modellemesin.
+
+**Üretilen 23 asset:** `t_{battery,ambush,decoy,minefield,beam}_{turret,platform}`, `u_{infantry,scout,soldier,blind,brood,queen}`, `home_base`, `scenery_{tree,rock,crater}`, `tile_{corridor,buildstrip,blocked}`.
+
+**Namlu artık istisnasız:** hepsi Blender'da **yerel −Y**'ye modellendi, yani `TowerTurret`'in taban kuralına (`açı = Atan2 + 90`) uyuyor. `rotationOffset` hepsinde 0. `UnitAgent` de aynı kuralı kullandığı için birlikler de −Y'ye bakacak şekilde modellendi. Hazır paketlerde her sayfa başka bir yön kullandığı için bu alan gerekmişti; kendi ürettiğimiz sette gerek yok ama alan duruyor — dışarıdan asset gelirse yine lazım olur.
+
+**Tam tepeden bakışın kendi sorunu var: her şey yassı görünür.** Işık tepedeyken bütün yüzeyler aynı parlaklığı alır. Çözüm üç parça:
+1. Anahtar ışığı **alçalt** (52° yanal) — gövde üzerinde gradyan üretir.
+2. Her nesneye **temas gölgesi** (hafif kaydırılmış koyu disk) — tepeden bakışta nesneyi zeminden ayıran tek ipucu.
+3. Ortak **zırhlı gövde dili** (alt kütle + üst kapak + tarete): beş kule aynı gövdeyi paylaşır, **fark silahta** olur. Oyuncu türü silahtan okur.
+
+**İki tuzak daha:**
+- **İç içe ince halkalar tepeden bakışta siyah bir hedef tahtasına dönüyor** — her halka kendi Freestyle konturunu üretiyor ve ışık araya giremiyor. Yem kulesi ilk denemede tamamen karardı; az sayıda büyük yüzey + dışa uzanan antenlere çevrildi.
+- **Kule sprite'ları 1,7 birimlik çerçeveye çekiliyor** (namlu dönerken çerçeveden taşmasın diye), görünür içerik çerçevenin ~0,68'i. `towerScale = 0,72` kuleyi 0,28 hücreye düşürüp görünmez yapmıştı; 1,15 görünür gövdeyi ~0,8 hücrede tutuyor. **Çerçeve payı olan sprite'ta ölçek doğrudan okunamaz.**
+
 ### Görsel elden geçirme: beş ayrı kule, namlu yönü, düşmanlar, üs, zemin (23 Ağustos 2026)
 
 Kullanıcı geri bildirimi: *"kuleler namlularının arka taraflarıyla ateş ediyor, ışın/batarya/pusu birbirinin aynısı, zemin ve üs basit, düşman türlerini oluştur."* Hepsi doğruydu.

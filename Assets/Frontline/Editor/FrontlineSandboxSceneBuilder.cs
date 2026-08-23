@@ -60,11 +60,8 @@ namespace Frontline.EditorTools
             var sceneryGo = new GameObject("SceneryView");
             var scenery = sceneryGo.AddComponent<SceneryView>();
             scenery.world = world;
-            // Agac ve kaya paketten geliyor (Garden/garden_pieces).
-            // Blender'da urettiklerim yaninda uslup olarak yabanci
-            // kaliyordu: biri boyali 2B, digeri render edilmis 3B.
-            scenery.treeSprite = LoadSubSprite(GardenSheet, "garden_tree");
-            scenery.rockSprite = LoadSubSprite(GardenSheet, "garden_stone");
+            scenery.treeSprite = LoadSprite("scenery_tree");
+            scenery.rockSprite = LoadSprite("scenery_rock");
             scenery.craterSprite = LoadSprite("scenery_crater");
 
             // Sprite'lar Blender'dan KENDI renkleriyle geliyor; tint beyaz
@@ -116,11 +113,11 @@ namespace Frontline.EditorTools
             placer.targetCamera = camera;
             placer.economy = economy;
 
-            // Kule sprite'lari 1 dunya birimi cikiyor; varsayilan 1,15 ile
-            // carpilinca siluet carpani en buyuk kulede 1,5 HUCREYE ulasip
-            // komsu mevzilerin uzerine tasiyordu. 0,72 en buyugu ~0,95
-            // hucrede tutuyor.
-            placer.towerScale = 0.72f;
+            // Blender kule sprite'lari 1,7 birimlik bir cerceveye cekiliyor
+            // (namlu donerken cerceveden tasmasin diye). Gorunur icerik
+            // cercevenin ~0,68'i; 0,72 olcek kuleyi 0,28 hucreye dusurup
+            // gorunmez yapiyordu. 1,15 gorunur govdeyi ~0,8 hucrede tutar.
+            placer.towerScale = 1.15f;
 
             // ── Arayuz ──────────────────────────────────────────────
             var hudGo = new GameObject("RunHud");
@@ -154,10 +151,16 @@ namespace Frontline.EditorTools
         }
 
         /// <summary>
-        /// Birlik, kule ve us gorsellerini tasiyan tek kaynak. Tint'lerin
-        /// ALPHA'SI 0: ArtLibrary bunu "sprite kendi renkleriyle cizilsin"
-        /// diye okuyor. Alpha 1 verilirse Blender render'inin uzerine ikinci
-        /// bir renk biner ve butun paleti bozar.
+        /// Birlik, kule ve us gorsellerini tasiyan tek kaynak.
+        ///
+        /// BUTUN gorseller Blender'da uretiliyor (tools/blender kaynak
+        /// dosyasi: Assets/Sprites/Frontline/frontline_sprites.blend) ve
+        /// hepsi TAM TEPEDEN cekiliyor. Hazir asset paketleri birakildi:
+        /// acilari 3/4 idi, namlu yonleri sayfadan sayfaya degisiyordu ve
+        /// bes kule ayni sayfadan gelince birbirinin kopyasi oluyordu.
+        ///
+        /// Tint'lerin ALPHA'SI 0: ArtLibrary bunu "sprite kendi renkleriyle
+        /// cizilsin" diye okuyor.
         /// </summary>
         private static void BuildArtLibrary()
         {
@@ -165,133 +168,62 @@ namespace Frontline.EditorTools
             var art = go.AddComponent<ArtLibrary>();
             Color own = new Color(1f, 1f, 1f, 0f);
 
-            // Birlikler paketin TEPEDEN asker gorselinden turetiliyor.
-            // Tek bir asker cizimi var; turler renk, kare ve olcekle
-            // ayrisiyor. Agir tur ise tank: "yavas, cok canli" tanimina
-            // arac silueti askerden cok daha iyi oturuyor.
             art.units = new[]
             {
-                MakeUnit(UnitType.Infantry, LoadSprite2(ArmyMiddle), own),
-                MakeUnit(UnitType.Scout,    LoadSprite2(ArmyLeft),
-                         new Color(0.95f, 0.86f, 0.55f, 1f)),
-                MakeUnit(UnitType.Soldier,  LoadSprite2(TankCut),   own),
-                MakeUnit(UnitType.Blind,    LoadSprite2(ArmyRight),
-                         new Color(0.48f, 0.50f, 0.56f, 1f)),
-                MakeUnit(UnitType.Brood,    LoadSprite2(ArmyLeft),
-                         new Color(0.72f, 0.45f, 0.85f, 1f)),
-                MakeUnit(UnitType.Queen,    LoadSprite2(TankCut),
-                         new Color(0.90f, 0.25f, 0.28f, 1f)),
+                MakeUnit(UnitType.Infantry, "u_infantry", own),
+                MakeUnit(UnitType.Scout,    "u_scout",    own),
+                MakeUnit(UnitType.Soldier,  "u_soldier",  own),
+                MakeUnit(UnitType.Blind,    "u_blind",    own),
+                MakeUnit(UnitType.Brood,    "u_brood",    own),
+                MakeUnit(UnitType.Queen,    "u_queen",    own),
             };
 
-            // Bes kule bes AYRI kaynaktan geliyor. Hepsini tek sayfadan
-            // secmek onlari birbirinin kopyasi yapiyordu; oysa kule turu
-            // oyunun MERKEZI ayrimi - oyuncu bir bakista ayirt etmeli.
+            // Bes kule bes AYRI siluet. Kule turu oyunun merkezi ayrimi;
+            // oyuncu bir bakista ayirt etmeli (spec 3.1-3.2).
+            //
+            // rotationOffset HEPSINDE 0: namlular Blender'da YEREL -Y'ye
+            // modellendi, yani TowerTurret'in taban kuralina uyuyorlar.
+            // Hicbir sprite kendi istisnasini tasimiyor.
             art.towers = new[]
             {
-                // Batarya: agir top. Ordu ondan kacmayi ogrenir, en
-                // gosterisli olan bu. Namlu sayfada YUKARI cizilmis.
-                MakeTower(TowerKind.Battery,
-                          LoadSubSprite(SheetCannonTurret, "turret_0_3"),
-                          LoadSubSprite(SheetCannonPlatform, "Platform_0"),
-                          180f, own),
-
-                // Pusu: alcak, yesil makineli. Ordu onu ALGILAYAMAZ.
-                // Namlu sayfada SOLA cizilmis.
-                MakeTower(TowerKind.Ambush,
-                          LoadSubSprite(SheetMachineGun, "mg_turret"),
-                          LoadSubSprite(SheetMachineGun, "mg_platform"),
-                          90f, own),
-
-                // Yem: radar canagi. Namlusu yok, hasar vermez - siluet
-                // bunu soylemeli.
-                MakeTower(TowerKind.Decoy,
-                          LoadSubSprite(SheetRadar, "radar_dish"),
-                          LoadSubSprite(SheetRadar, "radar_platform"),
-                          0f, own),
-
-                // Mayin tarlasi: buz kulesi. Yavaslatma alani ile kristal
-                // ayni seyi anlatiyor. Tek parca; donmez zaten.
-                MakeTower(TowerKind.Minefield,
-                          LoadSubSprite(SheetIce, "ice_tower"),
-                          null,
-                          0f, own),
-
-                // Isin: mavi enerji namlusu, gri radar kaidesi uzerinde.
-                MakeTower(TowerKind.Beam,
-                          LoadSubSprite(SheetCannonTurret, "turret_1_0"),
-                          LoadSubSprite(SheetRadar, "radar_platform"),
-                          180f, own),
+                MakeTower(TowerKind.Battery,   "t_battery",   own),
+                MakeTower(TowerKind.Ambush,    "t_ambush",    own),
+                MakeTower(TowerKind.Decoy,     "t_decoy",     own),
+                MakeTower(TowerKind.Minefield, "t_minefield", own),
+                MakeTower(TowerKind.Beam,      "t_beam",      own),
             };
 
-            // Us: paketin tepeden kalesi. Kaynak gorselin arka plani
-            // saydam degildi; tasma-doldurma ile kesilip
-            // Sprites/Frontline/home_fortress.png olarak kaydedildi.
-            art.baseSprite = LoadSprite("home_fortress");
+            art.baseSprite = LoadSprite("home_base");
             art.baseTint = own;
         }
 
-        private const string ArmyMiddle = "Assets/Sprites/Enemies/Army Runne/Army_middle.png";
-        private const string ArmyLeft = "Assets/Sprites/Enemies/Army Runne/Army_left.png";
-        private const string ArmyRight = "Assets/Sprites/Enemies/Army Runne/Army_right.png";
-        private const string TankCut = "Assets/Sprites/Frontline/enemy_tank.png";
-
-        private static ArtLibrary.UnitArt MakeUnit(UnitType type, Sprite sprite, Color tint)
+        private static ArtLibrary.UnitArt MakeUnit(UnitType type, string file, Color tint)
         {
             return new ArtLibrary.UnitArt
             {
                 type = type,
-                sprite = sprite,
+                sprite = LoadSprite(file),
                 scale = 0f,      // 0 = spawner'in varsayilani
                 tint = tint
             };
         }
 
-        /// <summary>Tam yol ile tek sprite yukler.</summary>
-        private static Sprite LoadSprite2(string path)
-        {
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-            if (sprite == null)
-                Debug.LogWarning("[FrontlineSandbox] Sprite bulunamadi: " + path);
-            return sprite;
-        }
-
-        private const string GardenSheet = "Assets/Sprites/Garden/garden_pieces.png";
-        private const string SheetCannonTurret = "Assets/Sprites/Towers/Cannon_tower/Turret.png";
-        private const string SheetCannonPlatform = "Assets/Sprites/Towers/Cannon_tower/Platform.png";
-        private const string SheetMachineGun = "Assets/Sprites/Towers/Machine_Gun_tower/Machnie_Gun.png";
-        private const string SheetRadar = "Assets/Sprites/Towers/Radar_tower/Radar.png";
-        private const string SheetIce = "Assets/Sprites/Towers/Ice_tower/Ice_tower.png";
-
-        private static ArtLibrary.TowerArt MakeTower(
-            TowerKind kind, Sprite turret, Sprite platform, float rotationOffset, Color tint)
+        /// <summary>
+        /// Kule gorseli iki parcadir: "<prefix>_turret" doner,
+        /// "<prefix>_platform" sabit kalir. Ikisi de ayni ortografik
+        /// olcekle cekildigi icin Unity'de birebir ust uste oturur.
+        /// </summary>
+        private static ArtLibrary.TowerArt MakeTower(TowerKind kind, string prefix, Color tint)
         {
             return new ArtLibrary.TowerArt
             {
                 kind = kind,
-                sprite = turret,
-                platform = platform,
-                rotationOffset = rotationOffset,
+                sprite = LoadSprite(prefix + "_turret"),
+                platform = LoadSprite(prefix + "_platform"),
+                rotationOffset = 0f,
                 scale = 0f,      // 0 = placer'in varsayilani
                 tint = tint
             };
-        }
-
-        /// <summary>
-        /// Bir sprite sayfasindan tek bir dilimi ada gore ceker.
-        /// LoadAssetAtPath sayfanin KENDISINI dondurur, dilimleri degil;
-        /// dilimlere ancak LoadAllAssetsAtPath ile ulasilir.
-        /// </summary>
-        private static Sprite LoadSubSprite(string sheetPath, string spriteName)
-        {
-            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(sheetPath))
-            {
-                var sprite = asset as Sprite;
-                if (sprite != null && sprite.name == spriteName) return sprite;
-            }
-
-            Debug.LogWarning("[FrontlineSandbox] Dilim bulunamadi: " +
-                             spriteName + " (" + sheetPath + ")");
-            return null;
         }
 
         /// <summary>
