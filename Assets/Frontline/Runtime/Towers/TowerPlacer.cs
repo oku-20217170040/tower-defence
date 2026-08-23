@@ -161,6 +161,7 @@ namespace Frontline.Runtime
             float scale = towerScale * TowerFx.For(kind).silhouetteScale;
             Sprite turretSprite = PrimitiveSprites.Circle();
             Sprite platformSprite = null;
+            float rotationOffset = 0f;
             Color color = ColorFor(kind);
 
             ArtLibrary art = ArtLibrary.Instance;
@@ -170,6 +171,7 @@ namespace Frontline.Runtime
             {
                 if (entry.sprite != null) turretSprite = entry.sprite;
                 platformSprite = entry.platform;
+                rotationOffset = entry.rotationOffset;
                 if (entry.scale > 0f) scale = entry.scale;
                 color = entry.tint.a > 0f ? entry.tint : Color.white;
             }
@@ -254,6 +256,7 @@ namespace Frontline.Runtime
             {
                 var turret = turretGo.AddComponent<TowerTurret>();
                 turret.weapon = weapon;
+                turret.rotationOffset = rotationOffset;
                 turret.degreesPerSecond = kind == TowerKind.Battery ? 260f : 420f;
             }
 

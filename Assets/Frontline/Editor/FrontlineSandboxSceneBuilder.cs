@@ -165,59 +165,112 @@ namespace Frontline.EditorTools
             var art = go.AddComponent<ArtLibrary>();
             Color own = new Color(1f, 1f, 1f, 0f);
 
+            // Birlikler paketin TEPEDEN asker gorselinden turetiliyor.
+            // Tek bir asker cizimi var; turler renk, kare ve olcekle
+            // ayrisiyor. Agir tur ise tank: "yavas, cok canli" tanimina
+            // arac silueti askerden cok daha iyi oturuyor.
             art.units = new[]
             {
-                MakeUnit(UnitType.Infantry, "unit_infantry", own),
-                MakeUnit(UnitType.Scout,    "unit_scout",    own),
-                MakeUnit(UnitType.Soldier,  "unit_soldier",  own),
-                MakeUnit(UnitType.Blind,    "unit_blind",    own),
-                MakeUnit(UnitType.Brood,    "unit_brood",    own),
-                MakeUnit(UnitType.Queen,    "unit_queen",    own),
+                MakeUnit(UnitType.Infantry, LoadSprite2(ArmyMiddle), own),
+                MakeUnit(UnitType.Scout,    LoadSprite2(ArmyLeft),
+                         new Color(0.95f, 0.86f, 0.55f, 1f)),
+                MakeUnit(UnitType.Soldier,  LoadSprite2(TankCut),   own),
+                MakeUnit(UnitType.Blind,    LoadSprite2(ArmyRight),
+                         new Color(0.48f, 0.50f, 0.56f, 1f)),
+                MakeUnit(UnitType.Brood,    LoadSprite2(ArmyLeft),
+                         new Color(0.72f, 0.45f, 0.85f, 1f)),
+                MakeUnit(UnitType.Queen,    LoadSprite2(TankCut),
+                         new Color(0.90f, 0.25f, 0.28f, 1f)),
             };
 
-            // Kule gorselleri projede HAZIR duran asset paketinden geliyor
-            // (Assets/Sprites/Towers). Blender'da urettigim ilk kuleler iki
-            // sebeple atildi: acilari 3/4 idi, top-down degil; ve namluyu
-            // +Y'ye modellemistim - TowerTurret ise YEREL -Y bekliyor,
-            // yani hepsi hedefe ters bakiyordu.
-            Sprite platform = LoadSubSprite(TowerSheetPlatform, "Platform_0");
-
+            // Bes kule bes AYRI kaynaktan geliyor. Hepsini tek sayfadan
+            // secmek onlari birbirinin kopyasi yapiyordu; oysa kule turu
+            // oyunun MERKEZI ayrimi - oyuncu bir bakista ayirt etmeli.
             art.towers = new[]
             {
-                MakeTower(TowerKind.Battery,   "turret_0_3", platform, own),
-                MakeTower(TowerKind.Ambush,    "turret_0_0", platform, own),
-                MakeTower(TowerKind.Decoy,     "turret_3_0", platform, own),
-                MakeTower(TowerKind.Minefield, "turret_2_1", platform, own),
-                MakeTower(TowerKind.Beam,      "turret_1_0", platform, own),
+                // Batarya: agir top. Ordu ondan kacmayi ogrenir, en
+                // gosterisli olan bu. Namlu sayfada YUKARI cizilmis.
+                MakeTower(TowerKind.Battery,
+                          LoadSubSprite(SheetCannonTurret, "turret_0_3"),
+                          LoadSubSprite(SheetCannonPlatform, "Platform_0"),
+                          180f, own),
+
+                // Pusu: alcak, yesil makineli. Ordu onu ALGILAYAMAZ.
+                // Namlu sayfada SOLA cizilmis.
+                MakeTower(TowerKind.Ambush,
+                          LoadSubSprite(SheetMachineGun, "mg_turret"),
+                          LoadSubSprite(SheetMachineGun, "mg_platform"),
+                          90f, own),
+
+                // Yem: radar canagi. Namlusu yok, hasar vermez - siluet
+                // bunu soylemeli.
+                MakeTower(TowerKind.Decoy,
+                          LoadSubSprite(SheetRadar, "radar_dish"),
+                          LoadSubSprite(SheetRadar, "radar_platform"),
+                          0f, own),
+
+                // Mayin tarlasi: buz kulesi. Yavaslatma alani ile kristal
+                // ayni seyi anlatiyor. Tek parca; donmez zaten.
+                MakeTower(TowerKind.Minefield,
+                          LoadSubSprite(SheetIce, "ice_tower"),
+                          null,
+                          0f, own),
+
+                // Isin: mavi enerji namlusu, gri radar kaidesi uzerinde.
+                MakeTower(TowerKind.Beam,
+                          LoadSubSprite(SheetCannonTurret, "turret_1_0"),
+                          LoadSubSprite(SheetRadar, "radar_platform"),
+                          180f, own),
             };
 
-            art.baseSprite = LoadSprite("home_base");
+            // Us: paketin tepeden kalesi. Kaynak gorselin arka plani
+            // saydam degildi; tasma-doldurma ile kesilip
+            // Sprites/Frontline/home_fortress.png olarak kaydedildi.
+            art.baseSprite = LoadSprite("home_fortress");
             art.baseTint = own;
         }
 
-        private static ArtLibrary.UnitArt MakeUnit(UnitType type, string file, Color tint)
+        private const string ArmyMiddle = "Assets/Sprites/Enemies/Army Runne/Army_middle.png";
+        private const string ArmyLeft = "Assets/Sprites/Enemies/Army Runne/Army_left.png";
+        private const string ArmyRight = "Assets/Sprites/Enemies/Army Runne/Army_right.png";
+        private const string TankCut = "Assets/Sprites/Frontline/enemy_tank.png";
+
+        private static ArtLibrary.UnitArt MakeUnit(UnitType type, Sprite sprite, Color tint)
         {
             return new ArtLibrary.UnitArt
             {
                 type = type,
-                sprite = LoadSprite(file),
+                sprite = sprite,
                 scale = 0f,      // 0 = spawner'in varsayilani
                 tint = tint
             };
         }
 
+        /// <summary>Tam yol ile tek sprite yukler.</summary>
+        private static Sprite LoadSprite2(string path)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+                Debug.LogWarning("[FrontlineSandbox] Sprite bulunamadi: " + path);
+            return sprite;
+        }
+
         private const string GardenSheet = "Assets/Sprites/Garden/garden_pieces.png";
-        private const string TowerSheetTurret = "Assets/Sprites/Towers/Cannon_tower/Turret.png";
-        private const string TowerSheetPlatform = "Assets/Sprites/Towers/Cannon_tower/Platform.png";
+        private const string SheetCannonTurret = "Assets/Sprites/Towers/Cannon_tower/Turret.png";
+        private const string SheetCannonPlatform = "Assets/Sprites/Towers/Cannon_tower/Platform.png";
+        private const string SheetMachineGun = "Assets/Sprites/Towers/Machine_Gun_tower/Machnie_Gun.png";
+        private const string SheetRadar = "Assets/Sprites/Towers/Radar_tower/Radar.png";
+        private const string SheetIce = "Assets/Sprites/Towers/Ice_tower/Ice_tower.png";
 
         private static ArtLibrary.TowerArt MakeTower(
-            TowerKind kind, string turretName, Sprite platform, Color tint)
+            TowerKind kind, Sprite turret, Sprite platform, float rotationOffset, Color tint)
         {
             return new ArtLibrary.TowerArt
             {
                 kind = kind,
-                sprite = LoadSubSprite(TowerSheetTurret, turretName),
+                sprite = turret,
                 platform = platform,
+                rotationOffset = rotationOffset,
                 scale = 0f,      // 0 = placer'in varsayilani
                 tint = tint
             };

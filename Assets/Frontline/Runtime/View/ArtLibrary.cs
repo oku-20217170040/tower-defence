@@ -39,10 +39,15 @@ namespace Frontline.Runtime
         {
             public TowerKind kind;
 
-            [Tooltip("DONEN ust yapi: namlu / anten / tabla. Sprite'in " +
-                     "namlusu YEREL -Y'ye (asagi) bakmali; TowerTurret aciyi " +
-                     "buna gore hesapliyor.")]
+            [Tooltip("DONEN ust yapi: namlu / anten / tabla.")]
             public Sprite sprite;
+
+            [Tooltip("Sprite'in namlusu hangi yone cizilmis? Derece cinsinden " +
+                     "duzeltme. Hazir asset paketlerinde her sayfa baska bir " +
+                     "yon kullaniyor - top namluyu YUKARI, makineli SOLA " +
+                     "ciziyor - ve tek bir kural hepsine uymuyor. " +
+                     "0 = namlu asagi (-Y), 180 = yukari (+Y), 90 = sola (-X).")]
+            public float rotationOffset;
 
             [Tooltip("SABIT kaide. Donmez. Bos birakilirsa kule yalnizca " +
                      "ust yapidan ibaret olur.")]

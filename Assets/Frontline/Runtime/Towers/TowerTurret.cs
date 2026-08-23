@@ -10,9 +10,10 @@ namespace Frontline.Runtime
     /// donen bir beton kaide, kulenin yerden sokulup cevrildigi izlenimi
     /// veriyor. Gercek top kulelerinde donen sey yalnizca ust yapidir.
     ///
-    /// Sprite'lar tepeden bakisla ve namlu YEREL -Y'de (ekranda asagi)
-    /// uretiliyor (bkz. tools/blender/towers.py). Birliklerdeki kuralin
-    /// aynisi, tek yerden: hedef aci = yonun acisi + 90 derece.
+    /// Taban kural: namlu YEREL -Y'de (ekranda asagi), hedef aci = yonun
+    /// acisi + 90 derece. Hazir asset paketleri bu kurala uymuyor - top
+    /// namluyu yukari, makineli sola ciziyor - bu yuzden her sprite kendi
+    /// duzeltmesini rotationOffset ile bildirir.
     ///
     /// Yalnizca HASAR VEREN kulelere takilir. Yem ve mayin tarlasi
     /// donmez - donen bir sey oyuncuya "bu beni hedefliyor" der ve
@@ -23,6 +24,11 @@ namespace Frontline.Runtime
         [Tooltip("Nisan yonunu okudugu silah. Bos birakilirsa ust nesnelerde " +
                  "aranir - turret cocugunun silahi kule kokundedir.")]
         public TowerWeapon weapon;
+
+        [Tooltip("Sprite'in namlu yonu duzeltmesi (derece). Taban kural " +
+                 "namlunun YEREL -Y'de olmasidir; baska yone cizilmis " +
+                 "sprite'lar bunu bildirir. Bkz. ArtLibrary.TowerArt.")]
+        public float rotationOffset;
 
         [Tooltip("Saniyede kac derece doner. Batarya agir bir top oldugu " +
                  "icin yavas, pusu daha cevik olabilir.")]
@@ -54,10 +60,13 @@ namespace Frontline.Runtime
                 degreesPerSecond * Time.deltaTime);
         }
 
-        /// <summary>Sprite'in yerel -Y ekseni verilen yone baksin.</summary>
-        private static float AngleFor(Vector2 direction)
+        /// <summary>
+        /// Sprite'in namlusu verilen yone baksin. Taban kural: namlu yerel
+        /// -Y'de. rotationOffset baska yone cizilmis sprite'lari duzeltir.
+        /// </summary>
+        private float AngleFor(Vector2 direction)
         {
-            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + 90f;
+            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + 90f + rotationOffset;
         }
     }
 }

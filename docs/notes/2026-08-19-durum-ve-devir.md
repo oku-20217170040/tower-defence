@@ -160,6 +160,32 @@ Blender'dan 15 asset üretildi, hepsi `Assets/Sprites/Frontline/`:
 
 **Sahnede `ArtLibrary` hiç yoktu** — bu yüzden her birlik ve kule beyaz daireye düşüyordu. Sahne üretici artık kuruyor; tint'lerin alpha'sı 0, yani sprite kendi renkleriyle çiziliyor.
 
+### Görsel elden geçirme: beş ayrı kule, namlu yönü, düşmanlar, üs, zemin (23 Ağustos 2026)
+
+Kullanıcı geri bildirimi: *"kuleler namlularının arka taraflarıyla ateş ediyor, ışın/batarya/pusu birbirinin aynısı, zemin ve üs basit, düşman türlerini oluştur."* Hepsi doğruydu.
+
+**1. Namlu yönü artık sprite başına tanımlı.** Tek bir küresel kural (`namlu yerel -Y'de`) hazır asset paketlerinde çalışmıyor: aynı projedeki `Cannon_tower` namluyu **yukarı**, `Machine_Gun_tower` **sola** çiziyor. `ArtLibrary.TowerArt.rotationOffset` eklendi, `TowerTurret` açıya ekliyor. 0 = aşağı, 180 = yukarı, 90 = sola. Doğrulama: dinlenme yönü `Vector2.down` iken top 180°, makineli 90° dönüyor ve ikisinin de namlusu üsse bakıyor.
+
+**2. Beş kule beş AYRI kaynaktan.** Hepsini tek sayfadan seçmek onları birbirinin kopyası yapıyordu; oysa kule türü oyunun merkezi ayrımı — oyuncu bir bakışta ayırt etmeli.
+
+| Kule | Görsel | Neden |
+|---|---|---|
+| Batarya | Top namlusu + taş kaide | Ordu ondan kaçmayı öğrenir; en gösterişli olan bu |
+| Pusu | Yeşil makineli + yeşil oktogon | Alçak, kompakt; ordu onu algılayamaz |
+| Yem | Radar çanağı + gri kaide | **Namlusu yok** — siluet "bu silah değil" demeli |
+| Mayın tarlası | Buz kulesi (tek parça) | Yavaşlatma alanı ile kristal aynı şeyi anlatıyor; dönmez |
+| Işın | Mavi enerji namlusu + gri kaide | Enerji silahı |
+
+Sayfaların dilim koordinatları **göz kararı değil**, opak bileşenlerin sınır kutuları otomatik bulunarak çıkarıldı.
+
+**Tuzak:** `spritesheet` rect'leri **orijinal** piksel uzayında, `GetPixels32` ise `maxTextureSize` ile küçültülmüş dokuyu veriyor. İkisi ayrışınca dilimler kayıyor (Ice_tower 2528→2048, oran 0,81). Çözüm: kesilecek sayfalarda `maxTextureSize = 4096`.
+
+**3. Düşmanlar pakete geçti.** `Enemies/Army Runne` gerçek tepeden asker çizimi; türler renk ve ölçekle ayrışıyor. Ağır tür (`Soldier` — "yavaş, çok canlı") ve `Queen` **tank**: araç silueti bu tanıma askerden çok daha iyi oturuyor.
+
+**4. Üs artık paketin tepeden kalesi.** Kaynak `Bases/Base.png`'in arka planı saydam değildi. Kenarlardan başlayan, komşusuna göre tolerans uygulayan bir taşma-doldurma ile kesildi — gradyanı takip eder, nesnenin sert dış hattında durur. Sıkıştırma benekleri adacıklar bırakınca ikinci geçiş eklendi: **opak bileşenlerden yalnızca en büyüğü tutulur.** Tek konulu görsellerde bu güvenilir. Sonuç: `Sprites/Frontline/home_fortress.png`, `enemy_tank.png`.
+
+**5. Zemin paleti değişti:** hepsi-kahverengiydi ve üzerine konan yeşil ağaç, gri kule ile hiçbir kontrast üretmiyordu. Artık kule kurulan alan **çim**, koridor **toprak yol**, engel **kaya**.
+
 ### Blender kuleleri atıldı, hazır asset paketine dönüldü (23 Ağustos 2026)
 
 Kullanıcı geri bildirimi: *"grafikler çok kötü, top-down olacak, kuleler komple dönüyor, eski spritlar iyiydi."* Üçü de haklıydı ve üçü ayrı sorundu:
