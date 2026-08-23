@@ -193,6 +193,16 @@ namespace Frontline.EditorTools
                 MakeTower(TowerKind.Beam,      "t_beam",      own),
             };
 
+            // Atis gorselleri: mermi, namlu cakmasi, carpma. Yalnizca
+            // SILAHLI kuleler icin var - yem ve mayin tarlasi ates etmez.
+            // Isinin mermisi yok; hat ElectricBeam ile ciziliyor.
+            art.fx = new[]
+            {
+                MakeFx(TowerKind.Battery, "fx_battery_bullet", "fx_battery_muzzle", "fx_battery_impact"),
+                MakeFx(TowerKind.Ambush,  "fx_ambush_bullet",  "fx_ambush_muzzle",  "fx_ambush_impact"),
+                MakeFx(TowerKind.Beam,    null,                "fx_beam_muzzle",    "fx_beam_impact"),
+            };
+
             art.baseSprite = LoadSprite("home_base");
             art.baseTint = own;
         }
@@ -205,6 +215,18 @@ namespace Frontline.EditorTools
                 sprite = LoadSprite(file),
                 scale = 0f,      // 0 = spawner'in varsayilani
                 tint = tint
+            };
+        }
+
+        private static ArtLibrary.FxArt MakeFx(
+            TowerKind kind, string bullet, string muzzle, string impact)
+        {
+            return new ArtLibrary.FxArt
+            {
+                kind = kind,
+                bullet = bullet != null ? LoadSprite(bullet) : null,
+                muzzle = LoadSprite(muzzle),
+                impact = LoadSprite(impact)
             };
         }
 

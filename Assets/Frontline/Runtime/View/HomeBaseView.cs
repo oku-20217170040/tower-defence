@@ -33,8 +33,11 @@ namespace Frontline.Runtime
         [Tooltip("Usun hucre cinsinden genisligi. 0 ise ArtLibrary'deki deger.")]
         public float scale;
 
-        [Tooltip("Cizim sirasi: kulelerin altinda, zeminin ustunde.")]
-        public int sortingOrder = 8;
+        [Tooltip("Cizim sirasi. BIRLIKLERIN USTUNDE olmali (birlik sirasi 20): " +
+                 "usse yaklasan birlik binanin ARKASINA gecmeli ki iceri " +
+                 "giriyor gibi gorunsun. 8 iken birlikler kalenin catisinda " +
+                 "yuruyup usten kayboluyordu.")]
+        public int sortingOrder = 24;
 
         [Tooltip("Us hucresinden YUKARI kaydirma (hucre). Us hucresi en alt " +
                  "sirada; sprite 2 hucreden genis oldugu icin ortalanirsa " +

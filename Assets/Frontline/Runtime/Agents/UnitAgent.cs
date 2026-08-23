@@ -183,8 +183,30 @@ namespace Frontline.Runtime
             // hedeflere ates etmeye devam eder.
             world.UnregisterUnit(this);
 
+            // Sizinti oyunun en pahali olayi; gorunmeden gecmemeli.
+            // Birligin bir kopyasi kapidan iceri suzulur (usun ALTINDA
+            // cizilir). Oyun mantigi beklemez - sayac hemen isler.
+            LeaveEntryVisual();
+
             Finished?.Invoke(this);
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Usse giren birligin gorsel kopyasini birakir. Us gorunumu
+        /// sahnede yoksa sessizce atlanir - gorsel katman oyunun
+        /// calismasi icin zorunlu olmamali.
+        /// </summary>
+        private void LeaveEntryVisual()
+        {
+            var sprite = GetComponent<SpriteRenderer>();
+            if (sprite == null) return;
+
+            var view = FindFirstObjectByType<HomeBaseView>();
+            if (view == null) return;
+
+            BaseEntry.Spawn(sprite, world.Space.CellToWorld(world.BaseCell),
+                            view.sortingOrder);
         }
 
         /// <summary>

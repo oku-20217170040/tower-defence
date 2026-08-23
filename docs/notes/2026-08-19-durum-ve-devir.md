@@ -160,6 +160,24 @@ Blender'dan 15 asset üretildi, hepsi `Assets/Sprites/Frontline/`:
 
 **Sahnede `ArtLibrary` hiç yoktu** — bu yüzden her birlik ve kule beyaz daireye düşüyordu. Sahne üretici artık kuruyor; tint'lerin alpha'sı 0, yani sprite kendi renkleriyle çiziliyor.
 
+### Atış görselleri küçültüldü, üsse giriş animasyonu (23 Ağustos 2026)
+
+**Mermiler küçültüldü.** Ölçüler **hücre oranıdır** (`TowerWeapon.EmitTracer` hepsini `Space.CellSize` ile çarpar) — kule boyutuyla ilgisi yok. 23 Ağustos'ta "telefonda küçük kalıyor" diye 1,4 kat büyütülmüştü, ama o büyütme **kuleler daire olarak çizilirken** yapılmıştı. Gerçek kule görselleri gelince mermi kulenin yarısı kadar oldu, patlama hücreyi kapattı.
+
+| | önce | sonra |
+|---|---|---|
+| Batarya mermi / çakma / çarpma | 0,46 / 0,72 / 1,00 | **0,20 / 0,34 / 0,46** |
+| Pusu | 0,34 / 0,44 / 0,55 | **0,13 / 0,21 / 0,28** |
+| Işın (mermisiz) | – / 0,60 / 0,68 | – / **0,26 / 0,30** |
+
+Ayrıca sekiz atış görseli Blender'da üretildi (`fx_*`): mermi, namlu çakması, çarpma patlaması. Bunlar küçük çizildiği için detay değil **siluet ve parlaklık** taşır; konturu 13'ten 5'e indirmek gerekti, yoksa 12 piksellik mermide kontur görselin tamamını yutuyor.
+
+**Üsse giriş.** Birlik üsse varınca anında yok oluyordu — sızıntı oyunun en pahalı olayı ve görünmeden geçiyordu. Artık `BaseEntry` bir kopya bırakıyor: kapıya doğru kayar, küçülür, solar.
+
+**İllüzyonun tamamı çizim sırasında.** Birlikler 20, üs **8** sırasındaydı — yani birlik kalenin **çatısında yürüyüp** üstten kayboluyordu. `HomeBaseView.sortingOrder = 24` yapıldı (birliklerin üstünde); giriş kopyası 22'de, yani üssün altında ama zeminin üstünde. Şimdi üsse yaklaşan birlik binanın arkasına geçiyor ve gerçekten içeri giriyor gibi duruyor.
+
+`BaseEntry` oyun mantığına dokunmaz: sızıntı sayacı birlik varır varmaz işler, bu yalnızca bırakılan bir görseldir.
+
 ### Her şey Blender'da, tam tepeden — kaynak dosya kaydedildi (23 Ağustos 2026)
 
 Kullanıcı kararı: **hazır asset paketleri tamamen bırakıldı.** Bütün görseller Blender'da üretiliyor ve hepsi **tam tepeden** (kamera eğimi 0°, ortografik). Kaynak dosya: `tools/blender/frontline_sprites.blend` — 21 koleksiyon (5 turret, 5 kaide, 6 birlik, üs, ağaç, kaya, çukur, zemin döşemesi). Kamera, ışık ve kontur ayarları dosyada duruyor; sprite değiştirmek isteyen sıfırdan modellemesin.

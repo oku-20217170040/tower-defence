@@ -57,10 +57,16 @@ namespace Frontline.Runtime
         /// AYNI kalir (spec 9.1): batarya buyuk ve yavas mermi + genis
         /// patlama, pusu kucuk hizli dart + ufak kivilcim.
         ///
-        /// 23 Agustos: butun atis gorselleri yaklasik 1,4 kat buyutuldu.
-        /// Telefonda mermi ve patlama hucrenin yaninda kucuk kaliyordu -
-        /// sayilar birbirine gore dogruydu ama TOPLU olarak dusuktu.
-        /// Oranlar korundu, yalnizca bant yukari tasindi.
+        /// 23 Agustos (once): butun atis gorselleri 1,4 kat buyutuldu.
+        /// 23 Agustos (sonra): GERI ALINDI ve daha da kucultuldu. O
+        /// buyutme, kuleler daire olarak cizilirken yapilmisti; gercek
+        /// kule gorselleri gelince mermi kulenin yarisi kadar oldu ve
+        /// patlama hucreyi kapatti.
+        ///
+        /// Olculer HUCRE oranidir (bkz. TowerWeapon.EmitTracer: hepsi
+        /// Space.CellSize ile carpiliyor), kule boyutuyla ilgisi yoktur.
+        /// Mermi hucrenin bestebiri civari olmali: gorulecek kadar buyuk,
+        /// hedefi ortmeyecek kadar kucuk.
         /// </summary>
         public static TowerFx For(TowerKind kind)
         {
@@ -70,10 +76,10 @@ namespace Frontline.Runtime
                 {
                     muzzleOffset = 0.42f,
                     silhouetteScale = 1.0f,
-                    bulletScale = 0.46f,
+                    bulletScale = 0.20f,
                     bulletSpeed = 11f,
-                    muzzleScale = 0.72f,
-                    impactScale = 1.0f,
+                    muzzleScale = 0.34f,
+                    impactScale = 0.46f,
                     fallbackColor = new Color(1f, 0.62f, 0.25f, 0.9f)
                 };
             }
@@ -86,8 +92,8 @@ namespace Frontline.Runtime
                     silhouetteScale = 1.05f,
                     bulletScale = 0f,      // isinin mermisi YOK, hat cizilir
                     bulletSpeed = 0f,
-                    muzzleScale = 0.60f,
-                    impactScale = 0.68f,
+                    muzzleScale = 0.26f,
+                    impactScale = 0.30f,
                     fallbackColor = new Color(0.55f, 0.88f, 1f, 0.9f)
                 };
             }
@@ -104,10 +110,10 @@ namespace Frontline.Runtime
             {
                 muzzleOffset = 0.48f,
                 silhouetteScale = silhouette,
-                bulletScale = 0.34f,
+                bulletScale = 0.13f,
                 bulletSpeed = 20f,
-                muzzleScale = 0.44f,
-                impactScale = 0.55f,
+                muzzleScale = 0.21f,
+                impactScale = 0.28f,
                 fallbackColor = new Color(0.80f, 0.88f, 0.94f, 0.75f)
             };
         }
