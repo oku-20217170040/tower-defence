@@ -315,15 +315,23 @@ namespace Frontline.Runtime
             go.transform.localScale = new Vector3(diameter, diameter, 1f);
 
             // Kaide once cizilir ve ASLA donmez.
+            // Golge kaymasi hucre boyutuyla olceklenir (bkz. SpriteShadow).
+            Vector2 shadowOffset = new Vector2(0.07f, -0.07f) * world.Space.CellSize;
+            SpriteRenderer platformRenderer = null;
+
             if (platformSprite != null)
             {
                 var platformGo = new GameObject("Platform");
                 platformGo.transform.SetParent(go.transform, false);
 
-                var platformRenderer = platformGo.AddComponent<SpriteRenderer>();
+                platformRenderer = platformGo.AddComponent<SpriteRenderer>();
                 platformRenderer.sprite = platformSprite;
                 platformRenderer.sortingOrder = sortingOrder;
                 platformRenderer.color = Color.white;
+
+                // Kaidenin zemine dusen golgesi.
+                SpriteShadow.Attach(platformRenderer, go.transform,
+                                    shadowOffset * 0.6f, sortingOrder - 1);
             }
 
             // Donen ust yapi kaidenin ustunde.
@@ -332,8 +340,14 @@ namespace Frontline.Runtime
 
             var renderer = turretGo.AddComponent<SpriteRenderer>();
             renderer.sprite = turretSprite;
-            renderer.sortingOrder = sortingOrder + 1;
+            renderer.sortingOrder = sortingOrder + 2;
             renderer.color = color;
+
+            // Taretin kaideye dusen golgesi: kaide ile taret arasinda cizilir.
+            // Yalnizca iki parcali (kaideli) kulelerde - tek sprite'li eski
+            // kulelerde zemine dusen bir taret golgesi yanlis okunurdu.
+            if (platformRenderer != null)
+                SpriteShadow.Attach(renderer, go.transform, shadowOffset, sortingOrder + 1);
 
             var tower = go.AddComponent<Emplacement>();
             tower.kind = kind;

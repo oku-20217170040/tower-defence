@@ -101,3 +101,7 @@ docs/notes/refimg2/
 .plastic/
 UpgradeLog*.htm
 *.slnx
+
+# Asset kutuphanesi: Unity "Library/" kurali bunu da yutuyordu
+!/tools/blender/library/
+__pycache__/

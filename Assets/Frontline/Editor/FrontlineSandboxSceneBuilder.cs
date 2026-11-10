@@ -327,11 +327,14 @@ namespace Frontline.EditorTools
             // sapma, 4 Eylul gece plani notuna bkz.).
             art.towers = new[]
             {
-                MakeVarietyTower(TowerKind.Battery,   "agir_top",         own),
-                MakeVarietyTower(TowerKind.Ambush,    "hizli_ates",       own),
-                MakeVarietyTower(TowerKind.Decoy,     "radar_destek",     own),
-                MakeVarietyTower(TowerKind.Minefield, "zaman_bozulmasi",  own),
-                MakeVarietyTower(TowerKind.Beam,      "keskin_nisanci",   own),
+                MakeSetTower(TowerKind.Battery, "cn"),
+                // 11 Kasim 2026: Makineli Tufek (tek hedef, hizli ates) artik
+                // kalici asset kutuphanesinden gelir - sabit kaide + donen
+                // taret AYRI sprite (tools/blender/library/tower_mg.py).
+                MakeSetTower(TowerKind.Ambush, "mg"),
+                MakeSetTower(TowerKind.Decoy, "rd"),
+                MakeSetTower(TowerKind.Minefield, "tm"),
+                MakeSetTower(TowerKind.Beam, "sn"),
             };
 
             // Atis gorselleri: mermi, namlu cakmasi, carpma. Yalnizca
@@ -415,6 +418,44 @@ namespace Frontline.EditorTools
                 scale = 0f,
                 tint = new Color(tint.r, tint.g, tint.b, 0f)
             };
+        }
+
+        /// <summary>
+        /// Kalici asset kutuphanesinden (tools/blender/library) uretilen
+        /// iki parcali kule: {prefix}_base.png sabit kaide, {prefix}_L{n}_turret.png
+        /// donen taret. Ikisi AYNI kadrajla render edildigi icin ust uste
+        /// tam otururlar. Olcek: tuval 1,4 birim, kaide capi 0,88 birim;
+        /// 1,35 kaideyi hucrenin ~%85'ine getirir.
+        /// </summary>
+        private static ArtLibrary.TowerArt MakeSetTower(TowerKind kind, string prefix)
+        {
+            var l1 = LoadSetSprite(prefix + "_L1_turret");
+            return new ArtLibrary.TowerArt
+            {
+                kind = kind,
+                sprite = l1,
+                platform = LoadSetSprite(prefix + "_base"),
+                rotationOffset = 0f,
+                levelTurrets = new[]
+                {
+                    l1,
+                    LoadSetSprite(prefix + "_L2_turret"),
+                    LoadSetSprite(prefix + "_L3_turret"),
+                },
+                scale = 1.35f,
+                tint = new Color(1f, 1f, 1f, 0f)
+            };
+        }
+
+        private static Sprite LoadSetSprite(string name)
+        {
+            string path = "Assets/Frontline/Art/TowerSet/" + name + ".png";
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+
+            if (sprite == null)
+                Debug.LogWarning("[FrontlineSandbox] TowerSet sprite bulunamadi: " + path);
+
+            return sprite;
         }
 
         private static Sprite LoadVarietySprite(string prefix, int level)
