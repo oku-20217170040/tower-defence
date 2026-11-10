@@ -141,7 +141,12 @@ namespace Frontline.Tests
 
             Assert.That(avg.Killed, Is.InRange(195f, 245f), "Oldurme gercek run'dan sapti: " + avg.Killed);
             Assert.That(avg.Leaked, Is.InRange(1f, 10f), "Sizinti gercek run'dan sapti: " + avg.Leaked);
-            Assert.That(avg.LeftoverFood, Is.InRange(45f, 95f), "Artan besin gercek run'dan sapti: " + avg.LeftoverFood);
+            // 3 Eylul 2026 (gece 4. tur): EconomyPlanner.Costs.Default() x5 olcekle
+            // yuvarlak sayilara cekildi (bkz. EconomyRunner.cs notu) -- artan besin
+            // parasal bir buyukluk oldugu icin ayni x5 ile (45-95 -> 225-475)
+            // guncellendi. Oldurme/sizinti/us-cani birim bazli oldugundan (para
+            // degil) degismedi -- bu asagidaki 3 satir dokunulmadan kaldi.
+            Assert.That(avg.LeftoverFood, Is.InRange(225f, 475f), "Artan besin gercek run'dan sapti: " + avg.LeftoverFood);
             Assert.That(avg.HomeBaseHpLeft, Is.InRange(20f, 30f), "Us cani gercek run'dan sapti: " + avg.HomeBaseHpLeft);
         }
 

@@ -49,7 +49,37 @@ namespace Frontline.Core
         /// kurulur - silmenin hicbir etkisi olmuyor (sizinti 26,4 -> 26,4).
         /// Ordunun gercek hafizasi kesif izidir.
         /// </summary>
-        Queen = 5
+        Queen = 5,
+
+        /// <summary>
+        /// Yaban Arisi: UCAR. Koridor tanimaz, duz cizgide usya gider
+        /// (spec 5.2).
+        ///
+        /// TASARIM UYARISI - bu tur oyunun merkezini delme riskini tasir.
+        /// Oyunun tamami koridor + kesif izi + kandirma uzerine kurulu
+        /// (spec 3). Koridor tanimayan bir birlik, oyuncunun butun tuzak
+        /// kurgusunu atlar. 20 Agustos'ta bu yuzden ucan birlik yerine
+        /// KOR birlik (Blind) konmustu. Ucan yine de eklendi, ama uc
+        /// kisitla - ucu de bu riskin dogrudan panzehiridir:
+        ///
+        ///   1) SEYREK GELIR. Pay kucuk ve FirstWave gec
+        ///      (bkz. UnitRoster.FlyerShare / FlyerFirstWave). Ucan bir
+        ///      tehdit cesnisidir, dalganin govdesi degildir.
+        ///   2) IZ BIRAKMAZ. Deposit/Reinforce/Weaken carpanlari 0 ve
+        ///      LeavesNoRecon acik. Sebep mekanik: ucan duvarlarin
+        ///      uzerinden gecer; iz biraksaydi YURUNMEYEN hucrelere
+        ///      kesif izi yazardi ve ogrenme katmani yalnizca kirlenmis
+        ///      olmazdi, anlamsizlasirdi. Ucan orduyu ogretmez, yalnizca
+        ///      oyuncuyu yoklar.
+        ///   3) CEVABI VARDIR. Duz cizgi tam olarak koridorlarin
+        ///      ARASINDAN gecer - spec 3.8'e gore kurulum seritleri
+        ///      oradadir. Yani menzili yeten kule ona ulasir; cani da
+        ///      dusuktur (x0,6). Ucan "cevapsiz" degil, "farkli cevap
+        ///      isteyen" tehdittir.
+        ///
+        /// OLCULMEDI: bu paragraftaki butun sayilar TAHMINDIR.
+        /// </summary>
+        Flyer = 6
     }
 
     /// <summary>
@@ -128,6 +158,27 @@ namespace Frontline.Core
         /// </summary>
         public bool ErasesDecoy;
 
+        /// <summary>
+        /// Ucar: araziyi (duvarlari, koridorlari) yok sayar ve usya duz
+        /// cizgide gider. Yol bulucu hic calistirilmaz.
+        ///
+        /// Polarite bilerek NEGATIFTIR (varsayilan false = yurur). Boylece
+        /// default(UnitProfile) eski davranisi korur; mevcut 200 test bu
+        /// varsayima bagli.
+        /// </summary>
+        public bool IgnoresTerrain;
+
+        /// <summary>
+        /// Hic kesif izi birakmaz: ne yururken deposit, ne varista
+        /// pekistirme, ne olumde zayiflatma. Ucan icindir.
+        ///
+        /// Carpanlari 0 yapmak tek basina yeterli olabilirdi; ayri bir
+        /// bayrak var cunku "iz birakmama" bir SAYI degil bir TASARIM
+        /// KARARIDIR ve testin dogrudan iddia edebilecegi bir sey olmali.
+        /// Yine negatif polarite: varsayilan false = iz birakir.
+        /// </summary>
+        public bool LeavesNoRecon;
+
         /// <summary>Taban birlik: butun carpanlar 1, hicbir ozel davranis yok.</summary>
         public static UnitProfile Infantry()
         {
@@ -141,6 +192,28 @@ namespace Frontline.Core
                 WeakenMultiplier = 1f,
                 SplitHpMultiplier = 1f
             };
+        }
+
+        /// <summary>
+        /// Yaban Arisi. Ucar, iz birakmaz, kirilgandir.
+        ///
+        /// Sayilar OLCULMEDI - tahmindir. Gerekceler:
+        ///   can x0,6   : oyuncunun cevabi olabilmeli; menzili yeten tek
+        ///                kule birkac atista dusurebilmeli (spec 5.2'nin
+        ///                "cevap birak" kosulu).
+        ///   hiz x1,3   : duz cizgi zaten kisa yoldur; ustune yuksek hiz
+        ///                verilirse kule hic atis penceresi bulamaz. 1,3
+        ///                "aceleci ama vurulabilir" bandi icin secildi.
+        ///   iz carpanlari 0 : bkz. UnitType.Flyer aciklamasi (2. kisit).
+        ///
+        /// IgnoresRecon/IgnoresDecoy DE acik: ucan zaten yolu izlemiyor,
+        /// dolayisiyla yem ve iz onun icin tanimsizdir. Bu, ucanin
+        /// KANDIRILAMAZ oldugu anlamina gelir - tam da payinin kucuk ve
+        /// giris dalgasinin gec olmasinin sebebi budur.
+        /// </summary>
+        public static UnitProfile Flyer()
+        {
+            return For(UnitType.Flyer);
         }
 
         /// <summary>
@@ -199,6 +272,25 @@ namespace Frontline.Core
                 profile.SplitCount = 2;
                 profile.SplitHpMultiplier = 0.5f;
                 profile.WeakenMultiplier = 3f;
+            }
+            else if (type == UnitType.Flyer)
+            {
+                profile.HpMultiplier = 0.6f;
+                profile.SpeedMultiplier = 1.3f;
+
+                profile.IgnoresTerrain = true;
+                profile.LeavesNoRecon = true;
+
+                // Iz kanallarinin ucu de kapali. LeavesNoRecon'u
+                // uygulayan taraf bunlari zaten atlamali; carpanlarin da
+                // 0 olmasi ikinci bir emniyet kemeridir.
+                profile.DepositMultiplier = 0f;
+                profile.ReinforceMultiplier = 0f;
+                profile.WeakenMultiplier = 0f;
+
+                // Ucan yolu izlemedigi icin iz ve yem onun icin tanimsiz.
+                profile.IgnoresRecon = true;
+                profile.IgnoresDecoy = true;
             }
             else if (type == UnitType.Queen)
             {

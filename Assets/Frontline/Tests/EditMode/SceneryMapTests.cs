@@ -85,6 +85,33 @@ namespace Frontline.Tests
         }
 
         [Test]
+        public void Damage_DepletingHealth_RaisesClearedDetailed_WithKindAndMaxHp()
+        {
+            var grid = EmptyGrid();
+            var scenery = new SceneryMap(grid);
+            int cell = grid.Index(1, 1);
+            scenery.Place(cell, SceneryKind.Rock, 30f);
+
+            int detailedCell = -1;
+            SceneryKind detailedKind = SceneryKind.None;
+            float detailedMaxHp = -1f;
+            scenery.ClearedDetailed += (c, k, hp) =>
+            {
+                detailedCell = c;
+                detailedKind = k;
+                detailedMaxHp = hp;
+            };
+
+            scenery.Damage(cell, 30f);
+
+            Assert.AreEqual(cell, detailedCell);
+            Assert.AreEqual(SceneryKind.Rock, detailedKind,
+                "ClearedDetailed, Clear() sifirlamadan ONCEKI turu tasimali.");
+            Assert.AreEqual(30f, detailedMaxHp, 0.001f,
+                "ClearedDetailed, Clear() sifirlamadan ONCEKI azami cani tasimali.");
+        }
+
+        [Test]
         public void Damage_OnEmptyCell_IsHarmless()
         {
             var grid = EmptyGrid();

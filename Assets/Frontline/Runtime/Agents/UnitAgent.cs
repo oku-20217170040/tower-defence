@@ -69,6 +69,17 @@ namespace Frontline.Runtime
             pathIndex = 0;
             ReachedBase = false;
 
+            // UCAN: yol bulucu HIC calistirilmaz. Ucan araziyi tanimaz,
+            // dolayisiyla maliyet modelinin (iz, yem, tehdit, kesif sapmasi)
+            // hicbiri onun icin tanimli degildir. Ortak maliyet modeline
+            // ucan icin ozel bir ayar sokmak yururyen ordunun dengesini
+            // kirletirdi; ucan kendi aptal duz cizgisini kullanir.
+            if (profile.IgnoresTerrain)
+            {
+                FlightPath.Build(world.Grid, spawnCell, world.BaseCell, path);
+                return BeginRoute(spawnCell);
+            }
+
             // Rota algisi TURE ozeldir: kor birlik ize ve yeme bakmaz, izci
             // daha yuksek sapmayla yola cikar. Bunlar sorgu basina verilir,
             // cunku maliyet modeli butun ordunun ortak nesnesidir.
@@ -85,6 +96,22 @@ namespace Frontline.Runtime
             if (!world.Pathfinder.FindPath(spawnCell, world.BaseCell, path))
             {
                 Debug.LogWarning("[UnitAgent] " + spawnCell + " hucminefieldden usya rota yok.");
+                active = false;
+                return false;
+            }
+
+            return BeginRoute(spawnCell);
+        }
+
+        /// <summary>
+        /// Rota hazir olduktan sonraki ortak baslangic. Yururyen ve ucan
+        /// birlik burada AYNI kodu kullanir; ayrilan tek sey rotanin nasil
+        /// uretildigidir.
+        /// </summary>
+        private bool BeginRoute(int spawnCell)
+        {
+            if (path.Count == 0)
+            {
                 active = false;
                 return false;
             }
@@ -162,6 +189,13 @@ namespace Frontline.Runtime
         private void EnterCell(int cell)
         {
             visited.Add(cell);
+
+            // Ucan iz BIRAKMAZ. Sebep mekanik degil, tasarimsal degil -
+            // ikisi de: ucan duvarlarin uzerinden geciyor, iz biraksaydi
+            // YURUNMEYEN hucrelere kesif izi yazardi ve yururyen ordu o
+            // ize gore rota kurmaya calisirdi. Ogrenme katmani cop olurdu.
+            if (profile.LeavesNoRecon) return;
+
             world.Recon.Deposit(cell, depositPerCell * profile.DepositMultiplier);
         }
 
@@ -171,7 +205,9 @@ namespace Frontline.Runtime
             ReachedBase = true;
 
             // Basarili rota guclenir - ordun ogrenmesi budur.
-            world.Recon.DepositTrail(visited, reinforceOnSuccess * profile.ReinforceMultiplier);
+            // Ucan bu kanali da kullanmaz: ordu ucandan HICBIR SEY ogrenmez.
+            if (!profile.LeavesNoRecon)
+                world.Recon.DepositTrail(visited, reinforceOnSuccess * profile.ReinforceMultiplier);
 
             // Kralice usya varirsa ordu ogrendigi her seyi unutur.
             // Tehdit alani DEGIL kesif izi silinir: ordunun hafizasi odur
@@ -218,7 +254,11 @@ namespace Frontline.Runtime
             if (!active) return;
             active = false;
 
-            world.Recon.WeakenTrail(visited, weakenOnDeath * profile.WeakenMultiplier);
+            // Ucanin olumu de orduya bir sey ogretmez; duz cizgisi
+            // yururyen birliklerin koridoruyla ilgisiz oldugu icin oradan
+            // silinen iz yanlis koridoru sonumlendirirdi.
+            if (!profile.LeavesNoRecon)
+                world.Recon.WeakenTrail(visited, weakenOnDeath * profile.WeakenMultiplier);
             world.UnregisterUnit(this);
 
             // Olum ACIK renkte soner.

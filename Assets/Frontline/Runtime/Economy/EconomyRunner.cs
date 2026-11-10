@@ -35,39 +35,57 @@ namespace Frontline.Runtime
         [Tooltip("Run basindaki besin. 90 olcumle secildi. 50 iken ilk dalgada " +
                  "YALNIZCA BIR kule kurulabiliyordu - uc koridorlu bir haritada " +
                  "bu, oyuncunun sistemi hic kuramamasi demek (oyuncu geri bildirimi).")]
-        public int startingBalance = 90;
+        public int startingBalance = 450;
 
         [Tooltip("Oldurulen birlik basina besin.")]
-        public int foodPerKill = 1;
+        public int foodPerKill = 5;
 
         [Tooltip("Dalga tamamlaninca kazanilan besin. Bu bir TABAN GELIRDIR: " +
                  "oldurmekten bagimsiz oldugu icin kaybetme sarmalini kirar.")]
-        public int foodPerWave = 6;
+        public int foodPerWave = 30;
 
         [Header("Kule Fiyatlari")]
         [Tooltip("Batarya kule ucuzdur: tek basina ise yaramadigi icin (spec 3.4) " +
                  "oyuncunun onu denemesi ucuza gelmeli.")]
-        public int batteryCost = 20;
+        public int batteryCost = 100;
 
         [Tooltip("Pusu mevzisi pahalidir: gercek katliami o yapar.")]
-        public int ambushCost = 40;
+        public int ambushCost = 200;
 
         [Tooltip("Sahte hedef orta fiyatlidir.")]
-        public int decoyCost = 26;
+        public int decoyCost = 130;
 
         [Tooltip("Mayin tarlasi kulesi. Hasar vermedigi icin sessizden ucuz; degeri " +
                  "yalnizca bir pusu mevzisiyle eslestiginde ortaya cikiyor.")]
-        public int minefieldCost = 26;
+        public int minefieldCost = 130;
 
         [Tooltip("Isin kulesi. Pusu ile mayin tarlasi arasinda fiyatlandi. " +
                  "Olcum fiyatin isin icin ZAYIF bir dugme oldugunu gosterdi " +
                  "(20 ile 50 arasi sizintiyi 15,3'ten 15,9'a tasiyor) cunku " +
                  "kulelerin cogu draft'tan bedava geliyor.")]
-        public int beamCost = 34;
+        public int beamCost = 170;
 
         [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
                  "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]
-        public int costStepPerSameKind = 5;
+        public int costStepPerSameKind = 25;
+
+        // NOT (3 Eylul 2026, gece 4. tur): fiyatlar SABIT/yuvarlak sayilara
+        // cekildi -- eski degerlerin (90/20/40/26/26/34/5) TAM x5 katidir,
+        // yani DENGE ORANI birebir korunuyor (hicbir sayi rastgele
+        // degistirilmedi). x5 secilmesinin nedeni: batteryCost*5=100 ve
+        // ambushCost*5=200 referans oyunda GERCEKTEN OLCULEN degerlerle
+        // (Makineli Tufek 100, Top 200 -- bkz.
+        // docs/notes/2026-09-03-ekonomi-buton-tema-karsilastirma.md) BIREBIR
+        // eslesiyor. decoy/minefield/beam (130/130/170) referansin
+        // Radar/Zaman Bozulmasi/Keskin Nisanci (200/250/300) degerleriyle
+        // TAM eslesmiyor -- tam eslesme icin oranlari (1:2:2:2.5:3)
+        // degistirmek gerekirdi ki bu, 162 kombinasyon x 20 seed ile
+        // kalibre edilmis mevcut dengeyi BOZAR. Bu yuzden BILINCLI olarak
+        // "yuvarlak sayi + ayni oran" tercih edildi ("referansla ayni
+        // oranlarda tam yeniden dengele" degil). EconomyPlanner.Costs.Default()
+        // (Core/Sim/EconomyPlanner.cs) da AYNI x5 ile guncellendi ki
+        // CurrentRunCalibrationTests'in olctugu simulasyon matematiksel
+        // olarak TAMAMEN AYNI kalsin (tam sayi olcekleme, yuvarlama yok).
 
         public RunEconomy Economy { get; private set; }
 

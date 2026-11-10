@@ -4,6 +4,18 @@ using Frontline.Core;
 namespace Frontline.Runtime
 {
     /// <summary>
+    /// Harita gorsel temasi. 3 Eylul 2026 gece plani FAZ 1: "en az 1 yeni
+    /// harita teması" talebi - ilk somut adim olarak Kar/Buz temasi
+    /// eklendi. Varsayilan (Default) mevcut davranisin AYNISI kalir,
+    /// yani hicbir mevcut sahne/test bu enum eklenince kirilmaz.
+    /// </summary>
+    public enum SceneryTheme
+    {
+        Default = 0,
+        Snow = 1
+    }
+
+    /// <summary>
     /// Birlik ve kule gorsellerinin TEK bagli noktasi.
     ///
     /// Neden var: birlikler ve kuleler bugun kod ile uretilen dairelerle
@@ -53,6 +65,14 @@ namespace Frontline.Runtime
                      "ust yapidan ibaret olur.")]
             public Sprite platform;
 
+            [Tooltip("3 Eylul 2026: 3 kademeli yukseltme gorseli (Level 1/2/3). " +
+                     "[0]=seviye1 (yoksa yukaridaki 'sprite' alanina duser), " +
+                     "[1]=seviye2, [2]=seviye3. Bos veya kisa dizi -> o seviyede " +
+                     "gorsel degismez (ArtLibrary'nin genel kurali: eksik asset " +
+                     "oyunu bozmaz). Kaynak: Assets/Frontline/Art/TowerVariety, " +
+                     "uretici tools/blender/generate_tower_variety_set.py.")]
+            public Sprite[] levelTurrets;
+
             [Tooltip("Sprite'in hucre boyutuna orani. 0 ise placer'in " +
                      "varsayilani kullanilir.")]
             public float scale;
@@ -101,6 +121,29 @@ namespace Frontline.Runtime
 
         [Tooltip("Alpha 0 ise sprite kendi renkleriyle cizilir.")]
         public Color baseTint;
+
+        [Header("Harita temasi")]
+        [Tooltip("Aktif harita temasi. Default = mevcut davranis (degismedi). " +
+                 "Snow secilirse SceneryView/GridTileRenderer buradaki kar " +
+                 "renklerini kullanir - Blender dosemesi atanana kadar bu " +
+                 "tema RENK TABANLI calisir (asset'ler parca parca gelebilir " +
+                 "kurali, bkz. sinif basi aciklama).")]
+        public SceneryTheme theme = SceneryTheme.Default;
+
+        [Tooltip("Kar temasinda agac (comlu/karli) tint'i.")]
+        public Color snowTreeTint = new Color(0.86f, 0.92f, 0.96f);
+
+        [Tooltip("Kar temasinda kaya (buzlu) tint'i.")]
+        public Color snowRockTint = new Color(0.78f, 0.85f, 0.93f);
+
+        [Tooltip("Kar temasinda koridor (kar ustu pist) rengi.")]
+        public Color snowCorridorColor = new Color(0.80f, 0.85f, 0.92f);
+
+        [Tooltip("Kar temasinda kule kurulabilen serit rengi.")]
+        public Color snowBuildStripColor = new Color(0.68f, 0.76f, 0.86f);
+
+        [Tooltip("Kar temasinda gecilemez engel rengi.")]
+        public Color snowBlockedColor = new Color(0.42f, 0.48f, 0.58f);
 
         private static ArtLibrary instance;
 

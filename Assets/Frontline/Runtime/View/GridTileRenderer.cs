@@ -117,6 +117,18 @@ namespace Frontline.Runtime
                 return;
             }
 
+            // Kar temasi (3 Eylul gece plani, FAZ 1): ayri Blender dosemesi
+            // uretmek yerine mevcut Blender zeminini buz-mavi/beyaza dogru
+            // renk kaydiriyoruz - ayni geometri/detay korunur, sadece tema
+            // degisir. Default tema bu blogu hic calistirmaz.
+            ArtLibrary art = ArtLibrary.Instance;
+            if (art != null && art.theme == SceneryTheme.Snow)
+            {
+                TintTowardSnow(corridorPixels, art.snowCorridorColor);
+                TintTowardSnow(buildPixels, art.snowBuildStripColor);
+                TintTowardSnow(blockedPixels, art.snowBlockedColor);
+            }
+
             texture = new Texture2D(grid.Width * tile, grid.Height * tile,
                                     TextureFormat.RGBA32, false)
             {
@@ -148,11 +160,40 @@ namespace Frontline.Runtime
             texture.Apply(false);
         }
 
+        /// <summary>
+        /// ArtLibrary.theme == Snow ise kar renklerine duser (3 Eylul gece
+        /// plani, FAZ 1 harita temasi). Default tema ya da ArtLibrary yoksa
+        /// mevcut davranis DEGISMEDEN kalir.
+        /// </summary>
+        /// <summary>
+        /// Piksel dizisini VERILEN renge dogru karistirir, alpha'yi korur.
+        /// Karistirma orani sabit (0.55): dokunun kendi deseni/golgeleri
+        /// hala secilebilir kalsin diye tam beyaza boyanmaz - aksi halde
+        /// zemin detaysiz duz bir alan gibi durur.
+        /// </summary>
+        private static void TintTowardSnow(Color[] pixels, Color snowColor)
+        {
+            const float mix = 0.55f;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color p = pixels[i];
+                pixels[i] = new Color(
+                    Mathf.Lerp(p.r, snowColor.r, mix),
+                    Mathf.Lerp(p.g, snowColor.g, mix),
+                    Mathf.Lerp(p.b, snowColor.b, mix),
+                    p.a);
+            }
+        }
+
         private Color ColorFor(CellKind kind)
         {
-            if (kind == CellKind.Corridor) return corridorColor;
-            if (kind == CellKind.BuildStrip || kind == CellKind.Scenery) return buildStripColor;
-            return blockedColor;
+            ArtLibrary art = ArtLibrary.Instance;
+            bool snow = art != null && art.theme == SceneryTheme.Snow;
+
+            if (kind == CellKind.Corridor) return snow ? art.snowCorridorColor : corridorColor;
+            if (kind == CellKind.BuildStrip || kind == CellKind.Scenery)
+                return snow ? art.snowBuildStripColor : buildStripColor;
+            return snow ? art.snowBlockedColor : blockedColor;
         }
 
         private void OnDestroy()

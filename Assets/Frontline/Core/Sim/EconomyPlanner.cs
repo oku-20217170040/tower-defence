@@ -33,17 +33,20 @@ namespace Frontline.Core
             /// <summary>EconomyRunner varsayilanlari ile ayni.</summary>
             public static Costs Default()
             {
+                // 3 Eylul 2026 (gece 4. tur): EconomyRunner ile ayni x5 yuvarlama
+                // olcegiyle guncellendi (tam sayi olcek, denge ORANI degismedi).
+                // Bkz. EconomyRunner.cs ust notu.
                 return new Costs
                 {
-                    StartingBalance = 90,
-                    FoodPerKill = 1,
-                    FoodPerWave = 6,
-                    BatteryCost = 20,
-                    AmbushCost = 40,
-                    DecoyCost = 26,
-                    MinefieldCost = 26,
-                    BeamCost = 34,
-                    CostStep = 5
+                    StartingBalance = 450,
+                    FoodPerKill = 5,
+                    FoodPerWave = 30,
+                    BatteryCost = 100,
+                    AmbushCost = 200,
+                    DecoyCost = 130,
+                    MinefieldCost = 130,
+                    BeamCost = 170,
+                    CostStep = 25
                 };
             }
         }

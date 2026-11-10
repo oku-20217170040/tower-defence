@@ -18,6 +18,7 @@ namespace Frontline.Runtime
         public UnitSpawner spawner;
         public TowerPlacer placer;
         public EconomyRunner economy;
+        public GameSpeedControl speed;
 
         private GUIStyle labelStyle;
         private GUIStyle titleStyle;
@@ -29,6 +30,7 @@ namespace Frontline.Runtime
             if (spawner == null) spawner = FindFirstObjectByType<UnitSpawner>();
             if (placer == null) placer = FindFirstObjectByType<TowerPlacer>();
             if (economy == null) economy = FindFirstObjectByType<EconomyRunner>();
+            if (speed == null) speed = FindFirstObjectByType<GameSpeedControl>();
         }
 
         private void EnsureStyles()
@@ -68,6 +70,16 @@ namespace Frontline.Runtime
                 GUILayout.Label("Oldurulen: " + spawner.TotalKilled +
                                 "   Sizan: " + spawner.TotalLeaked, labelStyle);
                 GUILayout.Label("Sahada: " + spawner.AliveCount, labelStyle);
+
+                // Dalganin ne kadarinin bittigini gormek, hizi ne zaman
+                // artiracagina karar vermenin tek yolu.
+                if (run != null && run.CurrentWave > 0)
+                {
+                    int total = run.CountForWave(run.CurrentWave);
+                    int remaining = total - spawner.WaveResolved;
+                    if (remaining < 0) remaining = 0;
+                    GUILayout.Label("Kalan dusman: " + remaining + " / " + total, labelStyle);
+                }
             }
 
             if (economy != null)
@@ -80,8 +92,8 @@ namespace Frontline.Runtime
             {
                 GUILayout.Space(8f);
                 GUILayout.Label("Secili: " + TurkishName(placer.Selected), labelStyle);
-                GUILayout.Label(PriceLine(TowerKind.Battery, "1 Batarya") + "   " +
-                                PriceLine(TowerKind.Ambush, "2 Pusu"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Battery, "1 Mak.Tufek") + "   " +
+                                PriceLine(TowerKind.Ambush, "2 Topcu"), labelStyle);
                 GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Sahte") + "   " +
                                 PriceLine(TowerKind.Minefield, "4 Mayin tarlasi"), labelStyle);
                 GUILayout.Label(PriceLine(TowerKind.Beam, "5 Isin"), labelStyle);
@@ -89,7 +101,24 @@ namespace Frontline.Runtime
 
             GUILayout.EndArea();
 
+            DrawSpeedButton();
             DrawRunResult();
+        }
+
+        /// <summary>
+        /// Hiz dugmesi sag altta: dikey tutusta bas parmagin dogal yeri
+        /// orasi ve harita ustunu kapatmaz.
+        /// </summary>
+        private void DrawSpeedButton()
+        {
+            if (speed == null) return;
+
+            var rect = new Rect(Screen.width - 132f, Screen.height - 132f, 116f, 116f);
+
+            var style = new GUIStyle(titleStyle);
+            style.alignment = TextAnchor.MiddleCenter;
+
+            if (GUI.Button(rect, speed.Label, style)) speed.Cycle();
         }
 
         private void DrawRunResult()
@@ -119,8 +148,8 @@ namespace Frontline.Runtime
 
         private static string TurkishName(TowerKind kind)
         {
-            if (kind == TowerKind.Battery) return "Batarya";
-            if (kind == TowerKind.Ambush) return "Pusu";
+            if (kind == TowerKind.Battery) return "Makineli Tufek";
+            if (kind == TowerKind.Ambush) return "Topcu";
             if (kind == TowerKind.Minefield) return "Mayin";
             if (kind == TowerKind.Beam) return "Isin";
             return "Sahte hedef";

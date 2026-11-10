@@ -1,4 +1,6 @@
 using UnityEngine;
+using Frontline.Core;
+using Frontline.Runtime.Audio;
 
 namespace Frontline.Runtime
 {
@@ -96,6 +98,12 @@ namespace Frontline.Runtime
                  "yoksa buyuk kulede mermi namlunun gerisinden cikar.")]
         public float visualScale = 1f;
 
+        [Tooltip("Donen ust yapi - atis aninda Recoil() cagrilir (geri tepme " +
+                 "animasyonu). TowerPlacer.Place() baglar; bos ise geri " +
+                 "tepme sessizce atlanir (ArtLibrary kurali: eksik parca " +
+                 "oyunu bozmaz).")]
+        public TowerTurret turret;
+
         /// <summary>
         /// Namlunun hedefe donuk ucu. Mermi de cakma da BURADAN dogar -
         /// kule merkezinden dogan mermi govdenin icinden cikip namluyu
@@ -120,6 +128,78 @@ namespace Frontline.Runtime
 
         private Battlefield world;
         private float worldRange;
+        private Emplacement emplacement;
+
+        /// <summary>
+        /// Kule tipine gore ates efekti sesi. Referans oyun turunde her kule
+        /// silueti farkli bir ses karakteri tasiyordu (mekanik/hizli,
+        /// gumbur, keskin cinlama, elektronik hum) - bizim 5 kulemizde ayni
+        /// dilin karsiligi budur (2026-09-03 ses gorevi).
+        /// </summary>
+        private string FireClip
+        {
+            get
+            {
+                if (emplacement == null) return AudioManager.TowerFireMg;
+                switch (emplacement.kind)
+                {
+                    case TowerKind.Battery: return AudioManager.TowerFireMg;
+                    case TowerKind.Ambush: return AudioManager.TowerFireSniper;
+                    case TowerKind.Beam: return AudioManager.TowerFireTimeWarp;
+                    default: return null; // Decoy/Minefield ates etmez.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Oyuncunun manuel olarak kilitledigi ortu hucresi (agac/kaya).
+        /// -1 = manuel hedef yok. Kullanici geri bildirimi (2 Eylul 2026):
+        /// "menzil alani icerisindeki agac ve taslara bastigimda kuleler
+        /// buraya ates etsin, odak TAMAMEN oraya donsun, ta ki patlayana
+        /// kadar ya da tekrar basip odagi alana kadar."
+        ///
+        /// "Odak TAMAMEN oraya donsun" - manuel hedef aktifken kule
+        /// BIRLIKLERE ATES ETMEZ, yalnizca kilitli ortuye vurur. Bu bilerek
+        /// riskli birakildi: oyuncu bunu secince sürünün o an gecmesi
+        /// oyuncunun kendi tercihidir, kule gizlice ikisini birden
+        /// yapmaz - "tamamen" kelimesi bunu net soyluyor.
+        /// </summary>
+        private int manualTargetCell = -1;
+
+        /// <summary>Su an manuel bir ortu hedefine kilitli mi?</summary>
+        public bool HasManualTarget { get { return manualTargetCell >= 0; } }
+
+        /// <summary>
+        /// Bu hucreyi menzildeyse manuel hedef yapar. Menzil disindaysa ya
+        /// da hucrede ayakta ortu yoksa sessizce reddeder (false doner) -
+        /// cagiran taraf (SceneryFocusController) zaten yalnizca menzildeki
+        /// kulelere cagiriyor ama savunma amacli burada da dogrulanir.
+        /// </summary>
+        public bool TrySetManualTarget(int cell)
+        {
+            if (world == null || world.Scenery == null) return false;
+            if (!world.Scenery.IsStanding(cell)) return false;
+
+            Vector2 cellWorld = world.Space.CellToWorld(cell);
+            float sqr = ((Vector2)transform.position - cellWorld).sqrMagnitude;
+            if (sqr > worldRange * worldRange) return false;
+
+            manualTargetCell = cell;
+            return true;
+        }
+
+        /// <summary>Manuel hedefi birakir; kule normal birlik hedeflemesine doner.</summary>
+        public void ClearManualTarget()
+        {
+            manualTargetCell = -1;
+        }
+
+        // Yukseltme (Emplacement.Upgrade) BASE hasari carpar, mevcut
+        // carpilmis degeri degil - ustuste yukseltmede hasarin katlanarak
+        // buyumesini (1.2 * 1.2 * ...) degil DOGRUSAL buyumesini (seviye
+        // basina sabit +%20) saglar.
+        private float baseDamagePerSecond;
+        private float baseBeamShotDamage;
 
         public void Bind(Battlefield world, float rangeInCells, float dps, bool splash)
         {
@@ -127,6 +207,7 @@ namespace Frontline.Runtime
             this.splash = splash;
             range = rangeInCells;
             damagePerSecond = dps;
+            baseDamagePerSecond = dps;
             worldRange = rangeInCells * world.Space.CellSize;
         }
 
@@ -140,13 +221,35 @@ namespace Frontline.Runtime
             worldRange = rangeInCells * world.Space.CellSize;
             beamHalfWidth = halfWidth;
             beamShotDamage = shotDamage;
+            baseBeamShotDamage = shotDamage;
             beamShotInterval = shotInterval;
             beamTimer = shotInterval;
+        }
+
+        /// <summary>
+        /// Emplacement.Upgrade cagirir: hasari BASE degerden yeniden
+        /// olceklendirir (bkz. Emplacement.StatMultiplier).
+        /// </summary>
+        public void ApplyLevelMultiplier(float multiplier)
+        {
+            if (beam) beamShotDamage = baseBeamShotDamage * multiplier;
+            else damagePerSecond = baseDamagePerSecond * multiplier;
+        }
+
+        private void Awake()
+        {
+            emplacement = GetComponent<Emplacement>();
         }
 
         private void Update()
         {
             if (world == null) return;
+
+            if (HasManualTarget)
+            {
+                UpdateManualTarget();
+                return;
+            }
 
             if (beam)
             {
@@ -176,6 +279,60 @@ namespace Frontline.Runtime
             if (HasTarget) ChipSceneryOnLine(target.transform.position, damage * sceneryDamageShare);
 
             EmitTracer(target);
+        }
+
+        /// <summary>
+        /// Manuel kilitli ortuye SUREKLI hasar verir - normal birlik
+        /// hedeflemesi bu sure boyunca tamamen durur (bkz. manualTargetCell
+        /// aciklamasi). Isin/alan hasarli kuleler de burada aynidir: manuel
+        /// modda hepsi damagePerSecond ile tek hedefe vurur, tur farki
+        /// yalnizca otomatik moddadir.
+        /// </summary>
+        private void UpdateManualTarget()
+        {
+            if (world.Scenery == null || !world.Scenery.IsStanding(manualTargetCell))
+            {
+                // Baskasi (baska bir kule, ya da bu obje zaten yikilmis)
+                // ortuyu temizlemis: kilit anlamsiz kaldi, birak.
+                ClearManualTarget();
+                HasTarget = false;
+                return;
+            }
+
+            Vector2 cellWorld = world.Space.CellToWorld(manualTargetCell);
+            Vector2 delta = cellWorld - (Vector2)transform.position;
+            if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
+            HasTarget = true;
+
+            float dps = beam ? (beamShotDamage / Mathf.Max(0.01f, beamShotInterval)) : damagePerSecond;
+            float damage = dps * Time.deltaTime;
+
+            bool destroyed = world.DamageScenery(manualTargetCell, damage);
+            EmitSceneryTracer(cellWorld);
+
+            if (destroyed) ClearManualTarget();
+        }
+
+        /// <summary>Manuel hedefe atis gorseli - normal EmitTracer ile ayni kurallar.</summary>
+        private void EmitSceneryTracer(Vector2 targetWorld)
+        {
+            tracerTimer -= Time.deltaTime;
+            if (tracerTimer > 0f) return;
+
+            tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
+
+            string clip = FireClip;
+            if (clip != null) AudioManager.Instance.PlaySfx(clip);
+
+            float cell = world.Space.CellSize;
+            Vector2 muzzle = MuzzlePoint;
+
+            if (turret != null) turret.Recoil();
+
+            FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
+                           fx.muzzleScale * cell, tracerColor, tracerSeconds);
+            FxBurst.Impact(impactSprite, targetWorld,
+                           fx.impactScale * cell, tracerColor, tracerSeconds);
         }
 
         /// <summary>
@@ -230,8 +387,13 @@ namespace Frontline.Runtime
 
             tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
 
+            string clip = FireClip;
+            if (clip != null) AudioManager.Instance.PlaySfx(clip);
+
             float cell = world.Space.CellSize;
             Vector2 muzzle = MuzzlePoint;
+
+            if (turret != null) turret.Recoil();
 
             FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
                            fx.muzzleScale * cell, tracerColor, tracerSeconds);
@@ -276,6 +438,9 @@ namespace Frontline.Runtime
 
             beamTimer += beamShotInterval > 0f ? beamShotInterval : 1f;
             if (!HasTarget) return;
+
+            string clip = FireClip;
+            if (clip != null) AudioManager.Instance.PlaySfx(clip);
 
             Fire(AimDirection);
         }
@@ -323,6 +488,8 @@ namespace Frontline.Runtime
                                  fx.impactScale * world.Space.CellSize,
                                  BeamFlash.color);
             }
+
+            if (turret != null) turret.Recoil();
 
             FxBurst.Muzzle(muzzleSprite, origin, direction,
                            fx.muzzleScale * world.Space.CellSize,

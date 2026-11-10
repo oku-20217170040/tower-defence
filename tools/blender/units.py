@@ -21,7 +21,7 @@ Kullanim (Blender Python konsolu ya da MCP):
 import bpy
 import os
 
-OUT = "C:/Users/serha/Unity/Unity/Tower Defence/Assets/Frontline/Art/Units"
+OUT = "C:/Users/serha/Unity/Unity/Tower Defence/Assets/Sprites/Frontline"
 
 # Haritanin zemini KOYU. Govde de koyu olursa birlik kaybolur;
 # orta tonlu asker yesili secildi.
@@ -39,8 +39,8 @@ def setup_rig():
     sc.render.engine = ('BLENDER_EEVEE_NEXT' if 'BLENDER_EEVEE_NEXT' in engines
                         else 'BLENDER_EEVEE' if 'BLENDER_EEVEE' in engines else 'CYCLES')
     sc.render.film_transparent = True
-    sc.render.resolution_x = 256
-    sc.render.resolution_y = 256
+    sc.render.resolution_x = 512
+    sc.render.resolution_y = 512
     sc.render.image_settings.file_format = 'PNG'
     sc.render.image_settings.color_mode = 'RGBA'
     # Filmic/AgX renkleri soldururdu; sprite'ta renk oldugu gibi kalmali.
@@ -49,7 +49,11 @@ def setup_rig():
 
     cam_data = bpy.data.cameras.new("TopCam")
     cam_data.type = 'ORTHO'          # izgara oyununda perspektif hizayi bozar
-    cam_data.ortho_scale = 1.0
+    # 3 Eylul 2026: TowerVariety seti ile ayni dolgunluk hedefi (~0.85
+    # alfa-bbox fill) icin kamera yaklastirildi (1.0 -> 0.86). Kule setinde
+    # oldugu gibi ayni res (512) ve ayni isik rigi kullaniliyor - tek fark
+    # kalan sey artik yalnizca siluet, dolgunluk degil.
+    cam_data.ortho_scale = 0.86
     cam = bpy.data.objects.new("TopCam", cam_data)
     cam.location = (0, 0, 10)
     cam.rotation_euler = (0, 0, 0)   # -Z'ye bakar; dunya +Y = ekranda yukari
@@ -162,23 +166,40 @@ def render_to(name):
 
 
 def build_all():
-    """Dort birlik. Renkler Unity'deki mevcut kodlamayla ayni."""
+    """Yedi birlik (Frontline.Core.UnitType). Dosya adlari kod tarafinin
+    ArtLibrary/FrontlineSandboxSceneBuilder icinde aradigi 'u_<tur>' adlariyla
+    BIREBIR eslesir - degistirilirse sprite'lar sessizce daireye duser."""
     out = []
 
-    # Piyade: taban. Dengeli kama, bej kask.
+    # Infantry: taban. Dengeli kama, bej kask.
     build((0.78, 0.72, 0.54, 1.0), w=1.00, l=1.00)
-    out.append(render_to("piyade.png"))
+    out.append(render_to("u_infantry.png"))
 
-    # Izci: dar ve uzun, anten var, omuzluk YOK -> hizli ve kirilgan.
+    # Scout: dar ve uzun, anten var, omuzluk YOK -> hizli ve kirilgan.
     build((0.38, 0.78, 0.93, 1.0), w=0.78, l=1.08, antenna=True, pauldrons=False)
-    out.append(render_to("izci.png"))
+    out.append(render_to("u_scout.png"))
 
-    # Asker: genis ve kalin omuzluklu -> agir, durdurulmasi zor.
+    # Soldier: genis ve kalin omuzluklu -> agir, durdurulmasi zor.
     build((0.80, 0.26, 0.22, 1.0), w=1.30, l=0.92)
-    out.append(render_to("asker.png"))
+    out.append(render_to("u_soldier.png"))
 
-    # Kralice: en iri, tacli -> ayriksi siluet.
+    # Blind: kesif izini/yemi gormez - soguk gri, omuzluksuz, antensiz;
+    # "korlugu" duz ve sade siluetle anlatir, digerlerinden vurgu rengiyle ayrisir.
+    build((0.58, 0.60, 0.62, 1.0), w=0.96, l=1.00, pauldrons=False)
+    out.append(render_to("u_blind.png"))
+
+    # Brood: olunce ikiye ayrilir - turuncu/amber vurgu, orta govde,
+    # kucuk omuzluk (yavrulari tasiyan "sisirilmis" gorunum).
+    build((0.90, 0.55, 0.18, 1.0), w=1.05, l=0.98)
+    out.append(render_to("u_brood.png"))
+
+    # Queen: en iri, tacli -> ayriksi siluet.
     build((0.68, 0.36, 0.88, 1.0), w=1.18, l=1.12, crown=True)
-    out.append(render_to("kralice.png"))
+    out.append(render_to("u_queen.png"))
+
+    # Flyer: kucuk ve hafif - dar govde, anten (radar/kanat hissi), acik
+    # mavi-beyaz vurgu; UnitRoster'da en gec giren en seyrek turdur.
+    build((0.75, 0.90, 0.98, 1.0), w=0.66, l=0.80, antenna=True, pauldrons=False)
+    out.append(render_to("u_flyer.png"))
 
     return out

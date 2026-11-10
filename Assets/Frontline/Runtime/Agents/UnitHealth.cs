@@ -54,6 +54,8 @@ namespace Frontline.Runtime
             if (CurrentHp <= 0f)
             {
                 CurrentHp = 0f;
+                Frontline.Runtime.Audio.AudioManager.Instance.PlaySfx(
+                    Frontline.Runtime.Audio.AudioManager.UnitDeath);
                 if (Died != null) Died(this);
                 if (agent != null) agent.Kill();
             }

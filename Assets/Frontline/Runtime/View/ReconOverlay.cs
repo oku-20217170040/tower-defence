@@ -83,7 +83,7 @@ namespace Frontline.Runtime
 
         private void Update()
         {
-            if (!bound) return;
+            if (!bound || grid == null) return;
 
             refreshTimer -= Time.deltaTime;
             if (refreshTimer > 0f) return;
@@ -95,7 +95,7 @@ namespace Frontline.Runtime
         /// <summary>Dokuyu alanlarin guncel degerlerinden yeniden doldurur.</summary>
         public void Refresh()
         {
-            if (!bound) return;
+            if (!bound || grid == null) return;
 
             int texWidth = grid.Width * texelsPerCell;
 

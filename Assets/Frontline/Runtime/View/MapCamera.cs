@@ -65,6 +65,15 @@ namespace Frontline.Runtime
         private float pinchStartDistance;
         private float pinchStartSize;
 
+        /// <summary>
+        /// ResetView'in en son hangi en-boy oraniyla hesaplandigi.
+        /// Oran degisirse kadraj yeniden kurulmali - aksi halde kamera
+        /// eski orana gore hesaplanmis bir orthographicSize ile kalir ve
+        /// haritanin kenarlari ekran disinda olur. Editorde Game view
+        /// cozunurlugu degistirilince, cihazda ekran dondurulunce olur.
+        /// </summary>
+        private float fittedAspect;
+
         private void Awake()
         {
             Instance = this;
@@ -104,9 +113,24 @@ namespace Frontline.Runtime
 
             float size = widthCells * world.Space.CellSize * 0.5f / aspect;
             targetCamera.orthographicSize = ClampSize(size);
+            fittedAspect = aspect;
 
             Vector2 bottom = new Vector2(0f, world.Space.Origin.y);
             MoveTo(bottom);
+        }
+
+        /// <summary>
+        /// En-boy orani degistiyse kadraji yeniden kurar. Esik %1: kayan
+        /// nokta gurultusu yuzunden her karede ResetView cagirmak
+        /// oyuncunun kaydirmasini surekli geri alirdi.
+        /// </summary>
+        private void RefitIfAspectChanged()
+        {
+            float aspect = Aspect();
+            if (fittedAspect <= 0f) { ResetView(); return; }
+
+            if (Mathf.Abs(aspect - fittedAspect) > fittedAspect * 0.01f)
+                ResetView();
         }
 
         private float Aspect()
@@ -118,6 +142,8 @@ namespace Frontline.Runtime
         private void Update()
         {
             if (world == null || world.Grid == null || targetCamera == null) return;
+
+            RefitIfAspectChanged();
 
             if (Input.touchCount >= 2) HandlePinch();
             else HandleDragAndWheel();

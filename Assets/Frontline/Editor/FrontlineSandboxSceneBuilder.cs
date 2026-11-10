@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using Frontline.Core;
 using Frontline.Runtime;
+using Frontline.Runtime.UI;
 
 namespace Frontline.EditorTools
 {
@@ -17,12 +18,27 @@ namespace Frontline.EditorTools
     public static class FrontlineSandboxSceneBuilder
     {
         private const string ScenePath = "Assets/Scenes/Frontline_Sandbox.unity";
+        private const string MainMenuScenePath = "Assets/Scenes/Frontline_MainMenu.unity";
 
         [MenuItem("Frontline/Sandbox Sahnesini Uret")]
         public static void BuildScene()
         {
             var scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // ── Olay sistemi ────────────────────────────────────────
+            // KRITIK: EventSystem sahnede yoksa uGUI Button'lar dokunmayi
+            // hic yakalamaz VE UiTouchGuard.IsPointerOverUi() her zaman
+            // false doner (EventSystem.current null kalir). Sonuc:
+            // radial menudeki bir dilime dokunmak butonu tetiklemek yerine
+            // TowerPlacer'in kendi TryPlaceAt'ine dusuyor ve menu yanlis
+            // hucreye kayiyor - kullanici geri bildirimi (2 Eylul 2026)
+            // tam olarak buydu: "kule, o an yuvarlakta gozuktugu yere
+            // kurulmaya calisiyor." Bu, olmadan hicbir uGUI etkilesiminin
+            // GUVENILIR calismadigi tek satirlik bir on kosuldur.
+            var eventSystemGo = new GameObject("EventSystem");
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
             // ── Kamera ──────────────────────────────────────────────
             var cameraGo = new GameObject("Main Camera");
@@ -33,9 +49,19 @@ namespace Frontline.EditorTools
             camera.transform.position = new Vector3(0f, 0f, -10f);
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.05f, 0.06f, 0.05f);
+            cameraGo.AddComponent<AudioListener>();
 
             // Harita icinde gezinme: surukle-kaydir + yakinlastir.
+            //
+            // Kullanici geri bildirimi (2 Eylul 2026): "harita tamami
+            // gozukmesin, objeler asiri uzak duruyor". Acilis genisligi
+            // 13 hucre (tam harita) yerine 7'ye dusuruldu - kule ve
+            // birim siluetleri artik iki katina yakin buyuk. En yakin
+            // zoom siniri da 10 -> 5 hucreye indi ki oyuncu istedigi
+            // kadar daha da yaklasabilsin.
             var mapCamera = camera.gameObject.AddComponent<MapCamera>();
+            mapCamera.startVisibleWidthCells = 7f;
+            mapCamera.minVisibleCells = 5f;
 
             // ── Dunya ───────────────────────────────────────────────
             var worldGo = new GameObject("Battlefield");
@@ -62,7 +88,10 @@ namespace Frontline.EditorTools
             scenery.world = world;
             scenery.treeSprite = LoadSprite("scenery_tree");
             scenery.rockSprite = LoadSprite("scenery_rock");
+            scenery.treeSpriteLarge = LoadSprite("scenery_tree_large");
+            scenery.rockSpriteLarge = LoadSprite("scenery_rock_large");
             scenery.craterSprite = LoadSprite("scenery_crater");
+            scenery.mountainSprite = LoadSprite("scenery_mountain");
 
             // Sprite'lar Blender'dan KENDI renkleriyle geliyor; tint beyaz
             // olmali ki uzerlerine ikinci bir renk binmesin. Hasar
@@ -119,14 +148,78 @@ namespace Frontline.EditorTools
             // gorunmez yapiyordu. 1,15 gorunur govdeyi ~0,8 hucrede tutar.
             placer.towerScale = 1.15f;
 
+            // ── Dairesel kule kurma menusu ────────────────────────────
+            // Bos kurulum karesine dokununca acilir (kullanici geri
+            // bildirimi, 2 Eylul 2026).
+            var radialGo = new GameObject("RadialBuildMenu");
+            var radial = radialGo.AddComponent<RadialBuildMenu>();
+            radial.placer = placer;
+            radial.economy = economy;
+            radial.targetCamera = camera;
+            placer.radialMenu = radial;
+
+            // ── Kule secimi / menzil gosterimi ───────────────────────
+            // Var olan bir kuleye dokununca yalnizca ONUN menzili gorunur
+            // (kullanici geri bildirimi: "hangi kuleye tiklasam onun
+            // kapsama alanini gormek istiyorum, geri kalani gizli olsun").
+            var selectionGo = new GameObject("TowerSelection");
+            var selection = selectionGo.AddComponent<TowerSelection>();
+            selection.world = world;
+            selection.targetCamera = camera;
+            selection.ringSprite = LoadSprite("fx_range_ring");
+
+            // ── Yukselt / Sat butonlari ──────────────────────────────
+            // Secili kulenin uzerinde/altinda beliren dokunmatik panel
+            // (kullanici talimati, 3 Eylul 2026: yukseltme sistemi klavye
+            // 'U' ile calisiyordu ama telefonda dokunmatik buton yoktu).
+            var actionPanelGo = new GameObject("TowerActionPanel");
+            var actionPanel = actionPanelGo.AddComponent<TowerActionPanel>();
+            actionPanel.selection = selection;
+            actionPanel.placer = placer;
+            actionPanel.economy = economy;
+            actionPanel.world = world;
+            actionPanel.targetCamera = camera;
+
+            // ── Ortu hedef kilitleme ──────────────────────────────────
+            // Agac/kayaya dokununca menzildeki kuleler oraya kilitlenir
+            // (kullanici geri bildirimi, 2 Eylul 2026).
+            var focusGo = new GameObject("SceneryFocus");
+            var focus = focusGo.AddComponent<SceneryFocusController>();
+            focus.world = world;
+            focus.targetCamera = camera;
+            focus.markerSprite = LoadSprite("fx_focus_marker");
+
+            // ── Oyun hizi ───────────────────────────────────────────
+            var speedGo = new GameObject("GameSpeed");
+            var speed = speedGo.AddComponent<GameSpeedControl>();
+            speed.run = run;
+
+            // ── Meta ilerleme ───────────────────────────────────────
+            // Ortu (agac/kaya) yikilinca buyuklugune gore besin verir
+            // (kullanici geri bildirimi, 2 Eylul 2026).
+            var sceneryRewardGo = new GameObject("SceneryReward");
+            var sceneryReward = sceneryRewardGo.AddComponent<SceneryRewardRunner>();
+            sceneryReward.world = world;
+            sceneryReward.economy = economy;
+
+            var metaGo = new GameObject("MetaProgress");
+            var meta = metaGo.AddComponent<MetaProgressRunner>();
+            meta.run = run;
+            meta.spawner = spawner;
+
             // ── Arayuz ──────────────────────────────────────────────
-            var hudGo = new GameObject("RunHud");
-            var hud = hudGo.AddComponent<RunHud>();
-            hud.run = run;
-            hud.homeBase = homeBase;
-            hud.spawner = spawner;
-            hud.placer = placer;
-            hud.economy = economy;
+            // RunScreen uretim ekranidir (spec 3.8, uc bant, uGUI).
+            // Eski RunHud (IMGUI) devre disi birakildi ama silinmedi -
+            // hizli bir debug/sandbox denetimi gerektiginde sahneye elle
+            // eklenebilir.
+            var screenGo = new GameObject("RunScreen");
+            var screen = screenGo.AddComponent<RunScreen>();
+            screen.run = run;
+            screen.homeBase = homeBase;
+            screen.spawner = spawner;
+            screen.economy = economy;
+            screen.speed = speed;
+            screen.placer = placer;
 
             // ── Dalga sonu draft ────────────────────────────────────
             var draftGo = new GameObject("DraftView");
@@ -148,6 +241,39 @@ namespace Frontline.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Debug.Log("[FrontlineSandbox] Sahne uretildi: " + ScenePath);
+        }
+
+        /// <summary>
+        /// Ana menu sahnesini uretir: EventSystem + kod ile kurulan
+        /// MainMenuScreen. Sandbox sahnesiyle ayni gerekce - sahne YAML'i
+        /// elle duzenlenmez, tek tikla yeniden uretilebilir olmali
+        /// (2026-09-03 menu/ses gorevi).
+        /// </summary>
+        [MenuItem("Frontline/Ana Menu Sahnesini Uret")]
+        public static void BuildMainMenuScene()
+        {
+            var scene = EditorSceneManager.NewScene(
+                NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            var eventSystemGo = new GameObject("EventSystem");
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+
+            var cameraGo = new GameObject("Main Camera");
+            cameraGo.tag = "MainCamera";
+            var camera = cameraGo.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.05f, 0.06f, 0.05f);
+            cameraGo.AddComponent<AudioListener>();
+
+            var menuGo = new GameObject("MainMenuScreen");
+            menuGo.AddComponent<MainMenuScreen>();
+
+            System.IO.Directory.CreateDirectory("Assets/Scenes");
+            EditorSceneManager.SaveScene(scene, MainMenuScenePath);
+
+            Debug.Log("[FrontlineSandbox] Ana menu sahnesi uretildi: " + MainMenuScenePath);
         }
 
         /// <summary>
@@ -184,13 +310,28 @@ namespace Frontline.EditorTools
             // rotationOffset HEPSINDE 0: namlular Blender'da YEREL -Y'ye
             // modellendi, yani TowerTurret'in taban kuralina uyuyorlar.
             // Hicbir sprite kendi istisnasini tasimiyor.
+            // 4 Eylul gunduz: piksel-olculu referansla yeniden tasarlanan
+            // TowerVariety seti (tools/blender/generate_tower_variety_set.py)
+            // buraya baglandi. Eslesme ROL'e gore: Battery (alan hasari,
+            // agir/ezici) -> agir_top; Ambush (surekli/hizli DPS) ->
+            // hizli_ates; Beam (uzun menzil, hic ISKALAMAZ) -> keskin_nisanci
+            // (uzun ince namlu = uzun menzil hissi); Decoy/Minefield (SILAHSIZ,
+            // dusman cekme/pasif alan) -> namlusuz destek siluetleri
+            // (radar_destek/zaman_bozulmasi) - gorsel olarak "atmiyor" hissini
+            // veriyorlar. rotationOffset=0: hull() namluyu -Y'ye modelliyor,
+            // TowerTurret'in taban kuraliyla (0 = -Y) zaten uyumlu. platform
+            // artik AYRI bir parca degil - govde+palet+namlu TEK render'da
+            // (bkz. TowerVariety script'i), yani platform=null birakiliyor ve
+            // tum sprite Turret olarak doner (kaide de namluyla birlikte
+            // doner - eski iki-parcali "sabit kaide" davranisindan bilincli
+            // sapma, 4 Eylul gece plani notuna bkz.).
             art.towers = new[]
             {
-                MakeTower(TowerKind.Battery,   "t_battery",   own),
-                MakeTower(TowerKind.Ambush,    "t_ambush",    own),
-                MakeTower(TowerKind.Decoy,     "t_decoy",     own),
-                MakeTower(TowerKind.Minefield, "t_minefield", own),
-                MakeTower(TowerKind.Beam,      "t_beam",      own),
+                MakeVarietyTower(TowerKind.Battery,   "agir_top",         own),
+                MakeVarietyTower(TowerKind.Ambush,    "hizli_ates",       own),
+                MakeVarietyTower(TowerKind.Decoy,     "radar_destek",     own),
+                MakeVarietyTower(TowerKind.Minefield, "zaman_bozulmasi",  own),
+                MakeVarietyTower(TowerKind.Beam,      "keskin_nisanci",   own),
             };
 
             // Atis gorselleri: mermi, namlu cakmasi, carpma. Yalnizca
@@ -246,6 +387,45 @@ namespace Frontline.EditorTools
                 scale = 0f,      // 0 = placer'in varsayilani
                 tint = tint
             };
+        }
+
+        /// <summary>
+        /// TowerVariety setinden (Assets/Frontline/Art/TowerVariety) 3
+        /// kademeli kule gorseli yukler. Tint alpha=0: bu sprite'lar Blender'da
+        /// zaten renkli render edildi (bkz. generate_tower_variety_set.py),
+        /// ArtLibrary'nin genel kurali "alpha 0 ise sprite kendi rengini
+        /// kullanir" burada devreye giriyor - eski t_* primitiflerinin aksine
+        /// bu sprite'lar TowerPlacer.ColorFor tint'iyle boyanmamali.
+        /// </summary>
+        private static ArtLibrary.TowerArt MakeVarietyTower(TowerKind kind, string prefix, Color tint)
+        {
+            var l1 = LoadVarietySprite(prefix, 1);
+            return new ArtLibrary.TowerArt
+            {
+                kind = kind,
+                sprite = l1,
+                platform = null,
+                rotationOffset = 0f,
+                levelTurrets = new[]
+                {
+                    l1,
+                    LoadVarietySprite(prefix, 2),
+                    LoadVarietySprite(prefix, 3),
+                },
+                scale = 0f,
+                tint = new Color(tint.r, tint.g, tint.b, 0f)
+            };
+        }
+
+        private static Sprite LoadVarietySprite(string prefix, int level)
+        {
+            string path = "Assets/Frontline/Art/TowerVariety/" + prefix + "_L" + level + ".png";
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+
+            if (sprite == null)
+                Debug.LogWarning("[FrontlineSandbox] TowerVariety sprite bulunamadi: " + path);
+
+            return sprite;
         }
 
         /// <summary>

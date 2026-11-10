@@ -31,6 +31,16 @@ namespace Frontline.Core
         /// <summary>Bir ortu yikildiginda hucre indeksi ile tetiklenir.</summary>
         public event Action<int> Cleared;
 
+        /// <summary>
+        /// Cleared ile AYNI anda, ama tur ve azami can bilgisiyle birlikte
+        /// tetiklenir. Ayri bir event olmasinin sebebi: Clear() cagrildiginda
+        /// kind/maxHp SIFIRLANIR, yani mevcut Cleared aboneleri bu bilgiyi
+        /// goremez. Ekonomi (obje buyuklugune gore odul) bu bilgiye ihtiyac
+        /// duyuyor; mevcut Cleared imzasini degistirmek yerine additive bir
+        /// event eklemek testleri ve diger aboneleri bozmaz.
+        /// </summary>
+        public event Action<int, SceneryKind, float> ClearedDetailed;
+
         public SceneryMap(BattleGrid grid)
         {
             if (grid == null) throw new ArgumentNullException(nameof(grid));
@@ -105,6 +115,9 @@ namespace Frontline.Core
             if (cell < 0 || cell >= kinds.Length) return;
             if (kinds[cell] == SceneryKind.None) return;
 
+            SceneryKind clearedKind = kinds[cell];
+            float clearedMaxHp = maxHp[cell];
+
             kinds[cell] = SceneryKind.None;
             hp[cell] = 0f;
             maxHp[cell] = 0f;
@@ -115,6 +128,9 @@ namespace Frontline.Core
 
             var handler = Cleared;
             if (handler != null) handler(cell);
+
+            var detailed = ClearedDetailed;
+            if (detailed != null) detailed(cell, clearedKind, clearedMaxHp);
         }
     }
 }

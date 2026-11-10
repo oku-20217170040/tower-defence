@@ -18,6 +18,19 @@ namespace Frontline.Runtime
         public Camera targetCamera;
         public EconomyRunner economy;
 
+        [Tooltip("Kalici (run'lar arasi) kule yukseltmeleri - ana menu " +
+                 "'GUNCELLE' ekraninda satin alinir (3 Eylul 2026 gece " +
+                 "plani, FAZ 3). Bos birakilirsa Awake'te diskten yuklenir " +
+                 "(MetaProgressStore.Load); testler burayi elle atayarak " +
+                 "disk erisimini atlayabilir.")]
+        public MetaState permanentMeta;
+
+        [Tooltip("Bos birakilirsa sahnede aranir. Atanmissa bos kurulum " +
+                 "karesine dokununca DOGRUDAN kurmak yerine bu menu acilir " +
+                 "(kullanici geri bildirimi: 'daire seklinde ciksinlar " +
+                 "fiyati ve sureti belirsin, hangisine tiklasam o kurulsun').")]
+        public Frontline.Runtime.UI.RadialBuildMenu radialMenu;
+
         [Header("Gorunum")]
         public Color batteryColor = new Color(0.95f, 0.35f, 0.25f);
         public Color ambushColor = new Color(0.45f, 0.5f, 0.55f);
@@ -90,6 +103,13 @@ namespace Frontline.Runtime
             if (world == null) world = FindFirstObjectByType<Battlefield>();
             if (targetCamera == null) targetCamera = Camera.main;
             if (economy == null) economy = FindFirstObjectByType<EconomyRunner>();
+            if (radialMenu == null) radialMenu = FindFirstObjectByType<Frontline.Runtime.UI.RadialBuildMenu>();
+
+            // Diskten yalniz burada, bir kez okunur - Place() her cagrida
+            // dosya acmaz. Kayit yoksa/bozuksa MetaProgressStore temiz bir
+            // MetaState doner (StartingLevelOf her kule icin 1), yani kalici
+            // yukseltme hic alinmamissa davranis ONCEKIYLE BIREBIR aynidir.
+            if (permanentMeta == null) permanentMeta = MetaProgressStore.Load();
         }
 
         private void Update()
@@ -107,12 +127,29 @@ namespace Frontline.Runtime
             // esigini asmis bir dokunus kule kurmaz (bkz. MapCamera).
             if (Input.GetMouseButtonUp(0))
             {
+                // Arayuz uzerinde biten dokunus haritaya gecmez: alt
+                // banttaki kule dugmesine basmak besini harcayip yanlis
+                // yere kule kurmamali (bkz. UiTouchGuard).
+                if (Frontline.Runtime.UI.UiTouchGuard.IsPointerOverUi()) return;
+
+                // Radial menu ACIKKEN bu bilesen HICBIR sey yapmaz - ikinci
+                // bir savunma katmani. UiTouchGuard'in EventSystem'e
+                // dayanmasi tek basina yeterli olmali ama menu her seyi
+                // kaplamiyorsa (ornegin dilimler radius disina tasarsa)
+                // bu kontrol menunun acik oldugu surece kurmayi tamamen
+                // durdurur.
+                if (radialMenu != null && radialMenu.IsOpen) return;
+
                 bool panned = MapCamera.Instance != null && MapCamera.Instance.DraggedSincePress;
                 if (!panned) TryPlaceAt(Input.mousePosition);
             }
         }
 
-        private void Select(TowerKind kind)
+        /// <summary>
+        /// Kule secimini degistirir. Public: arayuzdeki kule dugmelerinin
+        /// (TowerBarView) dogrudan cagirdigi tek yer budur.
+        /// </summary>
+        public void Select(TowerKind kind)
         {
             Selected = kind;
             Debug.Log("[TowerPlacer] Secili kule: " + kind);
@@ -134,7 +171,28 @@ namespace Frontline.Runtime
                 return;
             }
 
-            // Parasi yetmiyorsa yerlestirme reddedilir ve sebebi soylenir.
+            // Hucre basina EN FAZLA bir kule (kullanici geri bildirimi,
+            // 2 Eylul 2026). Kontrol yoktu; ayni hucreye ust uste kule
+            // kurulup gorsel/mantik cakismasi olusabiliyordu.
+            if (IsOccupied(cell))
+            {
+                Debug.Log("[TowerPlacer] Bu hucrede zaten bir kule var.");
+                return;
+            }
+
+            // Bos kurulum karesine dokununca ARTIK dogrudan kurmuyoruz -
+            // dairesel menu aciliyor (kullanici geri bildirimi, 2 Eylul
+            // 2026): "daire seklinde ciksinlar fiyati ve sureti belirsin,
+            // hangisine tiklasam o kurulsun." Ekonomi kontrolu ve gercek
+            // Place() cagrisi artik RadialBuildMenu.ChooseTower'da.
+            if (radialMenu != null)
+            {
+                radialMenu.Open(cell);
+                return;
+            }
+
+            // Menu sahnede yoksa (ornegin eski bir test kurulumu) eski
+            // davranisa duser: alt bardan secili turu dogrudan kurar.
             if (economy != null && !economy.CanAfford(Selected))
             {
                 Debug.Log("[TowerPlacer] Besin yetmiyor. Gereken=" +
@@ -142,10 +200,79 @@ namespace Frontline.Runtime
                 return;
             }
 
+            int cost = economy != null ? economy.CostFor(Selected) : 0;
             if (economy != null && !economy.TryBuy(Selected))
                 return;
 
-            Place(Selected, cell);
+            Place(Selected, cell, cost);
+        }
+
+        /// <summary>Verilen hucrede zaten bir kule var mi?</summary>
+        /// <summary>
+        /// Secili kuleyi bir kademe yukseltmeyi dener: ekonomiden dus,
+        /// basarirsa Emplacement.Upgrade() cagirir. Kule zaten 3. seviyedeyse
+        /// ya da besin yetmiyorsa hicbir sey degismez. Maliyet MEVCUT
+        /// kurulum fiyatindan (EconomyRunner.CostFor, ayni turden onceki
+        /// kuleler dahil) turetilir - yeni bir fiyat tablosu uydurulmadi.
+        /// </summary>
+        public bool TryUpgrade(Emplacement tower)
+        {
+            if (tower == null || tower.Level >= Emplacement.MaxLevel) return false;
+            if (economy == null) return false;
+
+            int baseCost = economy.CostFor(tower.kind);
+            int cost = Emplacement.UpgradeCost(baseCost, tower.Level);
+
+            if (!economy.Economy.TrySpend(cost)) return false;
+
+            if (tower.Upgrade())
+            {
+                tower.RecordSpend(cost);
+                return true;
+            }
+
+            // Yukseltme (beklenmedik sekilde) basarisiz olursa besini geri ver.
+            economy.Economy.Earn(cost);
+            return false;
+        }
+
+        /// <summary>
+        /// Kuleyi satar: dokunmatik "Sat" butonu (3 Eylul 2026). Geri odeme
+        /// Emplacement.SellValue() ile turetilir (harcanan toplamin %60'i -
+        /// bkz. Emplacement.SellRefundRatio, uydurma bir sayi degil). Kule
+        /// dunyadan cikar (Emplacement.OnDestroy -> world.UnregisterTower
+        /// zaten kendiliginden calisir) ve GameObject yok edilir.
+        /// </summary>
+        public bool TrySell(Emplacement tower)
+        {
+            if (tower == null || economy == null) return false;
+
+            int refund = tower.SellValue();
+            economy.Economy.Refund(refund);
+
+            Destroy(tower.gameObject);
+            return true;
+        }
+
+        private bool IsOccupied(int cell)
+        {
+            var towers = world.Towers;
+            for (int i = 0; i < towers.Count; i++)
+                if (towers[i].Cell == cell) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Gercekten odenen tutari da kaydeden yerlestirme - Sat butonunun
+        /// geri odemesi buradan turer (bkz. Emplacement.SellValue). Ekonomi
+        /// karari (CanAfford/TryBuy) HALA cagiran taraftadir; bu yalnizca
+        /// kaydi tutar.
+        /// </summary>
+        public Emplacement Place(TowerKind kind, int cell, int spentAmount)
+        {
+            Emplacement tower = Place(kind, cell);
+            if (tower != null) tower.RecordSpend(spentAmount);
+            return tower;
         }
 
         /// <summary>Test ve script'ten cagrilabilir yerlestirme.</summary>
@@ -170,6 +297,14 @@ namespace Frontline.Runtime
             if (art != null && art.TryGetTower(kind, out entry))
             {
                 if (entry.sprite != null) turretSprite = entry.sprite;
+                // Seviye 1 gorseli varsa tercih edilir (3 Eylul 2026,
+                // yukseltme sistemi): tek-sprite 'sprite' alani geriye
+                // donuk uyumluluk icin kalir.
+                if (entry.levelTurrets != null && entry.levelTurrets.Length > 0 &&
+                    entry.levelTurrets[0] != null)
+                {
+                    turretSprite = entry.levelTurrets[0];
+                }
                 platformSprite = entry.platform;
                 rotationOffset = entry.rotationOffset;
                 if (entry.scale > 0f) scale = entry.scale;
@@ -258,23 +393,51 @@ namespace Frontline.Runtime
                 turret.weapon = weapon;
                 turret.rotationOffset = rotationOffset;
                 turret.degreesPerSecond = kind == TowerKind.Battery ? 260f : 420f;
+
+                // Ates aninda geri tepme: TowerWeapon kendi Recoil()'ini
+                // burada baglanan turret uzerinden cagirir (3 Eylul 2026
+                // gece kullanici istegi). Bos birakilirsa TowerWeapon
+                // sessizce atlar (ArtLibrary kurali).
+                weapon.turret = turret;
             }
 
-            // Titresim halkasi YALNIZCA batarya kulede. Halkasizlik,
-            // "ordu beni goremiyor" demenin gorsel yoludur (spec 9.1).
-            if (kind == TowerKind.Battery)
+            // Yukseltme sisteminin (Emplacement.Upgrade) sprite/hasar
+            // degistirebilmesi icin referanslari birakir.
+            tower.BindVisual(renderer, weapon);
+
+            // Yildiz rozeti (referans oyundaki gibi, seviye gostergesi):
+            // kule sprite'inin USTUNE bindirilir. go.transform.localScale
+            // zaten diameter'a esitlendigi icin bu holder'in olcegi 1/diameter
+            // ile TERS carpilir - aksi halde yildizlar kule buyudukce
+            // orantisiz devasa/minik gorunurdu.
+            var starsGo = new GameObject("Stars");
+            starsGo.transform.SetParent(go.transform, false);
+            starsGo.transform.localPosition = new Vector3(0f, 0.62f, 0f);
+            float inv = diameter > 0.0001f ? 1f / diameter : 1f;
+            starsGo.transform.localScale = new Vector3(inv, inv, 1f);
+
+            var stars = starsGo.AddComponent<TowerStars>();
+            stars.Build(null); // Blender yildiz sprite'i eklenene kadar PrimitiveSprites.Star() kullanilir.
+            tower.BindStars(stars);
+
+            // Kalici (meta) yukseltme: oyuncu ana menude bu kule turu icin
+            // kademe satin aldiysa, kule BEDAVA olarak o kademede kurulur -
+            // ayni Emplacement.Upgrade() yolu kullanilir (sprite/hasar/yildiz
+            // tutarli kalsin diye), ama SpentTotal'e YAZILMAZ (bedava kademe
+            // satista geri odeme uretmemeli, tutarli: draft odulu kuleyle
+            // ayni kural).
+            if (permanentMeta != null)
             {
-                var ringGo = new GameObject("ThreatRing");
-                ringGo.transform.SetParent(go.transform, false);
-
-                // Kule olcegini geri al ki halka dunya olceginde buyusun.
-                float inverse = 1f / Mathf.Max(0.0001f, diameter);
-                ringGo.transform.localScale = new Vector3(inverse, inverse, 1f);
-
-                ringGo.AddComponent<SpriteRenderer>();
-                ringGo.AddComponent<ThreatRingView>()
-                      .Bind(tower.radius, world.Space.CellSize, sortingOrder - 1);
+                int startingLevel = permanentMeta.StartingLevelOf(kind);
+                for (int i = 1; i < startingLevel; i++) tower.Upgrade();
             }
+
+            // NOT: batarya kulenin surekli titreyen tehdit halkasi
+            // kaldirildi (kullanici geri bildirimi, 2 Eylul 2026: "surekli
+            // kirmizi cember yayiyor bu da olmasin"). Menzil artik yalnizca
+            // OYUNCU o kuleyi SECTIGINDE gorunur (bkz. RangeRingView /
+            // TowerSelection) - "hangi kulenin uzerine tiklasam onun
+            // kapsama alanini gormek istiyorum, onun disinda gizli olsun."
 
             Debug.Log("[TowerPlacer] " + kind + " kuruldu, hucre=" + cell);
             return tower;

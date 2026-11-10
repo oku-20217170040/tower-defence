@@ -36,6 +36,38 @@ namespace Frontline.Core
         public const int QueenFirstWave = 5;
 
         /// <summary>
+        /// Ucan payi. KUCUK OLMASI TASARIM GEREGIDIR, olcum degil.
+        ///
+        /// Ucan koridoru tanimaz; yani oyuncunun tuzak kurgusunun
+        /// ETKISIZ oldugu tek birliktir (spec 3'un tamami koridor uzerine
+        /// kurulu). Payi buyuk olsaydi oyuncunun ogrenmesi gereken sey
+        /// - itmek ile cekmenin birlikte kullanilmasi (spec 3.4) - odulunu
+        /// kaybederdi: mukemmel tuzak kuran oyuncu ile hic kurmayan
+        /// oyuncu ucana karsi ayni performansi gosterir.
+        ///
+        /// 0,06 secildi: 12 birliklik bir dalgada ortalama 1 ucan, yani
+        /// "arada bir gelen" bandi. OLCULMEDI - TAHMINDIR.
+        /// </summary>
+        public const float FlyerShare = 0.06f;
+
+        /// <summary>
+        /// Ucan 8. dalgadan itibaren cikar. Iki gerekce:
+        ///
+        ///   OGRENME SIRASI: oyuncu once cekirdek mekanigi ogrenmeli
+        ///   (batarya + yem birlikte, spec 3.4). Ilk dalgalarda koridoru
+        ///   atlayan bir dusman gorurse, koridorun onemli oldugunu hic
+        ///   ogrenemez. Asker 3, kralice 5 - ucan en son gelen olmali.
+        ///
+        ///   CEVAP HAZIR OLMALI: olculen ekonomi egrisinde (spec 3.5b)
+        ///   oyuncu 8. dalgada ortalama 5,6 kuleye ulasiyor. Ucan tam o
+        ///   noktada girer: oyuncunun ona ulasabilecek bir kulesi
+        ///   istatistiksel olarak zaten vardir.
+        ///
+        /// 8 sayisi bu egriden turetildi ama ucanla birlikte OLCULMEDI.
+        /// </summary>
+        public const int FlyerFirstWave = 8;
+
+        /// <summary>
         /// Bugunku bilesim: dortte bir izci, beste bir asker, gerisi piyade.
         ///
         /// Izci 1. dalgadan itibaren cikar. Sebebi: taban kesif sapmasi
@@ -76,6 +108,35 @@ namespace Frontline.Core
                     FirstWave = QueenFirstWave
                 }
             };
+        }
+
+        /// <summary>
+        /// Default() + ucan. AYRI BIR ROSTER OLMASI BILINCLIDIR.
+        ///
+        /// Default() su anda uc yere bagli: ScoutTests'in entropi
+        /// egilimi, BeamTowerTests'in isin olcumleri ve UnitSpawner.
+        /// Ucani dogrudan Default()'a koymak, ucanla ilgisi olmayan
+        /// olculmus testleri sessizce kaydirirdi - projenin defalarca
+        /// yasadigi tuzak tam olarak budur (bkz. BeamTowerTests'teki
+        /// "ayni tuzak kalibrasyon testlerinde bir kez yasandi" notu).
+        ///
+        /// Ucan olculdukten sonra Default()'a tasinmali ve bu metot
+        /// silinmelidir; simdilik olcum kurulumudur.
+        /// </summary>
+        public static UnitMix[] WithFlyers()
+        {
+            var baseMix = Default();
+            var result = new UnitMix[baseMix.Length + 1];
+            baseMix.CopyTo(result, 0);
+
+            result[baseMix.Length] = new UnitMix
+            {
+                Profile = UnitProfile.For(UnitType.Flyer),
+                Share = FlyerShare,
+                FirstWave = FlyerFirstWave
+            };
+
+            return result;
         }
     }
 }

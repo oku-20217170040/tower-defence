@@ -79,6 +79,31 @@ namespace Frontline.Runtime
             if (spawner == null) spawner = FindFirstObjectByType<UnitSpawner>();
             if (homeBase == null) homeBase = FindFirstObjectByType<HomeBaseHealth>();
             if (draft == null) draft = FindFirstObjectByType<DraftView>();
+
+            ApplySelectedLevelIfAny();
+        }
+
+        /// <summary>
+        /// Seviye ureteci ile secilmis bir seviye varsa dalga/zorluk
+        /// alanlarini onunla degistirir. Battlefield.ApplySelectedLevelIfAny
+        /// ile ayni kaynaktan (LevelSelection/LevelStore) okur ama harita ile
+        /// dalga ayarlari BAGIMSIZ bilesenler oldugu icin kendi kopyasini
+        /// tutar. Secim yoksa Inspector varsayilanlari degismez.
+        /// </summary>
+        private void ApplySelectedLevelIfAny()
+        {
+            string name = LevelSelection.SelectedLevelName;
+            if (string.IsNullOrEmpty(name)) return;
+
+            var catalog = LevelStore.Load();
+            var level = catalog.Find(name);
+            if (level == null) return;
+
+            totalWaves = level.TotalWaves;
+            baseUnitsPerWave = level.BaseUnitsPerWave;
+            unitsAddedPerWave = level.UnitsAddedPerWave;
+            baseUnitHp = level.BaseUnitHp;
+            hpGrowthPerWave = level.HpGrowthPerWave;
         }
 
         private void OnEnable()
@@ -122,6 +147,8 @@ namespace Frontline.Runtime
             while (State == RunState.Running && CurrentWave < totalWaves)
             {
                 CurrentWave++;
+                Frontline.Runtime.Audio.AudioManager.Instance.PlaySfx(
+                    Frontline.Runtime.Audio.AudioManager.WaveStart);
                 if (WaveChanged != null) WaveChanged(CurrentWave, totalWaves);
 
                 // Yem kalici degildir; her dalga tazelenir (spec 3.3).
@@ -176,6 +203,11 @@ namespace Frontline.Runtime
             State = result;
             Debug.Log("[RunController] Run bitti: " + result +
                       " (dalga " + CurrentWave + "/" + totalWaves + ")");
+
+            Frontline.Runtime.Audio.AudioManager.Instance.PlaySfx(
+                result == RunState.Won
+                    ? Frontline.Runtime.Audio.AudioManager.Victory
+                    : Frontline.Runtime.Audio.AudioManager.Defeat);
 
             if (RunEnded != null) RunEnded(result);
         }

@@ -84,3 +84,20 @@ ignore.conf
 
 # Gorsel dogrulama ekran goruntuleri
 Assets/Screenshots/
+
+# Unity gecici/kurtarma dosyalari
+.utmp/
+Assets/_Recovery/
+Assets/_Recovery.meta
+*.blend1
+*.blend1.meta
+
+# Referans oyun ekran goruntuleri (telifli, yalnizca yerel gozlem icin)
+docs/notes/ref*.png
+docs/notes/refimg2/
+/test.png
+
+# Yerel arac dosyalari
+.plastic/
+UpgradeLog*.htm
+*.slnx

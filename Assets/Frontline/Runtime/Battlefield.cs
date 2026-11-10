@@ -139,6 +139,9 @@ namespace Frontline.Runtime
         /// </summary>
         public event Action<int> SceneryCleared;
 
+        /// <summary>SceneryCleared ile ayni anda, tur ve azami can bilgisiyle. Bkz. SceneryMap.ClearedDetailed.</summary>
+        public event Action<int, Frontline.Core.SceneryKind, float> SceneryClearedDetailed;
+
         /// <summary>
         /// Bir hucredeki ortuye hasar verir. Kule mermileri, patlamalar ve
         /// ortuye yaslanan birlikler bunu cagirir; ortu yoksa zararsizdir.
@@ -282,7 +285,43 @@ namespace Frontline.Runtime
 
         private void Awake()
         {
+            ApplySelectedLevelIfAny();
             Regenerate(seed);
+        }
+
+        /// <summary>
+        /// Seviye ureteci (LevelEditorWindow) ile secilmis bir seviye varsa
+        /// bu bilesenin harita alanlarini onunla degistirir. Secim yoksa
+        /// (LevelSelection.SelectedLevelName bos) davranis ONCEKIYLE
+        /// BIREBIR ayni - Inspector'daki degerler kullanilir, hicbir mevcut
+        /// sahne/test etkilenmez.
+        /// </summary>
+        private void ApplySelectedLevelIfAny()
+        {
+            string name = LevelSelection.SelectedLevelName;
+            if (string.IsNullOrEmpty(name)) return;
+
+            var catalog = LevelStore.Load();
+            var level = catalog.Find(name);
+            if (level == null) return;
+
+            width = level.Width;
+            height = level.Height;
+            corridorCount = level.CorridorCount;
+            corridorWidth = level.CorridorWidth;
+            rungCount = level.RungCount;
+            sceneryPercent = level.SceneryPercent;
+            treeHealth = level.TreeHealth;
+            rockHealth = level.RockHealth;
+            seed = level.Seed;
+
+            var art = FindFirstObjectByType<ArtLibrary>();
+            if (art != null)
+            {
+                art.theme = level.Theme == Frontline.Core.LevelTheme.Snow
+                    ? SceneryTheme.Snow
+                    : SceneryTheme.Default;
+            }
         }
 
         /// <summary>
@@ -335,6 +374,7 @@ namespace Frontline.Runtime
             // uretici isaretler, canlarini bu adim dagitir.
             Scenery = generator.BuildScenery(Grid, activeSeed + attempt, treeHealth, rockHealth);
             Scenery.Cleared += OnSceneryCleared;
+            Scenery.ClearedDetailed += OnSceneryClearedDetailed;
 
             BuildFields();
             BuildEndpoints();
@@ -357,6 +397,12 @@ namespace Frontline.Runtime
         {
             var handler = SceneryCleared;
             if (handler != null) handler(cell);
+        }
+
+        private void OnSceneryClearedDetailed(int cell, Frontline.Core.SceneryKind kind, float maxHp)
+        {
+            var handler = SceneryClearedDetailed;
+            if (handler != null) handler(cell, kind, maxHp);
         }
 
         private void BuildFields()

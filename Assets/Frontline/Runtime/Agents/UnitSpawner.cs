@@ -51,6 +51,14 @@ namespace Frontline.Runtime
         /// <summary>Run boyunca usya ulasan toplam birlik.</summary>
         public int TotalLeaked { get; private set; }
 
+        /// <summary>
+        /// Su anki dalgada isi bitmis birlik sayisi (olen + sizan).
+        /// Arayuzdeki "kalan dusman" sayaci bunu kullanir. Sahada'dan
+        /// farki: heniiz uretilmemis birlikler de kalan sayilir, yoksa
+        /// dalganin basinda sayac 25 yerine 3 gorunur.
+        /// </summary>
+        public int WaveResolved { get; private set; }
+
         private void Awake()
         {
             if (world == null) world = FindFirstObjectByType<Battlefield>();
@@ -63,6 +71,8 @@ namespace Frontline.Runtime
         /// <summary>Tek bir dalga uretir ve spawn bitene kadar bekler.</summary>
         public IEnumerator SpawnWave(int count, float hpPerUnit)
         {
+            WaveResolved = 0;
+
             for (int i = 0; i < count; i++)
             {
                 SpawnOne(hpPerUnit, PickProfile());
@@ -172,6 +182,7 @@ namespace Frontline.Runtime
         {
             health.Died -= OnUnitDied;
             TotalKilled++;
+            WaveResolved++;
         }
 
         private void OnUnitFinished(UnitAgent agent)
@@ -184,6 +195,7 @@ namespace Frontline.Runtime
             if (agent.ReachedBase)
             {
                 TotalLeaked++;
+                WaveResolved++;
                 if (homeBase != null) homeBase.Damage(agent.damageToBase);
             }
 
