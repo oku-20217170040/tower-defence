@@ -40,8 +40,32 @@ namespace Frontline.Runtime
                  "Bunun altindaki hareket kule kurma dokunusudur.")]
         public float dragThreshold = 12f;
 
-        [Tooltip("Fare tekerlegi hassasiyeti.")]
+        [Tooltip("Fare tekerlegi hassasiyeti. KULLANILMIYOR: zoom artik iki " +
+                 "kademeli (bkz. narrowWidthCells).")]
         public float wheelZoomSpeed = 3f;
+
+        [Header("Iki kademeli zoom (11 Kasim 2026)")]
+        [Tooltip("GENIS kademe: kadrajin genisligi kac hucre. 0 = haritanin " +
+                 "tam genisligi.")]
+        public float wideWidthCells;
+
+        [Tooltip("DAR kademe: kadrajin genisligi kac hucre. Genisin biraz " +
+                 "darligi - cok yakin olmamali, yoksa sikiyor.")]
+        public float narrowWidthCells = 9.5f;
+
+        [Tooltip("Kademe degisiminin yumusama suresi (saniye).")]
+        public float zoomSmoothSeconds = 0.18f;
+
+        [Tooltip("Kistirma hareketinin kademe degistirmesi icin parmak " +
+                 "araliginin ne kadar degismesi gerekir (oran).")]
+        public float pinchSwitchRatio = 1.15f;
+
+        /// <summary>Su an DAR kademede mi (false = genis).</summary>
+        public bool IsNarrow { get; private set; }
+
+        private float targetSize;
+        private float sizeVelocity;
+        private bool pinchSwitched;
 
         [Tooltip("Kenarlarda birakilacak pay (dunya birimi).")]
         public float padding = 0.25f;
@@ -106,14 +130,13 @@ namespace Frontline.Runtime
 
             targetCamera.orthographic = true;
 
-            float aspect = Aspect();
-            float widthCells = startVisibleWidthCells > 0f
-                ? startVisibleWidthCells
-                : world.Grid.Width;
-
-            float size = widthCells * world.Space.CellSize * 0.5f / aspect;
-            targetCamera.orthographicSize = ClampSize(size);
-            fittedAspect = aspect;
+            // Acilis DAR kademede: objeler okunur boyutta olsun (2 Eylul
+            // geri bildirimi), oyuncu isterse genise acar.
+            IsNarrow = true;
+            targetSize = SizeForLevel(IsNarrow);
+            targetCamera.orthographicSize = targetSize;
+            sizeVelocity = 0f;
+            fittedAspect = Aspect();
 
             Vector2 bottom = new Vector2(0f, world.Space.Origin.y);
             MoveTo(bottom);
@@ -133,6 +156,38 @@ namespace Frontline.Runtime
                 ResetView();
         }
 
+        /// <summary>
+        /// Bir kademenin kamera boyutu. Dikey tutusta GENISLIK sabittir;
+        /// boyut genislikten ve en-boy oranindan turetilir.
+        /// </summary>
+        private float SizeForLevel(bool narrow)
+        {
+            float wide = wideWidthCells > 0f ? wideWidthCells : world.Grid.Width;
+            float cells = narrow ? Mathf.Min(narrowWidthCells, wide) : wide;
+            return ClampSize(cells * world.Space.CellSize * 0.5f / Aspect());
+        }
+
+        /// <summary>Kademeyi degistirir; gecis yumusak olur.</summary>
+        public void SetZoomLevel(bool narrow)
+        {
+            IsNarrow = narrow;
+            targetSize = SizeForLevel(narrow);
+        }
+
+        private void ApplyZoomSmoothing()
+        {
+            if (targetSize <= 0f) return;
+
+            float current = targetCamera.orthographicSize;
+            if (Mathf.Abs(current - targetSize) < 0.001f) return;
+
+            // Oyun hizi (x2, duraklat) kamerayi etkilememeli.
+            float next = Mathf.SmoothDamp(current, targetSize, ref sizeVelocity,
+                                          zoomSmoothSeconds, Mathf.Infinity, Time.unscaledDeltaTime);
+            targetCamera.orthographicSize = next;
+            MoveTo(transform.position);
+        }
+
         private float Aspect()
         {
             float aspect = targetCamera.aspect;
@@ -147,6 +202,8 @@ namespace Frontline.Runtime
 
             if (Input.touchCount >= 2) HandlePinch();
             else HandleDragAndWheel();
+
+            ApplyZoomSmoothing();
         }
 
         private void HandleDragAndWheel()
@@ -155,7 +212,7 @@ namespace Frontline.Runtime
 
             float wheel = Input.mouseScrollDelta.y;
             if (Mathf.Abs(wheel) > 0.01f)
-                Zoom(targetCamera.orthographicSize - wheel * wheelZoomSpeed);
+                SetZoomLevel(wheel > 0f);   // ileri = yaklas (dar), geri = genis
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -202,18 +259,17 @@ namespace Frontline.Runtime
             {
                 pinchStartDistance = distance;
                 pinchStartSize = targetCamera.orthographicSize;
+                pinchSwitched = false;
                 return;
             }
 
-            if (distance <= 1f) return;
+            if (distance <= 1f || pinchSwitched) return;
 
-            Zoom(pinchStartSize * (pinchStartDistance / distance));
-        }
-
-        private void Zoom(float size)
-        {
-            targetCamera.orthographicSize = ClampSize(size);
-            MoveTo(transform.position);
+            // Iki kademe: parmaklar yeterince acilinca DAR, kapaninca GENIS.
+            // Bir harekette en fazla bir gecis - yoksa esikte titrer.
+            float ratio = distance / pinchStartDistance;
+            if (ratio >= pinchSwitchRatio) { SetZoomLevel(true); pinchSwitched = true; }
+            else if (ratio <= 1f / pinchSwitchRatio) { SetZoomLevel(false); pinchSwitched = true; }
         }
 
         private Vector3 ScreenToWorld(Vector3 screen)
@@ -242,7 +298,12 @@ namespace Frontline.Runtime
 
             // Ust sinir: haritanin tamami. Daha genise acmak bos zemin
             // gostermekten baska bir sey yapmaz.
-            float max = world.Space.RequiredOrthographicSize(aspect);
+            // Dikey tutusta genislik belirleyicidir: en genis kademe haritanin
+            // TAM GENISLIGINI gosterir (yukseklik gezilir). RequiredOrthographicSize
+            // haritanin tamamini sigdirir; ikisinden kucuk olan ust sinirdir.
+            float fullWidth = world.Space.WorldWidth * 0.5f / aspect;
+            float max = Mathf.Min(world.Space.RequiredOrthographicSize(aspect), fullWidth);
+            if (max <= 0f) max = fullWidth;
             float min = minVisibleCells * world.Space.CellSize * 0.5f;
 
             if (min > max) min = max;

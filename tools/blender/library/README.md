@@ -14,6 +14,7 @@ yeniden modelleme, ana dosyayı açıp üzerinden devam et.**
 | `towers.py` | Topçu, Keskin Nişancı, Zaman Bozulması, Radar kuleleri. |
 | `scenery.py` | Ağaç, kaya, krater, dağ. |
 | `fx.py` | Mermi, namlu çakması, isabet, toz patlaması. |
+| `base.py` | Üs (komuta sığınağı). |
 | `tiles.py` | Zemin döşemeleri. Blender değil, sistem Python'u + PIL ile çalışır. |
 
 `.blend` dosyası bilinçli olarak `Assets/` dışında: Unity içerideki
@@ -61,12 +62,13 @@ yeniden kurarlar, başka asset'lere dokunmazlar.
 | Namlu çakmaları | `FX_fx_{battery,ambush,beam}_muzzle` | `Sprites/Frontline/fx_*_muzzle.png` | `fx.py` |
 | İsabet patlamaları | `FX_fx_{battery,ambush,beam}_impact` | `Sprites/Frontline/fx_*_impact.png` | `fx.py` |
 | Toz patlaması | `FX_fx_scenery_burst` | `Sprites/Frontline/fx_scenery_burst.png` | `fx.py` |
+| Üs | `BS_home` | `Sprites/Frontline/home_base.png` | `base.py` |
 | Zemin döşemeleri | (Blender'da değil) | `Sprites/Frontline/tile_*.png` | `tiles.py` |
 
 Çıktı yolları `Assets/Frontline/` (kuleler) ve `Assets/` (diğerleri) altındadır.
 Kod adları eski: `battery` = Topçu, `ambush` = Makineli Tüfek, `beam` = Keskin Nişancı.
 
-Henüz yeni stile geçmeyenler: birlikler (`u_*.png`), üs (`home_base.png`),
+Henüz yeni stile geçmeyenler: birlikler (`u_*.png`),
 menzil halkası ve hedef işareti, yıldız rozeti, arayüz ikonları.
 
 ## Yeni asset eklerken

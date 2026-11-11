@@ -31,10 +31,10 @@ namespace Frontline.Core
         private static readonly Dictionary<TowerKind, int> BaseCost = new Dictionary<TowerKind, int>
         {
             { TowerKind.Battery, 100 },
-            { TowerKind.Ambush, 200 },
-            { TowerKind.Decoy, 130 },
-            { TowerKind.Minefield, 130 },
-            { TowerKind.Beam, 170 },
+            { TowerKind.Ambush, 175 },
+            { TowerKind.Decoy, 125 },
+            { TowerKind.Minefield, 150 },
+            { TowerKind.Beam, 200 },
         };
 
         /// <summary>

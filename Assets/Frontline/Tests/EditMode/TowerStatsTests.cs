@@ -104,9 +104,11 @@ namespace Frontline.Tests
         // ------------------------------------------------- Zaman Bozulmasi
 
         [Test]
-        public void TimeDistortion_Level1_SlowsToThreeQuarterSpeed()
+        public void TimeDistortion_Level1_SlowsToTheMeasuredSpeed()
         {
-            Assert.AreEqual(1f / 0.75f, S(TowerKind.Minefield, 1).SlowFactor, 0.0001f);
+            // 0,6: ilk karar 0,75'ti, olcum sonrasi Serhat 0,6'yi onayladi.
+            Assert.AreEqual(0.6f, TowerStats.SlowSpeedLevel1, 0.0001f);
+            Assert.AreEqual(1f / 0.6f, S(TowerKind.Minefield, 1).SlowFactor, 0.0001f);
         }
 
         [Test]

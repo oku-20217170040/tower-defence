@@ -57,7 +57,9 @@ her değer simülasyon taramasıyla bulunacak, tahminle girilmeyecek.
 
 ## 4. Zaman Bozulması
 
-- Temel: çevresindeki alanda düşman hızı 0,75 katına iner (%25 yavaşlama).
+- Temel: çevresindeki alanda düşman hızı 0,6 katına iner (%40 yavaşlama).
+  İlk karar 0,75'ti; ölçümde ortalama oyuncu o değerle run'ların %25'ini
+  kazandı, 0,6 ile %85. Serhat 0,6'yı onayladı.
   Ateş etmez. İki kulenin etkisi üst üste binmez, güçlü olan geçerli.
 - Seviye 2: alan büyür, yavaşlatma güçlenir.
 - Seviye 3: yavaşlatma bir kademe daha güçlenir + hafif kırılganlık
@@ -95,14 +97,26 @@ Yön kararlara uygun, sayılar ilk değerdir.
 
 ## Serhat'ın karar vermesi gerekenler
 
-1. **Zaman Bozulması seviye 1 çok zayıf çıkıyor.** Hız 0,75 ile ortalama
-   oyuncu modeli run'ların yalnızca %25'ini kazanıyor (hız 0,65 → %65,
-   0,6 → %85, 0,5 → %100). Kod kararı uyguluyor (0,75); simülatör ise
-   bilinçli olarak seviye 3 değerini (0,5) kullanıyor ve bunu not ediyor.
-2. **Fiyatlar değişmedi.** İsimler düzeltildi ama Makineli Tüfek hâlâ 200,
-   Topçu 100. Takas ölçüldü: usta oyuncuda sızıntı 8,8 → 12,7 (21 Ağustos
-   kalibrasyon bandının dışı), ortalama oyuncuda 23,2 → 12,1. Yani takas
-   dengeyi belirgin kaydırıyor; karar ve yeniden kalibrasyon gerekiyor.
+1. ~~Zaman Bozulması seviye 1 zayıf~~ ÇÖZÜLDÜ: hız 0,75 → 0,6
+   (seviyeler 0,6 / 0,55 / 0,5). Simülatör hâlâ seviye 3 değerini (0,5)
+   kullanıyor; yükseltmeyi modellemediği için bilinçli sapma.
+2. ~~Fiyatlar~~ ÇÖZÜLDÜ (Serhat fiyat kararını simülasyona bıraktı):
+
+   | Kule | Eski | Yeni |
+   |---|---|---|
+   | Topçu | 100 | 100 |
+   | Radar | 130 | 125 |
+   | Zaman Bozulması | 130 | 150 |
+   | Makineli Tüfek | 200 | 175 |
+   | Keskin Nişancı | 170 | 200 |
+
+   Taranan setler (usta / askerli usta / ortalama oyuncu sızıntısı):
+   eski 8,8 / 10,1 / 23,2 · takas 12,7 / 16,7 / 12,1 · değerle orantılı
+   9,2 / 12,5 / 10,5 · seçilen 7,8 / 10,3 / 17,4. Değerle orantılı set
+   usta ile ortalama oyuncu arasındaki farkı kapatıyordu ("alım sırası
+   önemli olmalı" kuralını bozuyordu); seçilen set farkı koruyor ve
+   ortalama oyuncuyu rahatlatıyor. Keskin Nişancı ve Radar bu politikalarda
+   alınmadığı için ölçülen katkılarına göre kondu, taranmadı.
 3. **Radar'ın Keskin Nişancı'ya oranı** yarım uygulandı (aşağıya bak).
 4. **Kör birlik** yemi yok sayma/silme özelliği taşıyor; yem kulesi
    kalktığı için bu özellik oyunda artık karşılıksız.
@@ -127,6 +141,13 @@ görsel, gerekirse dokunsal (titreşim) ve işitsel.
   kraterdeki düşman, zırh delen atış, ikinci atış, çift namlu ateşi
   her biri kendi görsel/işitsel işaretini taşır. Ayrıntıları her kulenin
   kod adımında belirlenir.
+
+## Kamera (11 Kasım 2026)
+
+- Harita sürüklenerek kaydırılır (tek parmak).
+- Zoom YALNIZCA İKİ KADEME: geniş (haritanın tam genişliği, 13 hücre) ve
+  onun biraz darı (9,5 hücre). Kıstırma ya da fare tekerleği kademeyi
+  değiştirir; daha yakına inilmez. Açılış dar kademede.
 
 ## Görsel kararlar
 

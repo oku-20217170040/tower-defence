@@ -81,8 +81,13 @@ namespace Frontline.Core
     {
         public const int MaxLevel = 3;
 
-        /// <summary>Zaman Bozulmasi sv1: hiz carpani 0,75 (Serhat'in verdigi sayi).</summary>
-        public const float SlowSpeedLevel1 = 0.75f;
+        /// <summary>
+        /// Zaman Bozulmasi sv1 hiz carpani. Ilk karar 0,75'ti; olcumde
+        /// ortalama oyuncu o degerle run'larin yalnizca %25'ini kazandi
+        /// (0,65 -> %65, 0,6 -> %85, 0,5 -> %100). Serhat 11 Kasim 2026'da
+        /// 0,6'yi onayladi.
+        /// </summary>
+        public const float SlowSpeedLevel1 = 0.6f;
 
         /// <summary>
         /// Radar'in Keskin Nisanci'ya verdigi menzil ekinin orani. Harita 13
@@ -123,7 +128,8 @@ namespace Frontline.Core
 
                 case TowerKind.Minefield: // Zaman Bozulmasi
                     s.AuraRadius = level == 1 ? 4f : 4.75f;
-                    float speed = level == 1 ? SlowSpeedLevel1 : (level == 2 ? 0.62f : 0.5f);
+                    // sv2 ve sv3 OLCULMEDI; sv1'den guclu olmalari karar geregi.
+                    float speed = level == 1 ? SlowSpeedLevel1 : (level == 2 ? 0.55f : 0.5f);
                     s.SlowFactor = 1f / speed;
                     s.Fragility = level == 3 ? 1.12f : 1f;
                     break;

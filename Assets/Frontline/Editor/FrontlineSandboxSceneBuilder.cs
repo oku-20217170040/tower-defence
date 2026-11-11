@@ -60,7 +60,13 @@ namespace Frontline.EditorTools
             // zoom siniri da 10 -> 5 hucreye indi ki oyuncu istedigi
             // kadar daha da yaklasabilsin.
             var mapCamera = camera.gameObject.AddComponent<MapCamera>();
-            mapCamera.startVisibleWidthCells = 7f;
+            //
+            // 11 Kasim 2026 (Serhat): surukleyerek kaydirma kalir, zoom
+            // YALNIZCA IKI KADEME - genis (haritanin tam genisligi) ve onun
+            // biraz darligi. "Cok yakin gozukmesin, yoksa sikar." Eski 7
+            // hucrelik acilis bu yuzden 9,5'e acildi.
+            mapCamera.wideWidthCells = 0f;      // 0 = haritanin tam genisligi
+            mapCamera.narrowWidthCells = 9.5f;
             mapCamera.minVisibleCells = 5f;
 
             // ── Dunya ───────────────────────────────────────────────

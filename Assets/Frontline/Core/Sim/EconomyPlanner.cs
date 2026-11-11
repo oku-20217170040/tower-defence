@@ -41,11 +41,25 @@ namespace Frontline.Core
                     StartingBalance = 450,
                     FoodPerKill = 5,
                     FoodPerWave = 30,
-                    BatteryCost = 100,
-                    AmbushCost = 200,
-                    DecoyCost = 130,
-                    MinefieldCost = 130,
-                    BeamCost = 170,
+                    // 11 Kasim 2026 fiyat taramasi (20 seed; usta / askerli usta
+                    // / ortalama oyuncu sizintisi, MG/Topcu/Zaman):
+                    //   200/100/130 (eski)   8,8 / 10,1 / 23,2
+                    //   100/200/130 (takas) 12,7 / 16,7 / 12,1  usta bandin disi
+                    //   125/150/175 (degerle orantili) 9,2 / 12,5 / 10,5
+                    //        -> usta ile ortalama arasindaki fark kapaniyor
+                    //   175/100/150 (SECILDI) 7,8 / 10,3 / 17,4
+                    // Secilen set usta oyunu ayni tutuyor, ortalama oyuncuyu
+                    // rahatlatiyor (us 7 -> 13) ve alim sirasinin onemini
+                    // koruyor (fark 9,6 us cani; esik 8).
+                    // Keskin Nisanci (200) ve Radar (125) bu iki politikada
+                    // alinmadigi icin taramayla degil olculen KATKILARINA gore
+                    // kondu: nisanci en uzun menzil + en guclu sv3, radar erken
+                    // oyunda en zayif katki.
+                    BatteryCost = 100,   // Topcu
+                    AmbushCost = 175,    // Makineli Tufek
+                    DecoyCost = 125,     // Radar
+                    MinefieldCost = 150, // Zaman Bozulmasi
+                    BeamCost = 200,      // Keskin Nisanci
                     CostStep = 25
                 };
             }
@@ -133,8 +147,8 @@ namespace Frontline.Core
                     BatteryDps = TowerStats.CannonDps,
                     TowerRadius = 4f,
 
-                    // DIKKAT - bilincli sapma. Zaman Bozulmasi sv1 hizi 0,75'e
-                    // indirir (carpan 1,33); buradaki 2 ise SV3'un degeridir.
+                    // DIKKAT - bilincli sapma. Zaman Bozulmasi sv1 hizi 0,6'ya
+                    // indirir (carpan 1,67); buradaki 2 ise SV3'un degeridir.
                     // Simulator yukseltmeyi modellemiyor; ortalama oyuncunun
                     // alani yukselttigi varsayiliyor. Sv1 degeriyle olcum
                     // (20 seed, ortalama oyuncu): hiz 0,75 -> kazanma %25,

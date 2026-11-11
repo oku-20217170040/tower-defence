@@ -50,20 +50,20 @@ namespace Frontline.Runtime
         public int batteryCost = 100;
 
         [Tooltip("Pusu mevzisi pahalidir: gercek katliami o yapar.")]
-        public int ambushCost = 200;
+        public int ambushCost = 175;
 
         [Tooltip("Sahte hedef orta fiyatlidir.")]
-        public int decoyCost = 130;
+        public int decoyCost = 125;
 
         [Tooltip("Mayin tarlasi kulesi. Hasar vermedigi icin sessizden ucuz; degeri " +
                  "yalnizca bir pusu mevzisiyle eslestiginde ortaya cikiyor.")]
-        public int minefieldCost = 130;
+        public int minefieldCost = 150;
 
         [Tooltip("Isin kulesi. Pusu ile mayin tarlasi arasinda fiyatlandi. " +
                  "Olcum fiyatin isin icin ZAYIF bir dugme oldugunu gosterdi " +
                  "(20 ile 50 arasi sizintiyi 15,3'ten 15,9'a tasiyor) cunku " +
                  "kulelerin cogu draft'tan bedava geliyor.")]
-        public int beamCost = 170;
+        public int beamCost = 200;
 
         [Tooltip("Ayni turden her yeni kulenin ek maliyeti. 10'da run olcumde " +
                  "olduruyordu (kazanma %10); 5 spam'i yine pahali tutuyor.")]
@@ -86,6 +86,11 @@ namespace Frontline.Runtime
         // (Core/Sim/EconomyPlanner.cs) da AYNI x5 ile guncellendi ki
         // CurrentRunCalibrationTests'in olctugu simulasyon matematiksel
         // olarak TAMAMEN AYNI kalsin (tam sayi olcekleme, yuvarlama yok).
+
+        // 11 Kasim 2026: fiyatlar yeniden tarandi (isimler mekanige gore
+        // duzeltildikten sonra). Topcu 100, Makineli Tufek 175, Radar 125,
+        // Zaman Bozulmasi 150, Keskin Nisanci 200. Olcum tablosu
+        // EconomyPlanner.Costs.Default() icinde; iki dosya birlikte degisir.
 
         public RunEconomy Economy { get; private set; }
 
