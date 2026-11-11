@@ -15,6 +15,7 @@ yeniden modelleme, ana dosyayı açıp üzerinden devam et.**
 | `scenery.py` | Ağaç, kaya, krater, dağ. |
 | `fx.py` | Mermi, namlu çakması, isabet, toz patlaması. |
 | `base.py` | Üs (komuta sığınağı). |
+| `units.py` | Yedi düşman birliği. |
 | `tiles.py` | Zemin döşemeleri. Blender değil, sistem Python'u + PIL ile çalışır. |
 
 `.blend` dosyası bilinçli olarak `Assets/` dışında: Unity içerideki
@@ -44,6 +45,9 @@ yeniden kurarlar, başka asset'lere dokunmazlar.
 - Renkler yalnızca `fl_lib.PALETTE` içinden.
 - Kaide ve taret ayrı sprite, aynı kadraj (tuval 1,4 birim; 1 birim = 1 hücre).
 - Namlu yerel -Y'ye (resimde aşağı) bakar; dönme ekseni resmin merkezi.
+- Düşman rengi mor-lacivert + turuncu göz (`foe*`); oyuncunun kuleleriyle karışmaz.
+- Yeni PNG'nin Unity içe aktarma ayarı: Sprite, Single, 512 PPU. Eski bir
+  `.meta` farklıysa (ör. 100 PPU) birlik oyunda yanlış boyutta çıkar.
 
 ## Envanter
 
@@ -62,14 +66,14 @@ yeniden kurarlar, başka asset'lere dokunmazlar.
 | Namlu çakmaları | `FX_fx_{battery,ambush,beam}_muzzle` | `Sprites/Frontline/fx_*_muzzle.png` | `fx.py` |
 | İsabet patlamaları | `FX_fx_{battery,ambush,beam}_impact` | `Sprites/Frontline/fx_*_impact.png` | `fx.py` |
 | Toz patlaması | `FX_fx_scenery_burst` | `Sprites/Frontline/fx_scenery_burst.png` | `fx.py` |
+| Birlikler (7 tür) | `UN_infantry`, `UN_scout`, `UN_soldier`, `UN_blind`, `UN_brood`, `UN_queen`, `UN_flyer` | `Sprites/Frontline/u_*.png` | `units.py` |
 | Üs | `BS_home` | `Sprites/Frontline/home_base.png` | `base.py` |
 | Zemin döşemeleri | (Blender'da değil) | `Sprites/Frontline/tile_*.png` | `tiles.py` |
 
 Çıktı yolları `Assets/Frontline/` (kuleler) ve `Assets/` (diğerleri) altındadır.
 Kod adları eski: `battery` = Topçu, `ambush` = Makineli Tüfek, `beam` = Keskin Nişancı.
 
-Henüz yeni stile geçmeyenler: birlikler (`u_*.png`),
-menzil halkası ve hedef işareti, yıldız rozeti, arayüz ikonları.
+Henüz yeni stile geçmeyenler: menzil halkası ve hedef işareti, yıldız rozeti, arayüz ikonları.
 
 ## Yeni asset eklerken
 

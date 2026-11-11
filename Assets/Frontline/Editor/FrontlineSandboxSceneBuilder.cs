@@ -308,6 +308,9 @@ namespace Frontline.EditorTools
                 MakeUnit(UnitType.Blind,    "u_blind",    own),
                 MakeUnit(UnitType.Brood,    "u_brood",    own),
                 MakeUnit(UnitType.Queen,    "u_queen",    own),
+                // Ucan birligin daha once sprite kaydi YOKTU (daire olarak
+                // ciziliyordu); 11 Kasim 2026 birlik setiyle eklendi.
+                MakeUnit(UnitType.Flyer,    "u_flyer",    own),
             };
 
             // Bes kule bes AYRI siluet. Kule turu oyunun merkezi ayrimi;
