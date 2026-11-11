@@ -99,11 +99,12 @@ namespace Frontline.Core.UI
         {
             switch (kind)
             {
-                case TowerKind.Battery: return "Makineli Tufek";
-                case TowerKind.Ambush: return "Topcu";
-                case TowerKind.Decoy: return "Sahte hedef";
-                case TowerKind.Minefield: return "Mayin tarlasi";
-                case TowerKind.Beam: return "Isin";
+                // 11 Kasim 2026: adlar MEKANIGE gore (kod adlari eski kaldi).
+                case TowerKind.Ambush: return "Makineli Tufek";
+                case TowerKind.Battery: return "Topcu";
+                case TowerKind.Beam: return "Keskin Nisanci";
+                case TowerKind.Minefield: return "Zaman Bozulmasi";
+                case TowerKind.Decoy: return "Radar";
             }
 
             return kind.ToString();
@@ -114,11 +115,11 @@ namespace Frontline.Core.UI
         {
             switch (kind)
             {
-                case TowerKind.Battery: return "Mak. Tufek";
-                case TowerKind.Ambush: return "Topcu";
-                case TowerKind.Decoy: return "Sahte";
-                case TowerKind.Minefield: return "Mayin";
-                case TowerKind.Beam: return "Isin";
+                case TowerKind.Ambush: return "Mak. Tufek";
+                case TowerKind.Battery: return "Topcu";
+                case TowerKind.Beam: return "Nisanci";
+                case TowerKind.Minefield: return "Zaman";
+                case TowerKind.Decoy: return "Radar";
             }
 
             return kind.ToString();

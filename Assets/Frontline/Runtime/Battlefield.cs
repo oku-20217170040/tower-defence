@@ -115,6 +115,13 @@ namespace Frontline.Runtime
         public DecoyField Decoy { get; private set; }
         public ThreatField Threat { get; private set; }
         public SlowField Slow { get; private set; }
+
+        /// <summary>
+        /// Kirilganlik alani (Zaman Bozulmasi sv3): hucredeki dusmanin
+        /// aldigi hasarin carpani. SlowField ile ayni kural (en guclu kaynak
+        /// gecerli, ust uste binmez), o yuzden ayni sinif kullanilir.
+        /// </summary>
+        public SlowField Fragile { get; private set; }
         public RouteCostModel CostModel { get; private set; }
         public RoutePathfinder Pathfinder { get; private set; }
         public GridSpace Space { get; private set; }
@@ -239,6 +246,60 @@ namespace Frontline.Runtime
 
                 Slow.AddSource(tower.Cell, tower.radius, tower.slowFactor);
             }
+
+            if (Fragile != null)
+            {
+                Fragile.Clear();
+                for (int i = 0; i < towers.Count; i++)
+                {
+                    Emplacement tower = towers[i];
+                    if (tower == null || tower.kind != TowerKind.Minefield) continue;
+                    if (tower.fragility <= SlowField.None) continue;
+
+                    Fragile.AddSource(tower.Cell, tower.radius, tower.fragility);
+                }
+            }
+
+            RebuildAuras();
+        }
+
+        /// <summary>
+        /// Radar etkisini sifirdan kurar: her silahli kule, menzilinde oldugu
+        /// radarlarin EN GUCLUSUNDEN menzil ve ates hizi eki alir. Ust uste
+        /// binmez (iki radar toplanmaz) - 11 Kasim 2026 karari.
+        /// </summary>
+        public void RebuildAuras()
+        {
+            if (Grid == null) return;
+
+            for (int i = 0; i < towers.Count; i++)
+            {
+                Emplacement tower = towers[i];
+                if (tower == null) continue;
+
+                TowerWeapon weapon = tower.Weapon;
+                if (weapon == null) continue;
+
+                float range = 0f;
+                float rate = 0f;
+                int tx = Grid.X(tower.Cell);
+                int ty = Grid.Y(tower.Cell);
+
+                for (int r = 0; r < towers.Count; r++)
+                {
+                    Emplacement radar = towers[r];
+                    if (radar == null || radar.kind != TowerKind.Decoy) continue;
+
+                    float dx = Grid.X(radar.Cell) - tx;
+                    float dy = Grid.Y(radar.Cell) - ty;
+                    if (dx * dx + dy * dy > radar.radius * radar.radius) continue;
+
+                    range = Mathf.Max(range, TowerStats.RangeBonusFor(tower.kind, radar.rangeBonus));
+                    rate = Mathf.Max(rate, TowerStats.FireRateBonusFor(tower.kind, radar.fireRateBonus));
+                }
+
+                weapon.SetAura(range, rate);
+            }
         }
 
         /// <summary>
@@ -248,7 +309,12 @@ namespace Frontline.Runtime
         /// </summary>
         public void ApplyDecoys()
         {
-            if (Decoy == null) return;
+            // 11 Kasim 2026: Yem kulesi kaldirildi, TowerKind.Decoy artik
+            // RADAR'dir ve sahte iz basmaz. DecoyField ve bu yontem yerinde
+            // duruyor (RunController her dalga cagiriyor, kor birlik
+            // mekanigi Core'da hala test ediliyor) ama hicbir kule yem yazmaz.
+            bool anyTowerLaysDecoy = false;
+            if (Decoy == null || !anyTowerLaysDecoy) return;
 
             for (int i = 0; i < towers.Count; i++)
             {
@@ -411,6 +477,7 @@ namespace Frontline.Runtime
             Decoy = new DecoyField(Grid, decoyStrength, decoyDiminish);
             Threat = new ThreatField(Grid);
             Slow = new SlowField(Grid);
+            Fragile = new SlowField(Grid);
 
             CostModel = new RouteCostModel(Recon, Decoy, Threat)
             {

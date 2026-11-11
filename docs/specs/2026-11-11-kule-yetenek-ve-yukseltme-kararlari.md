@@ -75,6 +75,38 @@ her değer simülasyon taramasıyla bulunacak, tahminle girilmeyecek.
 - Keskin Nişancı'nın menzilini de artırır.
 - Zaman Bozulması'nı ETKİLEMEZ.
 
+## Uygulama durumu ve ölçümler (11 Kasım 2026)
+
+Kod yazıldı: sayıların tek kaynağı `Core/Towers/TowerStats.cs`, silah
+`Runtime/Towers/TowerWeapon.cs`, kararları kilitleyen testler
+`Tests/EditMode/TowerStatsTests.cs`. 335 test yeşil; mevcut kalibrasyon
+testlerinin hiçbiri değiştirilmedi.
+
+Ölçülerek seçilen seviye 1 değerleri (usta oyuncu, 20 seed):
+
+- **Topçu:** patlama yarıçapı 2,5 hücre, saniyelik 2,5 hasar eşdeğeri.
+  Patlama toplanmış sürüye çok daha sert vurduğu için iki kurulum birlikte
+  tarandı; tam tablo `TowerStats.cs` içinde.
+- **Keskin Nişancı:** menzil 9 hücre. Toplanmış orduya karşı sızıntıyı
+  19,1'den 15,5'e indiriyor (menzil 40 iken 12,2).
+
+Seviye 2 ve 3 değerleri ÖLÇÜLMEDİ: simülatör yükseltmeyi modellemiyor.
+Yön kararlara uygun, sayılar ilk değerdir.
+
+## Serhat'ın karar vermesi gerekenler
+
+1. **Zaman Bozulması seviye 1 çok zayıf çıkıyor.** Hız 0,75 ile ortalama
+   oyuncu modeli run'ların yalnızca %25'ini kazanıyor (hız 0,65 → %65,
+   0,6 → %85, 0,5 → %100). Kod kararı uyguluyor (0,75); simülatör ise
+   bilinçli olarak seviye 3 değerini (0,5) kullanıyor ve bunu not ediyor.
+2. **Fiyatlar değişmedi.** İsimler düzeltildi ama Makineli Tüfek hâlâ 200,
+   Topçu 100. Takas ölçüldü: usta oyuncuda sızıntı 8,8 → 12,7 (21 Ağustos
+   kalibrasyon bandının dışı), ortalama oyuncuda 23,2 → 12,1. Yani takas
+   dengeyi belirgin kaydırıyor; karar ve yeniden kalibrasyon gerekiyor.
+3. **Radar'ın Keskin Nişancı'ya oranı** yarım uygulandı (aşağıya bak).
+4. **Kör birlik** yemi yok sayma/silme özelliği taşıyor; yem kulesi
+   kalktığı için bu özellik oyunda artık karşılıksız.
+
 ## Açık nokta
 
 - Radar'ın Keskin Nişancı'ya verdiği menzil bonusu diğer kulelerle aynı

@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Frontline.Core;
 using Frontline.Runtime.Audio;
@@ -5,109 +7,117 @@ using Frontline.Runtime.Audio;
 namespace Frontline.Runtime
 {
     /// <summary>
-    /// Kulenin silahi. Mermi yok; hasar menzildeki en yakin birlige surekli
-    /// uygulanir. Mermi gorselleri Plan 5'in isi.
+    /// Kulenin silahi. Uc ates bicimi var (11 Kasim 2026 kararlari,
+    /// docs/specs/2026-11-11-kule-yetenek-ve-yukseltme-kararlari.md):
     ///
-    /// Tasarimin can alici noktasi burada gorunur: batarya kulenin hasari
-    /// yuksektir ama onunden zamanla kimse gecmez, dolayisiyla GERCEK hasari
-    /// dusuktur. Pusu mevzisinin hasari dusuktur ama surekli is gorur.
-    /// Oyuncunun kesfetmesi gereken sey bu fark (spec 3.2).
+    ///   Stream (Makineli Tufek)  en yakin N hedefe SUREKLI hasar. Sv3'te N=2.
+    ///   Shell  (Topcu)           aralikli mermi; dustugu yerde patlar,
+    ///                            yaricaptaki herkese vurur. Sv3 yanan krater.
+    ///   Line   (Keskin Nisanci)  aralikli atis; hat uzerindeki herkesi deler.
+    ///                            Sv3 zirh delme + oldurunce ikinci atis.
+    ///
+    /// Sayilar buraya GOMULMEZ: hepsi Core'daki TowerStats tablosundan gelir
+    /// (ApplyStats). Radar etkisi (menzil / ates hizi eki) SetAura ile gelir.
     /// </summary>
     public sealed class TowerWeapon : MonoBehaviour
     {
-        [Tooltip("Saniyede verilen hasar.")]
+        public enum FireMode { Stream, Shell, Line }
+
+        [Tooltip("Makineli Tufek: hedef basina saniyelik hasar (TowerStats'tan gelir).")]
         public float damagePerSecond = 4f;
 
-        [Tooltip("Menzil (hucre). Kulenin tehdit yaricapiyla ayni olmak zorunda degil.")]
+        [Tooltip("ETKIN menzil (hucre): taban menzil + radar eki. Salt okunur gibi dusun.")]
         public float range = 4f;
 
-        [Tooltip("Acikken menzildeki TUM birliklere ayni anda vurur (batarya kule). " +
-                 "Olcum: alan hasari yaklasik 4 kat deger katiyor - 8 birlik gecerken " +
-                 "tek hedefli kule 2, alan hasarli 8 olduruyor.")]
-        public bool splash;
+        [Tooltip("Makineli Tufek: ayni anda kac hedefe ates eder (sv3 = 2).")]
+        public int targets = 1;
 
-        [Tooltip("Acikken kule bir ISINDIR: belirli araliklarla ates eder, " +
-                 "namlusunu en yakin birlige dogrultur ve o dogrultuda onune " +
-                 "cikan HERKESI yarip gecer.")]
-        public bool beam;
+        [Header("Topcu mermisi")]
+        public float shellDamage;
+        public float shellInterval = 1.2f;
+        [Tooltip("Patlama yaricapi (hucre).")]
+        public float blastRadius = 1.5f;
+        public float burnDps;
+        public float burnSeconds;
 
-        [Tooltip("Isinin bir atista verdigi hasar. 3 olcumle secildi: nisan " +
-                 "aldigi icin iskalamiyor, o yuzden dusuk tutuldu.")]
+        [Header("Keskin Nisanci atisi")]
+        [Tooltip("Hat uzerindeki her birlige verilen hasar.")]
         public float beamShotDamage = 3f;
-
-        [Tooltip("Isinin atislari arasindaki sure. ASIL denge dugmesi budur: " +
-                 "0,5 sn'de isin tek basina oyunu cozuyor, 2 sn'de tek basina " +
-                 "ise yaramiyor ama karisimda deger uretiyor.")]
         public float beamShotInterval = 2f;
 
-        [Tooltip("Isin hattinin yarim KALINLIGI (hucre). Hat incedir.")]
+        [Tooltip("Hattin yarim KALINLIGI (hucre). Hat incedir.")]
         public float beamHalfWidth = 0.6f;
+
+        [Tooltip("Zirh delme: hattaki en yuksek canli hedefe atis hasarinin bu kati EK hasar.")]
+        public float pierceBonus;
+
+        [Tooltip("Atis birini oldururse hemen ikinci atis (zincirlenmez).")]
+        public bool followUpOnKill;
+
+        [Tooltip("Ikinci atisin gecikmesi (saniye).")]
+        public float followUpDelay = 0.25f;
 
         [Tooltip("Bir atisin gorsel olarak ne kadar sure gorunecegi.")]
         public float beamFlashSeconds = 0.12f;
 
-        [Tooltip("Isin cizgisinin GORSEL kalinligi (hucre orani). Hasar " +
-                 "kalinligindan (beamHalfWidth) AYRIDIR: biri denge sayisi, " +
-                 "digeri sanat karari. Once ikisi ayni sayidan turetiliyordu " +
-                 "ve isin ekrani kaplayan bir bant gibi duruyordu.")]
+        [Tooltip("Atis cizgisinin GORSEL kalinligi (hucre orani). Hasar " +
+                 "kalinligindan (beamHalfWidth) AYRIDIR.")]
         public float beamVisualThickness = 0.05f;
 
         [Header("Ortu Yikma")]
         [Tooltip("Atis hattinin uzerine denk gelen kaya/agaca verilen hasarin " +
-                 "DPS'e orani. Kule hedefine nisan alir; arada duran ortu " +
-                 "atisi yer ve zamanla yikilir, yerine mevzi kurulabilen cukur " +
-                 "kalir. 0 yapilirsa kuleler ortuyu hic acmaz.")]
+                 "orani. 0 yapilirsa kuleler ortuyu hic acmaz.")]
         [Range(0f, 2f)]
         public float sceneryDamageShare = 1f;
 
         [Header("Atis gorseli (KOZMETIK)")]
-        [Tooltip("Iki gorsel atis arasindaki sure. Hasar SUREKLI uygulanir; " +
-                 "mermi yalnizca oyuncuya geri bildirimdir ve dengeye dokunmaz.")]
+        [Tooltip("Makineli Tufek icin iki gorsel atis arasindaki sure. Hasar " +
+                 "SUREKLI uygulanir; mermi yalnizca geri bildirimdir.")]
         public float tracerInterval = 0.18f;
 
-        [Tooltip("Mermi ve patlama rengi. Sprite atanmissa yalnizca ona " +
-                 "uygulanan tint; sprite yoksa daire bu renkte cizilir. " +
-                 "Pusu SOLUK, batarya PARLAK - gorsel hiyerarsi mekanikle " +
-                 "ayni kalmali (spec 9.1).")]
+        [Tooltip("Mermi ve patlama rengi. Sprite atanmissa ona uygulanan tint.")]
         public Color tracerColor = new Color(0.75f, 0.82f, 0.88f, 0.45f);
-
-        [Tooltip("KULLANILMIYOR - eski cizgi izinden kalan alan. Mermi " +
-                 "boyutu artik TowerFx'ten gelir.")]
-        public float tracerThickness = 0.05f;
 
         [Tooltip("Namlu cakmasinin ne kadar sure gorunecegi.")]
         public float tracerSeconds = 0.07f;
 
-        private float tracerTimer;
-
         [Header("Mermi / patlama gorselleri")]
-        [Tooltip("Tur basina olculmus gorsel ayarlar: namlu ucu uzakligi, " +
-                 "mermi boyu ve hizi, patlama boyu.")]
-        public TowerFx fx = TowerFx.For(Frontline.Core.TowerKind.Ambush);
-
-        [Tooltip("Ucan mermi sprite'i. Bos ise daire cizilir.")]
+        public TowerFx fx = TowerFx.For(TowerKind.Ambush);
         public Sprite bulletSprite;
-
-        [Tooltip("Namlu ucundaki cakma sprite'i. Bos ise daire cizilir.")]
         public Sprite muzzleSprite;
-
-        [Tooltip("Hedefte patlayan carpma sprite'i. Bos ise daire cizilir.")]
         public Sprite impactSprite;
 
-        [Tooltip("Kule sprite'inin dunya olcegi. Namlu ucu bununla carpilir; " +
-                 "yoksa buyuk kulede mermi namlunun gerisinden cikar.")]
+        [Tooltip("Kule sprite'inin dunya olcegi. Namlu ucu bununla carpilir.")]
         public float visualScale = 1f;
 
-        [Tooltip("Donen ust yapi - atis aninda Recoil() cagrilir (geri tepme " +
-                 "animasyonu). TowerPlacer.Place() baglar; bos ise geri " +
-                 "tepme sessizce atlanir (ArtLibrary kurali: eksik parca " +
-                 "oyunu bozmaz).")]
+        [Tooltip("Donen ust yapi - atis aninda Recoil() cagrilir. Bos ise atlanir.")]
         public TowerTurret turret;
 
+        public FireMode Mode { get; private set; }
+
+        /// <summary>Radarin verdigi menzil eki (0,2 = +%20). 0 = radar yok.</summary>
+        public float RangeBonus { get; private set; }
+
+        /// <summary>Radarin verdigi ates hizi eki.</summary>
+        public float FireRateBonus { get; private set; }
+
+        /// <summary>Bir radarin etkisinde mi (gorsel geri bildirim bunu okur).</summary>
+        public bool IsBuffed { get { return RangeBonus > 0f || FireRateBonus > 0f; } }
+
+        /// <summary>Etkin menzil (hucre): taban + radar eki.</summary>
+        public float EffectiveRange { get { return baseRange * (1f + RangeBonus); } }
+
+        /// <summary>Son atisin yonu; kule govdesi buna doner.</summary>
+        public Vector2 AimDirection { get; private set; } = Vector2.down;
+
+        /// <summary>Su an menzilde bir hedef var mi (kule ona doner).</summary>
+        public bool HasTarget { get; private set; }
+
+        /// <summary>Her gercek atista (mermi / hat atisi) tetiklenir - testler ve efektler icin.</summary>
+        public event System.Action Fired;
+
         /// <summary>
-        /// Namlunun hedefe donuk ucu. Mermi de cakma da BURADAN dogar -
-        /// kule merkezinden dogan mermi govdenin icinden cikip namluyu
-        /// yalanci yapar (22 Agu kullanici geri bildirimi).
+        /// Namlunun hedefe donuk ucu. Mermi de cakma da BURADAN dogar.
         /// </summary>
         public Vector2 MuzzlePoint
         {
@@ -118,62 +128,83 @@ namespace Frontline.Runtime
             }
         }
 
-        private float beamTimer;
-
-        /// <summary>Son atisin yonu; kule govdesi buna doner.</summary>
-        public Vector2 AimDirection { get; private set; } = Vector2.down;
-
-        /// <summary>Su an menzilde bir hedef var mi (kule ona doner).</summary>
-        public bool HasTarget { get; private set; }
-
         private Battlefield world;
-        private float worldRange;
-        private Emplacement emplacement;
+        private TowerKind kind = TowerKind.Ambush;
+        private float baseRange = 4f;
+        private float damageMul = 1f;
+        private float rangeMul = 1f;
+        private float tracerTimer;
+        private float shotTimer;
+        private bool followUpUsed;
+        private int manualTargetCell = -1;
 
-        /// <summary>
-        /// Kule tipine gore ates efekti sesi. Referans oyun turunde her kule
-        /// silueti farkli bir ses karakteri tasiyordu (mekanik/hizli,
-        /// gumbur, keskin cinlama, elektronik hum) - bizim 5 kulemizde ayni
-        /// dilin karsiligi budur (2026-09-03 ses gorevi).
-        /// </summary>
-        private string FireClip
+        private readonly List<UnitHealth> picked = new List<UnitHealth>(4);
+
+        private float WorldRange
         {
-            get
-            {
-                if (emplacement == null) return AudioManager.TowerFireMg;
-                switch (emplacement.kind)
-                {
-                    case TowerKind.Battery: return AudioManager.TowerFireMg;
-                    case TowerKind.Ambush: return AudioManager.TowerFireSniper;
-                    case TowerKind.Beam: return AudioManager.TowerFireTimeWarp;
-                    default: return null; // Decoy/Minefield ates etmez.
-                }
-            }
+            get { return EffectiveRange * world.Space.CellSize; }
         }
 
+        private float RateScale { get { return 1f + FireRateBonus; } }
+
         /// <summary>
-        /// Oyuncunun manuel olarak kilitledigi ortu hucresi (agac/kaya).
-        /// -1 = manuel hedef yok. Kullanici geri bildirimi (2 Eylul 2026):
-        /// "menzil alani icerisindeki agac ve taslara bastigimda kuleler
-        /// buraya ates etsin, odak TAMAMEN oraya donsun, ta ki patlayana
-        /// kadar ya da tekrar basip odagi alana kadar."
-        ///
-        /// "Odak TAMAMEN oraya donsun" - manuel hedef aktifken kule
-        /// BIRLIKLERE ATES ETMEZ, yalnizca kilitli ortuye vurur. Bu bilerek
-        /// riskli birakildi: oyuncu bunu secince sürünün o an gecmesi
-        /// oyuncunun kendi tercihidir, kule gizlice ikisini birden
-        /// yapmaz - "tamamen" kelimesi bunu net soyluyor.
+        /// Kuleyi turune gore kurar. damageMul / rangeMul draft odullerinden
+        /// gelen kalici carpanlardir; seviye degisse de korunurlar.
         /// </summary>
-        private int manualTargetCell = -1;
+        public void Configure(Battlefield world, TowerKind kind, float damageMul, float rangeMul)
+        {
+            this.world = world;
+            this.kind = kind;
+            this.damageMul = damageMul;
+            this.rangeMul = rangeMul;
+
+            Mode = kind == TowerKind.Beam ? FireMode.Line
+                 : (kind == TowerKind.Battery ? FireMode.Shell : FireMode.Stream);
+        }
+
+        /// <summary>Seviyenin sayilarini uygular (kurulumda ve her yukseltmede).</summary>
+        public void ApplyStats(TowerLevelStats stats)
+        {
+            baseRange = stats.Range * rangeMul;
+            targets = Mathf.Max(1, stats.Targets);
+            damagePerSecond = stats.Dps * damageMul;
+
+            if (Mode == FireMode.Shell)
+            {
+                shellDamage = stats.ShotDamage * damageMul;
+                shellInterval = stats.ShotInterval;
+                blastRadius = stats.BlastRadius;
+                burnDps = stats.BurnDps * damageMul;
+                burnSeconds = stats.BurnSeconds;
+            }
+            else if (Mode == FireMode.Line)
+            {
+                beamShotDamage = stats.ShotDamage * damageMul;
+                beamShotInterval = stats.ShotInterval;
+                pierceBonus = stats.PierceBonus;
+                followUpOnKill = stats.FollowUpOnKill;
+            }
+
+            range = EffectiveRange;
+        }
+
+        /// <summary>Battlefield.RebuildAuras cagirir: radar etkisini yazar.</summary>
+        public void SetAura(float rangeBonus, float fireRateBonus)
+        {
+            RangeBonus = Mathf.Max(0f, rangeBonus);
+            FireRateBonus = Mathf.Max(0f, fireRateBonus);
+            range = EffectiveRange;
+        }
+
+        // ------------------------------------------------------ manuel hedef
 
         /// <summary>Su an manuel bir ortu hedefine kilitli mi?</summary>
         public bool HasManualTarget { get { return manualTargetCell >= 0; } }
 
         /// <summary>
-        /// Bu hucreyi menzildeyse manuel hedef yapar. Menzil disindaysa ya
-        /// da hucrede ayakta ortu yoksa sessizce reddeder (false doner) -
-        /// cagiran taraf (SceneryFocusController) zaten yalnizca menzildeki
-        /// kulelere cagiriyor ama savunma amacli burada da dogrulanir.
+        /// Bu hucreyi menzildeyse manuel hedef yapar (agac/kaya). Manuel
+        /// hedef aktifken kule BIRLIKLERE ATES ETMEZ - "odak tamamen oraya
+        /// donsun" (2 Eylul 2026 kullanici talimati).
         /// </summary>
         public bool TrySetManualTarget(int cell)
         {
@@ -182,64 +213,18 @@ namespace Frontline.Runtime
 
             Vector2 cellWorld = world.Space.CellToWorld(cell);
             float sqr = ((Vector2)transform.position - cellWorld).sqrMagnitude;
-            if (sqr > worldRange * worldRange) return false;
+            if (sqr > WorldRange * WorldRange) return false;
 
             manualTargetCell = cell;
             return true;
         }
 
-        /// <summary>Manuel hedefi birakir; kule normal birlik hedeflemesine doner.</summary>
         public void ClearManualTarget()
         {
             manualTargetCell = -1;
         }
 
-        // Yukseltme (Emplacement.Upgrade) BASE hasari carpar, mevcut
-        // carpilmis degeri degil - ustuste yukseltmede hasarin katlanarak
-        // buyumesini (1.2 * 1.2 * ...) degil DOGRUSAL buyumesini (seviye
-        // basina sabit +%20) saglar.
-        private float baseDamagePerSecond;
-        private float baseBeamShotDamage;
-
-        public void Bind(Battlefield world, float rangeInCells, float dps, bool splash)
-        {
-            this.world = world;
-            this.splash = splash;
-            range = rangeInCells;
-            damagePerSecond = dps;
-            baseDamagePerSecond = dps;
-            worldRange = rangeInCells * world.Space.CellSize;
-        }
-
-        /// <summary>Isin baglama: menzil, atis basina hasar ve atis araligi.</summary>
-        public void BindBeam(Battlefield world, float rangeInCells,
-                             float shotDamage, float shotInterval, float halfWidth)
-        {
-            this.world = world;
-            beam = true;
-            range = rangeInCells;
-            worldRange = rangeInCells * world.Space.CellSize;
-            beamHalfWidth = halfWidth;
-            beamShotDamage = shotDamage;
-            baseBeamShotDamage = shotDamage;
-            beamShotInterval = shotInterval;
-            beamTimer = shotInterval;
-        }
-
-        /// <summary>
-        /// Emplacement.Upgrade cagirir: hasari BASE degerden yeniden
-        /// olceklendirir (bkz. Emplacement.StatMultiplier).
-        /// </summary>
-        public void ApplyLevelMultiplier(float multiplier)
-        {
-            if (beam) beamShotDamage = baseBeamShotDamage * multiplier;
-            else damagePerSecond = baseDamagePerSecond * multiplier;
-        }
-
-        private void Awake()
-        {
-            emplacement = GetComponent<Emplacement>();
-        }
+        // ------------------------------------------------------------ dongu
 
         private void Update()
         {
@@ -251,49 +236,270 @@ namespace Frontline.Runtime
                 return;
             }
 
-            if (beam)
-            {
-                UpdateBeam();
-                return;
-            }
+            if (Mode == FireMode.Line) UpdateLine();
+            else if (Mode == FireMode.Shell) UpdateShell();
+            else UpdateStream();
+        }
 
+        private void Aim(UnitHealth target)
+        {
+            HasTarget = target != null;
+            if (!HasTarget) return;
+
+            Vector2 delta = (Vector2)target.transform.position - (Vector2)transform.position;
+            if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
+        }
+
+        // --------------------------------------------------- Makineli Tufek
+
+        private void UpdateStream()
+        {
             if (damagePerSecond <= 0f) return;
 
-            float damage = damagePerSecond * Time.deltaTime;
+            FindNearestTargets(picked, targets);
+            Aim(picked.Count > 0 ? picked[0] : null);
+            if (!HasTarget) return;
 
-            // Namlu her karede en yakin hedefi takip eder; kule govdesi
-            // buna doner (TowerTurret). Alan hasarli batarya da doner:
-            // "kime bakiyor" bilgisi oyuncuya nereye vurdugunu soyler.
-            UnitHealth target = FindNearestTarget();
-            HasTarget = target != null;
+            float damage = damagePerSecond * RateScale * Time.deltaTime;
+            UnitHealth first = picked[0];
+            UnitHealth second = picked.Count > 1 ? picked[1] : null;
 
-            if (HasTarget)
+            ChipSceneryOnLine(first.transform.position, damage * sceneryDamageShare);
+
+            // Hasar birligi yok edebilir; gorsel icin once konumlari kullan.
+            EmitStreamTracer(first, second);
+
+            for (int i = 0; i < picked.Count; i++)
+                if (picked[i] != null) picked[i].TakeDamage(damage);
+        }
+
+        private void EmitStreamTracer(UnitHealth first, UnitHealth second)
+        {
+            tracerTimer -= Time.deltaTime * RateScale;
+            if (tracerTimer > 0f) return;
+            tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
+
+            PlayFireFx();
+
+            float cell = world.Space.CellSize;
+            Vector2 muzzle = MuzzlePoint;
+
+            // Hedefin KENDISI verilir: mermi ucus boyunca ona kilitlenir.
+            Projectile.Fire(bulletSprite, muzzle, first,
+                            fx.bulletScale * cell, fx.bulletSpeed * cell, tracerColor,
+                            impactSprite, fx.impactScale * cell, tracerColor);
+
+            // Cift namlu: ikinci hedefe de AYNI anda mermi gider - oyuncu
+            // iki ayri birligin vuruldugunu gormeli.
+            if (second != null)
             {
-                Vector2 delta = (Vector2)target.transform.position - (Vector2)transform.position;
-                if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
+                Projectile.Fire(bulletSprite, muzzle, second,
+                                fx.bulletScale * cell, fx.bulletSpeed * cell, tracerColor,
+                                impactSprite, fx.impactScale * cell, tracerColor);
+            }
+        }
+
+        // ------------------------------------------------------------ Topcu
+
+        private void UpdateShell()
+        {
+            if (shellDamage <= 0f) return;
+
+            UnitHealth target = FindNearestTarget();
+            Aim(target);
+
+            shotTimer -= Time.deltaTime * RateScale;
+            if (shotTimer > 0f) return;
+            if (!HasTarget) { shotTimer = 0f; return; }
+
+            shotTimer += shellInterval > 0f ? shellInterval : 1f;
+
+            ChipSceneryOnLine(target.transform.position, shellDamage * sceneryDamageShare);
+            PlayFireFx();
+
+            float cell = world.Space.CellSize;
+            Vector2 muzzle = MuzzlePoint;
+            float speed = Mathf.Max(0.01f, fx.bulletSpeed * cell);
+            float travel = ((Vector2)target.transform.position - muzzle).magnitude / speed;
+
+            // Mermi gorseli (kendi carpma efekti yok: patlamayi Explode cizer).
+            Projectile.Fire(bulletSprite, muzzle, target,
+                            fx.bulletScale * cell, fx.bulletSpeed * cell, tracerColor,
+                            null, 0f, tracerColor);
+
+            StartCoroutine(ShellFlight(target, target.transform.position, travel));
+        }
+
+        private IEnumerator ShellFlight(UnitHealth target, Vector2 lastKnown, float travel)
+        {
+            if (travel > 0f) yield return new WaitForSeconds(travel);
+
+            // Hedef yoldayken olduyse mermi SON bilinen yere duser: alan
+            // hasarinin anlami bu - yanindakiler yine yanar.
+            Vector2 center = (target != null && target.IsAlive)
+                ? (Vector2)target.transform.position
+                : lastKnown;
+
+            Explode(center);
+        }
+
+        /// <summary>Patlama: yaricaptaki herkese hasar + (sv3) yanan krater.</summary>
+        public void Explode(Vector2 center)
+        {
+            if (world == null) return;
+
+            float radius = blastRadius * world.Space.CellSize;
+            DamageInRadius(world, center, radius, shellDamage);
+
+            FxBurst.Impact(impactSprite, center, radius * 2f, Color.white, 0.22f);
+
+            if (burnDps > 0f && burnSeconds > 0f)
+                BurnZone.Spawn(world, center, radius * BurnRadiusShare, burnDps, burnSeconds, impactSprite);
+        }
+
+        /// <summary>Yanan krater patlamanin tamami degil, cekirdegidir.</summary>
+        public const float BurnRadiusShare = 0.6f;
+
+        /// <summary>Bir daire icindeki butun canli birliklere ayni hasari verir.</summary>
+        public static int DamageInRadius(Battlefield world, Vector2 center, float radius, float damage)
+        {
+            var units = world.ActiveUnits;
+            if (units == null || units.Count == 0 || damage <= 0f) return 0;
+
+            float radiusSqr = radius * radius;
+            int hits = 0;
+
+            // Hasar birligi yok edebilecegi icin geriye dogru gezilir.
+            for (int i = units.Count - 1; i >= 0; i--)
+            {
+                UnitAgent unit = units[i];
+                if (unit == null) continue;
+
+                UnitHealth health = unit.Health;
+                if (health == null || !health.IsAlive) continue;
+
+                if (((Vector2)unit.transform.position - center).sqrMagnitude <= radiusSqr)
+                {
+                    health.TakeDamage(damage);
+                    hits++;
+                }
             }
 
-            if (splash) DamageEveryoneInRange(damage);
-            else if (HasTarget) target.TakeDamage(damage);
+            return hits;
+        }
 
-            if (HasTarget) ChipSceneryOnLine(target.transform.position, damage * sceneryDamageShare);
+        // --------------------------------------------------- Keskin Nisanci
 
-            EmitTracer(target);
+        private void UpdateLine()
+        {
+            // Nisan her karede guncellenir: govde hedefi TAKIP eder.
+            Aim(FindNearestTarget());
+
+            shotTimer -= Time.deltaTime * RateScale;
+            if (shotTimer > 0f) return;
+            if (!HasTarget) { shotTimer = 0f; return; }
+
+            shotTimer += beamShotInterval > 0f ? beamShotInterval : 1f;
+
+            PlaySound();
+            int killed = FireLine(AimDirection);
+
+            // Oldurunce ikinci atis: zincirlenmez (ikinci atisin oldurmesi
+            // ucuncuyu tetiklemez), yoksa zayif bir surude kule hic durmazdi.
+            if (followUpOnKill && killed > 0 && !followUpUsed)
+            {
+                followUpUsed = true;
+                shotTimer = Mathf.Min(shotTimer, followUpDelay);
+            }
+            else
+            {
+                followUpUsed = false;
+            }
         }
 
         /// <summary>
-        /// Manuel kilitli ortuye SUREKLI hasar verir - normal birlik
-        /// hedeflemesi bu sure boyunca tamamen durur (bkz. manualTargetCell
-        /// aciklamasi). Isin/alan hasarli kuleler de burada aynidir: manuel
-        /// modda hepsi damagePerSecond ile tek hedefe vurur, tur farki
-        /// yalnizca otomatik moddadir.
+        /// Verilen dogrultuda menzil boyunca onune cikan HERKESI deler.
+        /// Olen birlik sayisini doner.
+        /// </summary>
+        private int FireLine(Vector2 direction)
+        {
+            if (Fired != null) Fired();
+
+            var units = world.ActiveUnits;
+            Vector2 origin = MuzzlePoint;
+            float cell = world.Space.CellSize;
+            float halfWidth = beamHalfWidth * cell;
+            float reach = WorldRange;
+
+            // 1. gecis: hattakileri topla, en yuksek canliyi bul (zirh delme).
+            picked.Clear();
+            UnitHealth toughest = null;
+
+            if (units != null)
+            {
+                for (int i = 0; i < units.Count; i++)
+                {
+                    UnitAgent unit = units[i];
+                    if (unit == null) continue;
+
+                    UnitHealth health = unit.Health;
+                    if (health == null || !health.IsAlive) continue;
+
+                    Vector2 v = (Vector2)unit.transform.position - origin;
+
+                    // Namlu dogrultusundaki mesafe: arkada kalan vurulmaz.
+                    float along = Vector2.Dot(v, direction);
+                    if (along < 0f || along > reach) continue;
+
+                    // Hatta dik uzaklik: hat ne kadar inceyse o kadar secici.
+                    float perp = Mathf.Abs(v.x * direction.y - v.y * direction.x);
+                    if (perp > halfWidth) continue;
+
+                    picked.Add(health);
+                    if (toughest == null || health.CurrentHp > toughest.CurrentHp) toughest = health;
+                }
+            }
+
+            // 2. gecis: hasar. Carpma efekti VURULAN HER BIRLIGIN uzerinde.
+            int killed = 0;
+            for (int i = 0; i < picked.Count; i++)
+            {
+                UnitHealth health = picked[i];
+                bool pierced = pierceBonus > 0f && health == toughest;
+                float damage = beamShotDamage * (pierced ? 1f + pierceBonus : 1f);
+
+                FxBurst.ImpactOn(impactSprite, health.transform,
+                                 fx.impactScale * cell * (pierced ? 1.7f : 1f),
+                                 pierced ? PierceColor : BeamFlash.color);
+
+                health.TakeDamage(damage);
+                if (!health.IsAlive) killed++;
+            }
+
+            if (turret != null) turret.Recoil();
+
+            FxBurst.Muzzle(muzzleSprite, origin, direction,
+                           fx.muzzleScale * cell, BeamFlash.color, beamFlashSeconds);
+
+            BeamFlash.Spawn(origin, direction, cell * beamVisualThickness,
+                            beamFlashSeconds, picked.Count, reach);
+
+            return killed;
+        }
+
+        /// <summary>Zirh delen isabetin rengi: sicak beyaz-sari, normal isabetten ayrilsin.</summary>
+        private static readonly Color PierceColor = new Color(1f, 0.92f, 0.55f, 1f);
+
+        // --------------------------------------------------------- yardimci
+
+        /// <summary>
+        /// Manuel kilitli ortuye SUREKLI hasar verir. Tur farki yok: her kule
+        /// kendi saniyelik hasar esdegeriyle tek hedefe vurur.
         /// </summary>
         private void UpdateManualTarget()
         {
             if (world.Scenery == null || !world.Scenery.IsStanding(manualTargetCell))
             {
-                // Baskasi (baska bir kule, ya da bu obje zaten yikilmis)
-                // ortuyu temizlemis: kilit anlamsiz kaldi, birak.
                 ClearManualTarget();
                 HasTarget = false;
                 return;
@@ -304,42 +510,60 @@ namespace Frontline.Runtime
             if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
             HasTarget = true;
 
-            float dps = beam ? (beamShotDamage / Mathf.Max(0.01f, beamShotInterval)) : damagePerSecond;
-            float damage = dps * Time.deltaTime;
-
+            float damage = DpsEquivalent() * RateScale * Time.deltaTime;
             bool destroyed = world.DamageScenery(manualTargetCell, damage);
-            EmitSceneryTracer(cellWorld);
+
+            tracerTimer -= Time.deltaTime;
+            if (tracerTimer <= 0f)
+            {
+                tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
+                PlayFireFx();
+                FxBurst.Impact(impactSprite, cellWorld,
+                               fx.impactScale * world.Space.CellSize, tracerColor, tracerSeconds);
+            }
 
             if (destroyed) ClearManualTarget();
         }
 
-        /// <summary>Manuel hedefe atis gorseli - normal EmitTracer ile ayni kurallar.</summary>
-        private void EmitSceneryTracer(Vector2 targetWorld)
+        /// <summary>Kulenin tek hedefe saniyelik hasar esdegeri.</summary>
+        public float DpsEquivalent()
         {
-            tracerTimer -= Time.deltaTime;
-            if (tracerTimer > 0f) return;
+            if (Mode == FireMode.Line) return beamShotDamage / Mathf.Max(0.01f, beamShotInterval);
+            if (Mode == FireMode.Shell) return shellDamage / Mathf.Max(0.01f, shellInterval);
+            return damagePerSecond;
+        }
 
-            tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
+        private void PlaySound()
+        {
+            string clip;
+            switch (kind)
+            {
+                case TowerKind.Ambush: clip = AudioManager.TowerFireMg; break;
+                // Topcu icin ayri bir ses klibi henuz yok; keskin nisanci
+                // klibi (tek, agir patlama) en yakin karsilik.
+                case TowerKind.Battery: clip = AudioManager.TowerFireSniper; break;
+                case TowerKind.Beam: clip = AudioManager.TowerFireSniper; break;
+                default: clip = null; break;
+            }
 
-            string clip = FireClip;
             if (clip != null) AudioManager.Instance.PlaySfx(clip);
+        }
 
-            float cell = world.Space.CellSize;
-            Vector2 muzzle = MuzzlePoint;
-
+        /// <summary>Ses + geri tepme + namlu cakmasi: her gorsel atista.</summary>
+        private void PlayFireFx()
+        {
+            if (Fired != null) Fired();
+            PlaySound();
             if (turret != null) turret.Recoil();
 
-            FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
-                           fx.muzzleScale * cell, tracerColor, tracerSeconds);
-            FxBurst.Impact(impactSprite, targetWorld,
-                           fx.impactScale * cell, tracerColor, tracerSeconds);
+            FxBurst.Muzzle(muzzleSprite, MuzzlePoint, AimDirection,
+                           fx.muzzleScale * world.Space.CellSize, tracerColor, tracerSeconds);
         }
 
         /// <summary>
         /// Namlu ile hedef arasindaki hatta ilk denk gelen AYAKTA ortuye hasar
-        /// verir. Kule ortuye nisan almaz; ortu yalnizca yolun uzerinde
-        /// oldugu icin atisi yer. Bir tanesiyle yetinilir: bir atis bir
-        /// engeli deler, hattaki her seyi ayni anda yikmaz.
+        /// verir. Kule ortuye nisan almaz; ortu yolun uzerinde oldugu icin
+        /// atisi yer. Bir atis bir engeli deler.
         /// </summary>
         private void ChipSceneryOnLine(Vector2 targetPosition, float damage)
         {
@@ -372,191 +596,50 @@ namespace Frontline.Runtime
             }
         }
 
-        /// <summary>
-        /// Gorsel atis: namlu ucunda cakma + hedefe ucan mermi + varista
-        /// patlama. Hasarla ILGISI YOKTUR - hasar surekli uygulanir, atis
-        /// yalnizca sabit araliklarla gorunur. Ayrilmasinin sebebi,
-        /// gorselin sikligini dengeye dokunmadan ayarlayabilmek.
-        /// </summary>
-        private void EmitTracer(UnitHealth target)
-        {
-            if (!HasTarget || target == null) return;
-
-            tracerTimer -= Time.deltaTime;
-            if (tracerTimer > 0f) return;
-
-            tracerTimer += tracerInterval > 0f ? tracerInterval : 0.2f;
-
-            string clip = FireClip;
-            if (clip != null) AudioManager.Instance.PlaySfx(clip);
-
-            float cell = world.Space.CellSize;
-            Vector2 muzzle = MuzzlePoint;
-
-            if (turret != null) turret.Recoil();
-
-            FxBurst.Muzzle(muzzleSprite, muzzle, AimDirection,
-                           fx.muzzleScale * cell, tracerColor, tracerSeconds);
-
-            // Hedefin KENDISI verilir, konumu degil: mermi ucus boyunca
-            // ona kilitlenir ve patlama birligin uzerinde olur. Sabit
-            // noktaya ucarken hizli birlikte patlama arkada kaliyordu.
-            Projectile.Fire(bulletSprite, muzzle, target,
-                            fx.bulletScale * cell, fx.bulletSpeed * cell,
-                            tracerColor,
-                            impactSprite, fx.impactScale * cell, tracerColor);
-        }
-
-        /// <summary>
-        /// Isin: sayac dolunca kulenin durdugu SATIR boyunca ates eder ve o
-        /// satirdaki her birlige ayni hasari verir - kac birlik oldugundan
-        /// bagimsiz.
-        ///
-        /// Neden surekli hasar degil (20 Agu 2026 olcumu): surekli hasarli
-        /// isin her ayarda ya olu ya baskin cikiyordu. Bedava draft kulesi
-        /// tamamen kapatilip her strateji cokerken 7 surekli isin oyunu tek
-        /// basina kazaniyordu, cunku bir koridoru bastan sona kaplayan sey
-        /// spec 3.5'i ("korunmayan koridor her zaman bulunur") siler.
-        /// Periyodik atis bunu cozer: hat 1 hucre kalinligindadir, hizli
-        /// birlik iki atis arasinda karsiya gecebilir, yavaslatilmis
-        /// kalabalik tam yer. Bu yuzden isin mayin tarlasiyla eslesir.
-        /// </summary>
-        private void UpdateBeam()
-        {
-            // Nisan her karede guncellenir: kule govdesi hedefi TAKIP eder,
-            // yalnizca ates aninda donmez. Ates etmeyen kule cansiz durur.
-            UnitHealth nearest = FindNearestTarget();
-            HasTarget = nearest != null;
-            if (HasTarget)
-            {
-                Vector2 delta = (Vector2)nearest.transform.position - (Vector2)transform.position;
-                if (delta.sqrMagnitude > 0.000001f) AimDirection = delta.normalized;
-            }
-
-            beamTimer -= Time.deltaTime;
-            if (beamTimer > 0f) return;
-
-            beamTimer += beamShotInterval > 0f ? beamShotInterval : 1f;
-            if (!HasTarget) return;
-
-            string clip = FireClip;
-            if (clip != null) AudioManager.Instance.PlaySfx(clip);
-
-            Fire(AimDirection);
-        }
-
-        /// <summary>
-        /// Verilen dogrultuda onune cikan HERKESI yarip gecer - kac birlik
-        /// oldugundan bagimsiz, hepsi ayni hasari alir.
-        /// </summary>
-        private void Fire(Vector2 direction)
-        {
-            var units = world.ActiveUnits;
-            if (units == null || units.Count == 0) return;
-
-            // Isin da namlu UCUNDAN cikar: merkezden ciksaydi hat kulenin
-            // govdesini yarip gecerdi.
-            Vector2 origin = MuzzlePoint;
-            float halfWidth = beamHalfWidth * world.Space.CellSize;
-            int hits = 0;
-
-            for (int i = units.Count - 1; i >= 0; i--)
-            {
-                UnitAgent unit = units[i];
-                if (unit == null) continue;
-
-                UnitHealth health = unit.Health;
-                if (health == null || !health.IsAlive) continue;
-
-                Vector2 v = (Vector2)unit.transform.position - origin;
-
-                // Namlu dogrultusundaki mesafe: arkada kalan vurulmaz.
-                float along = Vector2.Dot(v, direction);
-                if (along < 0f || along > worldRange) continue;
-
-                // Hatta dik uzaklik: hat ne kadar inceyse o kadar secici.
-                float perp = Mathf.Abs(v.x * direction.y - v.y * direction.x);
-                if (perp > halfWidth) continue;
-
-                health.TakeDamage(beamShotDamage);
-                hits++;
-
-                // Isinin carpmasi VURULAN HER BIRLIGIN uzerinde gorunur:
-                // delici silahin degeri "kac kisiyi bicti" bilgisidir ve
-                // tek bir cizgi bunu anlatmiyordu.
-                FxBurst.ImpactOn(impactSprite, unit.transform,
-                                 fx.impactScale * world.Space.CellSize,
-                                 BeamFlash.color);
-            }
-
-            if (turret != null) turret.Recoil();
-
-            FxBurst.Muzzle(muzzleSprite, origin, direction,
-                           fx.muzzleScale * world.Space.CellSize,
-                           BeamFlash.color, beamFlashSeconds);
-
-            BeamFlash.Spawn(origin, direction,
-                            world.Space.CellSize * beamVisualThickness,
-                            beamFlashSeconds, hits);
-        }
-
-        /// <summary>
-        /// Menzildeki her birlige ayni anda vurur. Batarya kulenin sürüye
-        /// karsi degeri buradan gelir - ama ordu ondan kacmayi ogrendigi
-        /// icin onunden gecen sayisi zamanla azalir (spec 3.2).
-        /// </summary>
-        private void DamageEveryoneInRange(float damage)
-        {
-            var units = world.ActiveUnits;
-            if (units == null || units.Count == 0) return;
-
-            Vector2 origin = transform.position;
-            float rangeSqr = worldRange * worldRange;
-
-            // Hasar birligi yok edebilecegi icin geriye dogru gezilir.
-            for (int i = units.Count - 1; i >= 0; i--)
-            {
-                UnitAgent unit = units[i];
-                if (unit == null) continue;
-
-                UnitHealth health = unit.Health;
-                if (health == null || !health.IsAlive) continue;
-
-                if (((Vector2)unit.transform.position - origin).sqrMagnitude <= rangeSqr)
-                    health.TakeDamage(damage);
-            }
-        }
-
-        /// <summary>
-        /// Menzildeki en yakin canli birlik. Sahnedeki tum birlikleri taramak
-        /// yerine dunyanin tuttugu canli listesi kullanilir.
-        /// </summary>
         private UnitHealth FindNearestTarget()
         {
+            FindNearestTargets(picked, 1);
+            return picked.Count > 0 ? picked[0] : null;
+        }
+
+        /// <summary>
+        /// Menzildeki en yakin N canli birlik, yakindan uzaga. N kucuk (1-2)
+        /// oldugu icin her secim icin listeyi bir kez taramak yeterli.
+        /// </summary>
+        private void FindNearestTargets(List<UnitHealth> into, int count)
+        {
+            into.Clear();
+
             var units = world.ActiveUnits;
-            if (units == null || units.Count == 0) return null;
+            if (units == null || units.Count == 0) return;
 
             Vector2 origin = transform.position;
-            float bestSqr = worldRange * worldRange;
-            UnitHealth best = null;
+            float rangeSqr = WorldRange * WorldRange;
 
-            for (int i = 0; i < units.Count; i++)
+            for (int n = 0; n < count; n++)
             {
-                UnitAgent unit = units[i];
-                if (unit == null) continue;
+                float bestSqr = rangeSqr;
+                UnitHealth best = null;
 
-                UnitHealth health = unit.Health;
-                if (health == null || !health.IsAlive) continue;
-
-                float sqr = ((Vector2)unit.transform.position - origin).sqrMagnitude;
-                if (sqr <= bestSqr)
+                for (int i = 0; i < units.Count; i++)
                 {
-                    bestSqr = sqr;
-                    best = health;
-                }
-            }
+                    UnitAgent unit = units[i];
+                    if (unit == null) continue;
 
-            return best;
+                    UnitHealth health = unit.Health;
+                    if (health == null || !health.IsAlive || into.Contains(health)) continue;
+
+                    float sqr = ((Vector2)unit.transform.position - origin).sqrMagnitude;
+                    if (sqr <= bestSqr)
+                    {
+                        bestSqr = sqr;
+                        best = health;
+                    }
+                }
+
+                if (best == null) return;
+                into.Add(best);
+            }
         }
     }
 }

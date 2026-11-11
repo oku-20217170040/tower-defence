@@ -353,33 +353,24 @@ namespace Frontline.Runtime
             tower.kind = kind;
             tower.Place(world, cell);
 
-            // Sahte hedef hasar vermez; tek isi suruyu cekmektir.
-            float dps = kind == TowerKind.Battery ? batteryDps
-                      : (kind == TowerKind.Ambush ? ambushDps : 0f);
-
-            // Isin surekli hasar vermez; kendi baglama yolu var.
+            // Silahli kuleler: Makineli Tufek (Ambush), Topcu (Battery),
+            // Keskin Nisanci (Beam). Radar ve Zaman Bozulmasi ates etmez.
+            // Butun sayilar TowerStats'tan gelir (Emplacement.ApplyStats);
+            // buradaki batteryDps/ambushDps/beam* alanlari artik OKUNMUYOR.
             TowerWeapon weapon = null;
 
-            if (kind == TowerKind.Beam)
+            if (TowerStats.IsWeapon(kind))
             {
                 weapon = go.AddComponent<TowerWeapon>();
-                weapon.BindBeam(world, beamRange * rangeMultiplier,
-                                beamShotDamage * damageMultiplier,
-                                beamShotInterval, beamHalfWidth);
-            }
-            // Alan hasari YALNIZCA batarya kulede: sürüyü bicen odur.
-            else if (dps > 0f)
-            {
-                weapon = go.AddComponent<TowerWeapon>();
-                weapon.Bind(world, tower.radius * rangeMultiplier,
-                            dps * damageMultiplier, kind == TowerKind.Battery);
+                weapon.Configure(world, kind, damageMultiplier, rangeMultiplier);
+                weapon.beamHalfWidth = beamHalfWidth;
 
-                // Atis gorseli mekanigi yansitir: batarya parlak ve
-                // seyrek (agir top), pusu soluk ve sik (surekli is gorur).
+                // Atis gorseli mekanigi yansitir: Topcu parlak ve seyrek
+                // (agir mermi), Makineli Tufek soluk ve cok sik.
                 bool loud = kind == TowerKind.Battery;
                 weapon.tracerColor = loud ? batteryTracer : ambushTracer;
-                weapon.tracerInterval = loud ? 0.55f : 0.30f;
-                weapon.tracerSeconds = loud ? 0.09f : 0.06f;
+                weapon.tracerInterval = 0.14f;
+                weapon.tracerSeconds = loud ? 0.09f : 0.05f;
             }
 
             // Atis gorselleri: namlu ucu, mermi, cakma, carpma. Ayni
@@ -408,6 +399,9 @@ namespace Frontline.Runtime
                 turret.rotationOffset = rotationOffset;
                 turret.degreesPerSecond = kind == TowerKind.Battery ? 260f : 420f;
 
+                // Radar etkisindeki kule ara ara parlar (bkz. AuraFeedback).
+                AuraFeedback.Attach(go, weapon, renderer);
+
                 // Ates aninda geri tepme: TowerWeapon kendi Recoil()'ini
                 // burada baglanan turret uzerinden cagirir (3 Eylul 2026
                 // gece kullanici istegi). Bos birakilirsa TowerWeapon
@@ -415,8 +409,15 @@ namespace Frontline.Runtime
                 weapon.turret = turret;
             }
 
-            // Yukseltme sisteminin (Emplacement.Upgrade) sprite/hasar
-            // degistirebilmesi icin referanslari birakir.
+            // Destek kuleleri: ust yapi yavasca doner (canak tarar, yayici
+            // calisir) ve Zaman Bozulmasi etki alanini zeminde gosterir.
+            if (weapon == null)
+                SupportFeedback.Attach(go, tower, turretGo.transform,
+                                       world.Space.CellSize, sortingOrder - 2);
+
+            // Yukseltme sisteminin (Emplacement.Upgrade) sprite/sayi
+            // degistirebilmesi icin referanslari birakir; seviye 1 sayilarini
+            // da burada uygular (Emplacement.ApplyStats).
             tower.BindVisual(renderer, weapon);
 
             // Yildiz rozeti (referans oyundaki gibi, seviye gostergesi):

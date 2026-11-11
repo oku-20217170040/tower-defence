@@ -41,6 +41,11 @@ namespace Frontline.Runtime
         {
             if (amount <= 0f || !IsAlive) return;
 
+            // Kirilganlik (Zaman Bozulmasi sv3): alandaki birlik HER kaynaktan
+            // biraz daha fazla hasar alir. Tek yerde uygulanir ki hicbir
+            // silah bunu unutamasin.
+            if (agent != null) amount *= agent.DamageTakenMultiplier;
+
             CurrentHp -= amount;
 
             // Hasar gorsel olarak okunmali; yoksa oyuncu tuzagin ise yarayip

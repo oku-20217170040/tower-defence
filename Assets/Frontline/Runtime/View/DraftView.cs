@@ -168,11 +168,8 @@ namespace Frontline.Runtime
 
         private static string TurkishName(TowerKind kind)
         {
-            if (kind == TowerKind.Battery) return "makineli tufek";
-            if (kind == TowerKind.Ambush) return "topcu";
-            if (kind == TowerKind.Minefield) return "mayin tarlasi";
-            if (kind == TowerKind.Beam) return "isin";
-            return "sahte hedef";
+            // Adlarin tek dogru kaynagi HudFormat (11 Kasim 2026).
+            return Frontline.Core.UI.HudFormat.TowerName(kind).ToLowerInvariant();
         }
     }
 }

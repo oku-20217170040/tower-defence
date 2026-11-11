@@ -160,7 +160,7 @@ namespace Frontline.Runtime
             }
 
             ringView.transform.position = world.Space.CellToWorld(Selected.Cell);
-            ringView.Bind(Selected.radius, world.Space.CellSize, sortingOrder);
+            ringView.Bind(Selected.DisplayRange, world.Space.CellSize, sortingOrder);
             ringView.Show();
         }
     }

@@ -27,6 +27,15 @@ namespace Frontline.Runtime
                  "oluyor. 2'de saf pusu mevzisiyle basa bas - yani gercek bir secim.")]
         public float slowFactor = 2f;
 
+        [Tooltip("Zaman Bozulmasi sv3: alandaki dusmanin aldigi hasar carpani. 1 = yok.")]
+        public float fragility = 1f;
+
+        [Tooltip("Radar: etkiledigi kulelere menzil eki (0,2 = +%20).")]
+        public float rangeBonus;
+
+        [Tooltip("Radar sv3: etkiledigi kulelere ates hizi eki.")]
+        public float fireRateBonus;
+
         private Battlefield world;
 
         /// <summary>Kulenin durdugu izgara hucresi.</summary>
@@ -65,6 +74,47 @@ namespace Frontline.Runtime
         private TowerWeapon weapon;
         private TowerStars stars;
 
+        /// <summary>Bu kulenin silahi; destek kulelerinde null.</summary>
+        public TowerWeapon Weapon { get { return weapon; } }
+
+        /// <summary>Su anki seviyenin sayilari (TowerStats).</summary>
+        public TowerLevelStats Stats { get { return TowerStats.For(kind, Level); } }
+
+        /// <summary>
+        /// Oyuncuya gosterilecek menzil (hucre): silahli kulede ETKIN ates
+        /// menzili (radar eki dahil), destek kulesinde etki yaricapi.
+        /// </summary>
+        public float DisplayRange
+        {
+            get { return weapon != null ? weapon.EffectiveRange : radius; }
+        }
+
+        /// <summary>
+        /// Seviyenin sayilarini kuleye yazar ve alanlari (tehdit, yavaslatma,
+        /// kirilganlik, radar) yeniden kurar. Kurulumda ve her yukseltmede.
+        /// </summary>
+        public void ApplyStats()
+        {
+            TowerLevelStats stats = Stats;
+
+            if (TowerStats.IsWeapon(kind))
+            {
+                // Tehdit yaricapi da budur (yalnizca Topcu tehdit yazar).
+                radius = stats.Range;
+            }
+            else
+            {
+                radius = stats.AuraRadius;
+                slowFactor = stats.SlowFactor;
+                fragility = stats.Fragility;
+                rangeBonus = stats.RangeBonus;
+                fireRateBonus = stats.FireRateBonus;
+            }
+
+            if (weapon != null) weapon.ApplyStats(stats);
+            if (world != null) world.RebuildThreat();
+        }
+
         public void Place(Battlefield world, int cell)
         {
             this.world = world;
@@ -84,6 +134,7 @@ namespace Frontline.Runtime
         {
             this.turretRenderer = turretRenderer;
             this.weapon = weapon;
+            ApplyStats();
         }
 
         /// <summary>
@@ -109,8 +160,7 @@ namespace Frontline.Runtime
 
             Level++;
 
-            if (weapon != null)
-                weapon.ApplyLevelMultiplier(StatMultiplier(Level));
+            ApplyStats();
 
             if (turretRenderer != null)
             {
@@ -164,6 +214,10 @@ namespace Frontline.Runtime
         }
 
         /// <summary>
+        /// 11 Kasim 2026: ARTIK KULLANILMIYOR - seviye sayilari kule turune
+        /// gore TowerStats tablosundan gelir (her kulenin kendi yetenegi var,
+        /// duz +%20 hasar degil). Yontem eski testler icin yerinde duruyor.
+        ///
         /// Seviye basina hasar/guc carpani: seviye basina +%20. Saf ve
         /// test edilebilir - TowerWeapon'un mevcut damagePerSecond/
         /// beamShotDamage alanlarina carpilir, yeni bir dengeye DOKUNMAZ

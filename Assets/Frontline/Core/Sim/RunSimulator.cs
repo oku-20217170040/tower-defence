@@ -42,7 +42,14 @@ namespace Frontline.Core
             ///
             /// Dengeleyici dugme hasar degil, ATIS ARALIGIDIR.
             /// </summary>
-            Beam = 2
+            Beam = 2,
+
+            /// <summary>
+            /// Topcu (11 Kasim 2026). Menzildeki en yakin birlige mermi atar;
+            /// mermi dustugu yerde patlar ve BlastRadius icindeki herkese
+            /// vurur. Splash'tan farki: butun menzile degil, hedefin cevresine.
+            /// </summary>
+            Blast = 3
         }
 
         public struct TowerSpec
@@ -76,6 +83,23 @@ namespace Frontline.Core
 
             /// <summary>Isinin atislari arasindaki sure (saniye).</summary>
             public float ShotInterval;
+
+            /// <summary>
+            /// Topcu (Targeting.Blast): patlama yaricapi (hucre). Mermi en
+            /// yakin hedefe duser ve bu yaricaptaki herkese vurur.
+            /// </summary>
+            public float BlastRadius;
+
+            /// <summary>
+            /// Yem basar mi. 11 Kasim 2026'ya kadar bunu TowerKind.Decoy
+            /// belirliyordu; o tur artik RADAR oldu ve yem basmiyor. Yem
+            /// (ve kor birligin onu silmesi) Core'da bir yetenek olarak
+            /// duruyor ama oyunda hicbir kule kullanmiyor.
+            /// </summary>
+            public bool LaysDecoy;
+
+            /// <summary>Radar: Radius icindeki silahli kulelere menzil eki.</summary>
+            public float RangeBonus;
         }
 
         public struct Settings
@@ -469,7 +493,7 @@ namespace Frontline.Core
             for (int i = 0; i < towers.Count; i++)
             {
                 TowerSpec tower = towers[i];
-                if (tower.Kind != TowerKind.Decoy) continue;
+                if (!tower.LaysDecoy) continue;
 
                 int reach = (int)tower.Radius;
                 float radiusSq = tower.Radius * tower.Radius;
@@ -573,6 +597,31 @@ namespace Frontline.Core
             }
         }
 
+        /// <summary>
+        /// Radar etkisi: silahli bir kule, menzilinde oldugu radarlarin EN
+        /// GUCLUSUNDEN menzil eki alir (ust uste binmez). Keskin Nisanci
+        /// yarim oran alir - calisma zamaniyla ayni kural (TowerStats).
+        /// </summary>
+        private static float RadarBonusFor(List<TowerSpec> towers, TowerSpec tower)
+        {
+            float best = 0f;
+
+            for (int i = 0; i < towers.Count; i++)
+            {
+                TowerSpec radar = towers[i];
+                if (radar.RangeBonus <= 0f) continue;
+
+                float dx = radar.X - tower.X;
+                float dy = radar.Y - tower.Y;
+                if (dx * dx + dy * dy > radar.Radius * radar.Radius) continue;
+
+                float bonus = TowerStats.RangeBonusFor(tower.Kind, radar.RangeBonus);
+                if (bonus > best) best = bonus;
+            }
+
+            return best;
+        }
+
         private void Fire(List<TowerSpec> towers, List<Unit> active, Settings settings,
                           float dt, List<float> beamTimers)
         {
@@ -580,6 +629,9 @@ namespace Frontline.Core
             {
                 TowerSpec tower = towers[t];
                 if (tower.Dps <= 0f) continue;
+
+                float radarBonus = RadarBonusFor(towers, tower);
+                if (radarBonus > 0f) tower.Radius *= 1f + radarBonus;
 
                 float radiusSq = tower.Radius * tower.Radius;
 
@@ -647,9 +699,7 @@ namespace Frontline.Core
                     continue;
                 }
 
-                // Tek hedef: menzildeki EN YAKIN birlik. Bir kule bir anda
-                // yalnizca bir birlige ates eder - modelin tum mesele ettigi
-                // sey budur.
+                // Tek hedef ya da Topcu: menzildeki EN YAKIN birlik secilir.
                 Unit best = null;
                 float bestSq = radiusSq;
 
@@ -666,7 +716,32 @@ namespace Frontline.Core
                     }
                 }
 
-                if (best != null) best.Hp -= tower.Dps * dt;
+                if (best == null) continue;
+
+                if (tower.Targeting == Targeting.Blast)
+                {
+                    // Topcu: mermi hedefe duser, patlama yaricapindaki
+                    // HERKES ayni hasari alir. Calisma zamaninda bu aralikli
+                    // mermidir; burada ayni hasarin surekli esdegeri.
+                    int center = best.Path[best.PathIndex];
+                    float cx = grid.X(center);
+                    float cy = grid.Y(center);
+                    float blastSq = tower.BlastRadius * tower.BlastRadius;
+
+                    for (int i = 0; i < active.Count; i++)
+                    {
+                        Unit unit = active[i];
+                        if (!unit.Alive || unit.Hp <= 0f) continue;
+
+                        int cell = unit.Path[unit.PathIndex];
+                        float dx = grid.X(cell) - cx;
+                        float dy = grid.Y(cell) - cy;
+                        if (dx * dx + dy * dy <= blastSq) unit.Hp -= tower.Dps * dt;
+                    }
+                    continue;
+                }
+
+                best.Hp -= tower.Dps * dt;
             }
         }
 

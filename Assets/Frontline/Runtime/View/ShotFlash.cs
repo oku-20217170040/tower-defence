@@ -121,8 +121,14 @@ namespace Frontline.Runtime
         /// <summary>Isin rengi. Kule sprite'indaki mercekle ayni aile.</summary>
         public static Color color = new Color(0.55f, 0.88f, 1f, 0.95f);
 
+        /// <param name="reach">
+        /// Atisin dunya birimi uzunlugu. 11 Kasim 2026: Keskin Nisanci'nin
+        /// menzili artik SINIRLI, cizgi de menzilin bittigi yerde biter -
+        /// yoksa gorsel menzil hakkinda yalan soylerdi. 0 verilirse eski
+        /// davranis (kameranin disina tasar).
+        /// </param>
         public static void Spawn(Vector2 origin, Vector2 direction,
-                                 float thickness, float seconds, int hits)
+                                 float thickness, float seconds, int hits, float reach = 0f)
         {
             // Vurdugu birlik sayisi arttikca isin PARLAR - kalinlasmaz.
             // Kalinlasma inceligi bozuyordu; parlaklik ayni bilgiyi
@@ -135,7 +141,7 @@ namespace Frontline.Runtime
             // her karede yeniden kiriliyor. Kalinlik ve uzunluk kurallari
             // degismedi - degisen yalnizca cizginin nasil cizildigi.
             ElectricBeam.Spawn(origin, direction,
-                               OffscreenLength(origin, direction),
+                               reach > 0f ? reach : OffscreenLength(origin, direction),
                                thickness, c, seconds);
         }
 

@@ -92,6 +92,13 @@ namespace Frontline.Core
             /// </summary>
             public RunSimulator.Targeting BatteryTargeting;
 
+            /// <summary>Topcu patlama yaricapi (hucre); Targeting.Blast icin.</summary>
+            public float BatteryBlastRadius;
+
+            /// <summary>Radar (TowerKind.Decoy): etki yaricapi ve menzil eki.</summary>
+            public float RadarRadius;
+            public float RadarRangeBonus;
+
             /// <summary>Draft her dalga bedava kule veriyor mu?</summary>
             public bool DraftGivesFreeTower;
 
@@ -120,16 +127,29 @@ namespace Frontline.Core
                         TowerKind.Ambush, TowerKind.Minefield, TowerKind.Ambush,
                         TowerKind.Battery
                     },
+                    // 11 Kasim 2026: sayilar TowerStats'in SEVIYE 1 degerleriyle
+                    // hizali (Makineli Tufek = Ambush, Topcu = Battery, ...).
                     AmbushDps = 4f,
-                    BatteryDps = 2.5f,
+                    BatteryDps = TowerStats.CannonDps,
                     TowerRadius = 4f,
+
+                    // DIKKAT - bilincli sapma. Zaman Bozulmasi sv1 hizi 0,75'e
+                    // indirir (carpan 1,33); buradaki 2 ise SV3'un degeridir.
+                    // Simulator yukseltmeyi modellemiyor; ortalama oyuncunun
+                    // alani yukselttigi varsayiliyor. Sv1 degeriyle olcum
+                    // (20 seed, ortalama oyuncu): hiz 0,75 -> kazanma %25,
+                    // 0,65 -> %65, 0,6 -> %85, 0,5 -> %100. Yani sv1 alani
+                    // tek basina ortalama oyuncuyu tasimiyor.
                     MinefieldSlowFactor = 2f,
                     BeamShotDamage = 3f,
                     BeamShotInterval = 2f,
                     BeamWidth = 0.6f,
-                    BeamRange = 40f,
+                    BeamRange = TowerStats.SniperRange,
                     BatteryThreatStrength = 4f,
-                    BatteryTargeting = RunSimulator.Targeting.Splash,
+                    BatteryTargeting = RunSimulator.Targeting.Blast,
+                    BatteryBlastRadius = TowerStats.CannonBlastRadius,
+                    RadarRadius = 3f,
+                    RadarRangeBonus = 0.2f,
                     DraftGivesFreeTower = true,
                     FreeTowerEveryNWaves = 1,
                     DraftFoodReward = 0
@@ -272,6 +292,14 @@ namespace Frontline.Core
                 spec.Dps = policy.BatteryDps;
                 spec.ThreatStrength = policy.BatteryThreatStrength;
                 spec.Targeting = policy.BatteryTargeting;
+                spec.BlastRadius = policy.BatteryBlastRadius;
+            }
+            else if (kind == TowerKind.Decoy)
+            {
+                // Radar: ates etmez, yem basmaz; cevresindeki silahli
+                // kulelerin menzilini artirir.
+                spec.Radius = policy.RadarRadius > 0f ? policy.RadarRadius : policy.TowerRadius;
+                spec.RangeBonus = policy.RadarRangeBonus;
             }
             else if (kind == TowerKind.Minefield) spec.SlowFactor = policy.MinefieldSlowFactor;
             else if (kind == TowerKind.Beam)

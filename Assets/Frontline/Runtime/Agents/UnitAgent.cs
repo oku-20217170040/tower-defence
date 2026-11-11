@@ -57,6 +57,35 @@ namespace Frontline.Runtime
         public int damageToBase = 1;
 
         /// <summary>
+        /// Ucan birlik zemindeki alanlardan (yavaslatma, kirilganlik)
+        /// ETKILENMEZ - 11 Kasim 2026 karari: ucani digerlerinden ayiran,
+        /// "yavaslatmayla cozulemeyen" tehdit olmasidir.
+        /// </summary>
+        public bool IsFlyer { get { return profile.Type == UnitType.Flyer; } }
+
+        /// <summary>Su an durdugu hucredeki gecis suresi carpani (1 = normal hiz).</summary>
+        public float SlowFactorHere
+        {
+            get
+            {
+                if (!active || world == null || world.Slow == null || IsFlyer) return SlowField.None;
+                if (pathIndex < 0 || pathIndex >= path.Count) return SlowField.None;
+                return Mathf.Max(SlowField.None, world.Slow.Get(path[pathIndex]));
+            }
+        }
+
+        /// <summary>Su an aldigi hasarin carpani (kirilganlik alani; 1 = normal).</summary>
+        public float DamageTakenMultiplier
+        {
+            get
+            {
+                if (!active || world == null || world.Fragile == null || IsFlyer) return 1f;
+                if (pathIndex < 0 || pathIndex >= path.Count) return 1f;
+                return Mathf.Max(1f, world.Fragile.Get(path[pathIndex]));
+            }
+        }
+
+        /// <summary>
         /// Bocegi baslatir. Rota bulunamazsa false doner ve birlik hemen biter -
         /// gecerli haritada bu olmamali, olursa dogrulamada bir sorun var demektir.
         /// </summary>
@@ -127,6 +156,7 @@ namespace Frontline.Runtime
             Health = GetComponent<UnitHealth>();
             world.RegisterUnit(this);
 
+            UnitStatusFx.Ensure(this);
             active = true;
             return true;
         }
@@ -151,7 +181,7 @@ namespace Frontline.Runtime
 
             // Mayin tarlasi alanindaki hucrede gecis suresi uzar. Birlik bunu
             // ALGILAMAZ - rota degismez, yalnizca yavaslar.
-            float slow = world.Slow != null ? world.Slow.Get(path[pathIndex]) : SlowField.None;
+            float slow = SlowFactorHere;
             float step = cellsPerSecond * profile.SpeedMultiplier / slow
                          * world.Space.CellSize * Time.deltaTime;
 

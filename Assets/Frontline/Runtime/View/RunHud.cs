@@ -92,11 +92,11 @@ namespace Frontline.Runtime
             {
                 GUILayout.Space(8f);
                 GUILayout.Label("Secili: " + TurkishName(placer.Selected), labelStyle);
-                GUILayout.Label(PriceLine(TowerKind.Battery, "1 Mak.Tufek") + "   " +
-                                PriceLine(TowerKind.Ambush, "2 Topcu"), labelStyle);
-                GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Sahte") + "   " +
-                                PriceLine(TowerKind.Minefield, "4 Mayin tarlasi"), labelStyle);
-                GUILayout.Label(PriceLine(TowerKind.Beam, "5 Isin"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Battery, "1 Topcu") + "   " +
+                                PriceLine(TowerKind.Ambush, "2 Mak.Tufek"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Decoy, "3 Radar") + "   " +
+                                PriceLine(TowerKind.Minefield, "4 Zaman Bozulmasi"), labelStyle);
+                GUILayout.Label(PriceLine(TowerKind.Beam, "5 Keskin Nisanci"), labelStyle);
             }
 
             GUILayout.EndArea();
@@ -148,11 +148,11 @@ namespace Frontline.Runtime
 
         private static string TurkishName(TowerKind kind)
         {
-            if (kind == TowerKind.Battery) return "Makineli Tufek";
-            if (kind == TowerKind.Ambush) return "Topcu";
-            if (kind == TowerKind.Minefield) return "Mayin";
-            if (kind == TowerKind.Beam) return "Isin";
-            return "Sahte hedef";
+            if (kind == TowerKind.Battery) return "Topcu";
+            if (kind == TowerKind.Ambush) return "Makineli Tufek";
+            if (kind == TowerKind.Minefield) return "Zaman Bozulmasi";
+            if (kind == TowerKind.Beam) return "Keskin Nisanci";
+            return "Radar";
         }
     }
 }
